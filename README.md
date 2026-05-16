@@ -1,4 +1,4 @@
-# Dominion AI — Reinforcement Learning for Dominion
+# Dominion ML — Reinforcement Learning for Dominion
 
 ——— Work in progress ———
 

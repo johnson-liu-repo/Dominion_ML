@@ -22,4 +22,8 @@ data/*
 claude/*
 codex/*
 
+# Agent training settings
 config/train_agent.json
+
+# Misc
+# writeup.md
