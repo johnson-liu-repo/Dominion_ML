@@ -27,7 +27,7 @@ G_t &= \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}
 \end{aligned}
 $$
 
-
+where $\gamma$ is a discount factor for future returns.
 
 ===================================
 
