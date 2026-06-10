@@ -32,14 +32,6 @@ where $\gamma \in [0,1]$ is a discount factor for future returns.
 
 ===================================
 
-*write something about ...
-In machine learning, we look for a function \(f\) in a hypothesis space \(\mathcal{H}\) that maps inputs to outputs.
-We can define the subsets by their mapping structures:Supervised Learning (\(SL\)): \(f: \mathcal{X} \to \mathcal{Y}\).
-The dataset is a static set of pairs: \(\mathcal{D} = \{(x_i, y_i)\}_{i=1}^N\).
-Reinforcement Learning (\(RL\)): \(f: \mathcal{S} \to \mathcal{A}\) (where \(f\) is a policy \(\pi \), mapping states to actions).The fundamental difference lies in the loss function.
-In supervised learning, the loss is evaluated per independent sample.
-In RL, the objective function is a conditional expectation over time, where actions change the future data distribution:*
-
 ===================================
 
 ### Markov Decision Processes
@@ -47,11 +39,17 @@ In RL, the objective function is a conditional expectation over time, where acti
 A Markov decision process (MDP) is a 4-tuple defined as
 
 $$
-(\mathscr{S}, \mathscr{A}, P, R)
+(𝒮, 𝒜, 𝒫, ℛ)
 $$
 
-where $\mathscr{S}$ is the state space, $\mathscr{A}$ is the action space, $P = P(s' \mid s, a)$ is the probability of transitioning from state $s$ to $s'$ through action $a$, and $R(s,a,s')$ is the reward for the transition from state $s$ to $s'$ through action $a$.
-MDPs have the property that the probability of an event happening is independent of the process's history:
+where $𝒮$ is the state space, $𝒜$ is the action space, $𝒫 = P(s' \mid s, a)$ is the probability of transitioning from state $s$ to $s'$ through action $a$, and $ℛ(s,a,s')$ is the reward for the transition from state $s$ to $s'$ through action $a$.
+Generally the reward is written as
+
+$$
+r(s,a,s') = 𝔼\big[ R_{t+1} \mid S_t = s, A_t = a, S_{t+1} = s' \big]
+$$
+
+MDPs have the property where the probability of an event happening in the present $(s, a)$ is independent of the process's history:
 
 $$
 P \big(S_{t_1} \mid S_t, A_t \big) = P \big( S_{t+1} \mid S_t, A_t, S_{t-1}, A_{t-1}, \ldots \big) \ .
@@ -62,12 +60,14 @@ $$
 Following a deterministic policy, the agent's behavior is defined by
 
 $$
-a = \pi(s)
+a = \pi(s) \in 𝒜
 $$
 
-where $\pi(s)$ is a policy mapping each state $s$ to the action $a$.
+where $\pi(s)$ is a policy mapping each state $s$ to an action $a$.
 While in a given state, the agent picks the action that gives it the greatest reward.
-A stochastic policy gives the agent 
+A stochastic policy $\pi(a \mid s)$ maps states to distributions over actions.
+
+At time $t$, the return 
 
 ### Bellman Equations
 
