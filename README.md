@@ -1,282 +1,168 @@
 # Dominion ML — Reinforcement Learning for Dominion
 
-——— Work in progress ———
+Dominion ML is a work-in-progress reinforcement-learning project for training agents to play the deck-building game **Dominion**. The repository layers a Gymnasium-style buy-phase environment, a Dueling/Double DQN training loop, diagnostics tooling, and replay visualization on top of a bundled copy of [Pyminion](https://github.com/evanofslack/pyminion).
 
-This project explores reinforcement learning approaches to training bots that can play the deck-building board game *Dominion*. It builds on the [Pyminion](https://github.com/evanofslack/pyminion) library, providing an environment wrapper and experimental reinforcement learning agents.
+## Current status
 
-Johnson Liu\
-<sub><small>
-GitHub: [@johnson-liu-code](https://github.com/johnson-liu-code)\
-</small></sub>
-<sup><small>
-Email: [liujohnson.jl@gmail.com](mailto:liujohnson.jl@gmail.com)
-</small></sup>
+The current codebase is an experimental buy-phase RL stack rather than a finished Dominion-playing agent.
 
----
+- **Game engine:** the repository vendors Pyminion under `pyminion_master/` and uses it to run two-player Dominion games.
+- **Supported RL environment:** `DominionBuyPhaseEnv` exposes only the RL agent's buy decision. Action, treasure, cleanup, and the opponent turn are handled internally between environment steps.
+- **Player count:** training currently supports exactly one scripted opponent, so games are always two-player: the RL agent plus one opponent bot.
+- **Card set:** the training entry point currently exposes `BASE_CARDS` as the configured card-set key.
+- **Opponent bots:** the supported opponent names in the training config are `BigMoney` and `BigMoneyUltimate`.
+- **Agent/trainer:** `src/agent_rl/train_dqn.py` implements a Dueling DQN with legal-action masking, replay buffer learning, target-network updates, checkpointing, resume/continuation support, and optional diagnostics.
+- **Repository tests:** the checked-in tests cover environment card-count behavior and replay-state serialization/reconstruction.
+- **Known limitations:** the project does not yet expose a full action-phase RL policy, does not yet evaluate against a broad benchmark suite, and does not currently include a checked-in `config/train_agent.json`; use `config/train_agent_example.txt` as the template/reference when creating one locally.
 
-## Table of Contents
+## Repository layout
 
-- [Project Overview](#project-overview)
-  - [Goal](#goal)
-  - [Current Progress](#current-progress)
-  - [Future Plans](#future-plans)
-- [General Structure](#general-structure)
-- [Some notes](#some-notes)
-- [Module Relationships & Data Flow](#module-relationships--data-flow)
-  - [Dependency Graph (ASCII Diagram)](#dependency-graph-ascii-diagram)
-  - [Module Relationship Table](#module-relationship-table)
-  - [Data Flow Pipeline](#data-flow-pipeline)
-  - [Output Artifact Structure](#output-artifact-structure)
-- [Diagnostics](#diagnostics)
-  - [Enable diagnostics](#enable-diagnostics)
-  - [Diagnostics outputs](#diagnostics-outputs)
-  - [Generate the plots and report](#generate-the-plots-and-report)
-  - [Interpreting small runs](#interpreting-small-runs)
-- [Design Decisions (potentially outdated section)](#design-decisions-potentially-outdated-section)
-- [Detailed DQN Structure Overview](#detailed-dqn-structure-overview)
-  - [DQN Structure (at a glance)](#dqn-structure-at-a-glance)
-  - [1) Learning Setup: What the Agent Actually Learns](#1-learning-setup-what-the-agent-actually-learns)
-  - [2) State (Observation) Structure](#2-state-observation-structure)
-  - [3) Action-Space Constraints via Legal Masking](#3-action-space-constraints-via-legal-masking)
-  - [4) Network Architecture: Dueling DQN MLP](#4-network-architecture-dueling-dqn-mlp)
-  - [5) Exploration Strategy](#5-exploration-strategy)
-  - [6) Replay Buffer and Off-Policy Learning](#6-replay-buffer-and-off-policy-learning)
-  - [7) Target Computation: Double DQN with Masked Argmax](#7-target-computation-double-dqn-with-masked-argmax)
-  - [8) Optimization and Stability Mechanisms](#8-optimization-and-stability-mechanisms)
-  - [9) Reward Composition and Learning Signal](#9-reward-composition-and-learning-signal)
-  - [10) Temporal Granularity and Credit Assignment](#10-temporal-granularity-and-credit-assignment)
-  - [11) Logging, Checkpointing, and Diagnostics Integration](#11-logging-checkpointing-and-diagnostics-integration)
-  - [12) Why This DQN Design Fits the Current Project Stage](#12-why-this-dqn-design-fits-the-current-project-stage)
-
----
-
-## Project Overview
-
-### Goal
-
-Create a framework to train reinforcement learning agents to play Dominion.
-
-### Current Progress
-
-- **Environment**: Dominion game environment built on top of Pyminion (`dominion_env.py`, `dominion_env_factory.py`, `wrappers.py`)
-- **Agents**: Includes `DummieBot` baseline and early DQN agent implementations (`train_dqn.py`)
-- **Training I/O**: Full logging pipeline (`training_io.py`) with checkpoints, metrics, and turn events
-
-### Future Plans
-
-- Train robust DQN agents that outperform scripted baselines
-- Experiment with curriculum learning (start with basic cards, progressively add complexity)
-- Extend to multi-phase agents (action + buy decision-making)
-- Compare shared vs. separate models for multi-phase learning
-- Evaluate agent performance using custom metrics and comparisons to human-style strategies
-
----
-
-## General Structure
-
-The repository is organized around a small RL stack layered on top of a bundled copy of Pyminion:
-
-```
-Dominion_AI_ML/
-├── README.md                        # Project overview + onboarding report
-├── docs/                            # Research notes and reports
-│   ├── reports/                     # Internal reports
-│   └── research/                    # External reading material
-├── scripts/                         # Standalone entry points and analysis
-│   ├── train_agent.py               # Entry point for training experiments
-│   ├── plot_episode_metrics.py      # Plot reward/score trends from CSV logs
-│   ├── plot_final_deck_card_trends.py # Analyze deck composition evolution
-│   ├── reorganize_run_artifacts.py  # Utility for managing output structure
-│   └── logs/                        # Historical training logs
-├── src/                             # Core RL implementation
-│   ├── __init__.py
-│   └── agent_rl/                    # RL environments, bots, and training loops
-│       ├── __init__.py
-│       ├── dominion_env.py          # DominionBuyPhaseEnv (Gymnasium wrapper)
-│       ├── dominion_env_factory.py  # make_env() factory for seeded environments
-│       ├── train_dqn.py             # train_buy_phase() DQN training loop
-│       ├── dummie_bot.py            # DummieBot baseline agent
-│       ├── training_io.py           # TrainingRunWriter, checkpoint I/O
-│       ├── logging_utils.py         # Logging configuration
-│       ├── run_dummy_agent.py       # Manual agent runner (debugging tool)
-│       ├── wrappers.py              # Gym-style environment wrappers/aliases
-│       ├── card_catalog.py          # BASE_CARDS enumeration
-│       └── __pycache__/
-├── data/                            # Training data and outputs
-│   └── training/                    # Training run directories
-│       ├── training_005/            # Example completed training run
-│       │   ├── episode_data_over_time.csv    # Metrics: episode, steps, reward
-│       │   ├── model_weights_over_time.csv   # Network parameters evolution
-│       │   ├── final_decks.json              # Card composition per player
-│       │   ├── episodes/                     # Turn-by-turn event logs (JSONL)
-│       │   │   ├── episode_000000_turns.jsonl
-│       │   │   ├── episode_000001_turns.jsonl
-│       │   │   └── ...
-│       │   └── checkpoints/                  # Model snapshots (.pt)
-│       │       ├── checkpoint_latest.pt
-│       │       ├── checkpoint_best.pt
-│       │       └── ...
-│       ├── training_006/
-│       └── training_007/
-├── claude/                          # Claude model evaluation data
-│   ├── episode_010000_turns.jsonl   # Turn-by-turn records from Claude runs
-│   ├── episode_010001_turns.jsonl
-│   └── ...
-├── pyminion_master/                 # Bundled Pyminion repo (vendor—do not edit)
-│   ├── LICENSE
-│   ├── README.md
-│   ├── setup.py
-│   ├── pyminion/                    # Game engine (Game, Player, Bot, cards)
-│   │   ├── core.py                  # Card, DeckCounter, Supply abstractions
-│   │   ├── game.py                  # Game loop and phase management
-│   │   ├── player.py                # Player state (deck, hand, discard)
-│   │   ├── bot.py                   # Bot interface and examples
-│   │   ├── effects.py               # Card effect system
-│   │   ├── exceptions.py
-│   │   ├── duration.py
-│   │   ├── decider.py
-│   │   ├── human.py
-│   │   ├── result.py
-│   │   ├── simulator.py
-│   │   ├── expansions/              # Card definitions (base, intrigue, seaside, alchemy)
-│   │   │   ├── base.py              # Base set cards (Copper, Silver, Province, etc.)
-│   │   │   ├── intrigue.py
-│   │   │   ├── seaside.py
-│   │   │   └── alchemy.py
-│   │   ├── bots/                    # Bot implementations
-│   │   │   ├── bot.py               # Base Bot class
-│   │   │   ├── optimized_bot.py
-│   │   │   └── custom_bots/
-│   │   └── __pycache__/
-│   ├── tests/
-│   └── examples/
-├── replay_viewer/                   # HTML replay viewer
-│   └── dominion_replay_viewer.html
-├── __pycache__/
-└── (Note: __pycache__/ and .pyc files are auto-generated and ignored)
+```text
+.
+├── README.md
+├── config/
+│   └── train_agent_example.txt        # Documented JSON config examples
+├── data/training/training_010/        # Checked-in sample diagnostics from an earlier run
+├── docs/                              # Research notes, reports, and images
+├── pyminion_master/                   # Vendored Pyminion engine and tests
+├── replay_viewer/
+│   └── dominion_replay_viewer.html    # Browser-based JSONL replay viewer
+├── scripts/
+│   ├── train_agent.py                 # Training CLI; reads a JSON config
+│   ├── analyze_midgame_policy.py      # Policy-analysis helper
+│   ├── generate_diagnostics_report.py # Builds text summaries from diagnostics CSVs
+│   ├── plot_diagnostics.py            # Builds diagnostics plots
+│   ├── plot_episode_metrics.py        # Plots reward/score-diff episode metrics
+│   ├── plot_final_deck_card_trends.py # Analyzes deck-composition trends
+│   └── reorganize_run_artifacts.py    # Moves run outputs into tiered folders
+├── src/agent_rl/
+│   ├── card_catalog.py                # Base-card action/observation catalog
+│   ├── diagnostics.py                 # Training diagnostics collectors/rollups
+│   ├── dominion_env.py                # Gymnasium buy-phase environment
+│   ├── dominion_env_factory.py        # Environment factory
+│   ├── dummie_bot.py                  # RL-agent bot shim used by the environment
+│   ├── replay_state.py                # Replay-state snapshot/reconstruction helpers
+│   ├── train_dqn.py                   # Dueling/Double DQN trainer
+│   ├── training_io.py                 # Run directories, CSV/JSONL/checkpoint I/O
+│   └── wrappers.py                    # Environment alias/future wrapper hook
+├── tests/
+│   ├── test_dominion_env_counts.py
+│   └── test_replay_state.py
+└── writeup.md                         # Project writeup/notes
 ```
 
----
+## Environment and dependencies
 
-## Some notes
+There is no root-level dependency lockfile yet. The current Python code imports the following major packages:
 
-- **Pyminion is the underlying game engine.** All game rules, card definitions, and turn mechanics live in `pyminion_master`. Treat it as vendor code; keep custom logic in `src/agent_rl`.
-- **The RL environment is buy-phase only.** `DominionBuyPhaseEnv` (in `dominion_env.py`) internally advances the game through action and treasure phases, exposing only buy decisions to the agent.
-- **Action space is fixed.** The environment uses a fixed action space (one per card + pass).
-- **The training loop is intentionally minimal.** `train_dqn.py` is a small DQN baseline with a replay buffer, masking logic, and target network syncs. This is just a starting point.
+- `gymnasium`
+- `numpy`
+- `torch`
+- `pandas`
+- `matplotlib`
+- `pytest` for tests
 
----
+A typical local setup is:
 
-## Module Relationships & Data Flow
-
-### Dependency Graph (ASCII Diagram)
-
-```
-scripts/train_agent.py  [CONFIG & ENTRY POINT]
-    │
-    ├─→ agent_rl.dominion_env_factory.make_env()
-    │       │
-    │       ├─→ pyminion.Game (from pyminion_master/)
-    │       ├─→ pyminion.expansions.base (BASE_CARDS)
-    │       ├─→ agent_rl.dummie_bot.DummieBot [RL Agent]
-    │       │       └─→ pyminion.bots.Bot (base class)
-    │       │
-    │       └─→ agent_rl.wrappers.DominionBuyPhaseEnv
-    │               └─→ agent_rl.dominion_env.DominionBuyPhaseEnv (Gymnasium wrapper)
-    │                   └─→ pyminion.Game (manages game loop)
-    │
-    ├─→ agent_rl.train_dqn.train_buy_phase() [TRAINING LOOP]
-    │       │
-    │       ├─→ torch.nn.Module (DQN network)
-    │       ├─→ agent_rl.training_io.TrainingRunWriter [LOGGING]
-    │       │       └─→ data/training/training_XXX/ (checkpoints, CSV, JSONL)
-    │       │
-    │       └─→ agent_rl.training_utils.EpisodeProgress [METRICS]
-    │
-    └─→ agent_rl.card_catalog.BASE_CARDS [CARD ENUMERATION]
-
-ANALYSIS PIPELINE (post-training):
-    agent_rl.training_io [Read artifacts]
-        │
-        ├─→ scripts/plot_episode_metrics.py [Episode metrics plotting]
-        ├─→ scripts/plot_final_deck_card_trends.py [Deck composition analysis]
-        └─→ scripts/reorganize_run_artifacts.py [Output structure management]
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install gymnasium numpy torch pandas matplotlib pytest
 ```
 
-### Module Relationship Table
+The vendored Pyminion package is imported directly from the repository (`pyminion_master`) by the project scripts and tests.
 
-| **Module** | **Key Classes/Functions** | **Purpose** | **Depends On** | **Used By** |
-|---|---|---|---|---|
-| **dominion_env.py** | `DominionBuyPhaseEnv` (class) | Wraps Pyminion Game as Gymnasium environment; exposes buy-phase decisions; internally runs action/treasure/cleanup phases | `pyminion.Game`, `numpy`, `gymnasium` | `dominion_env_factory.make_env()`, `train_dqn.train_buy_phase()` |
-| **dominion_env_factory.py** | `make_env(cards, seed, opponent)` | Factory function; creates seeded 2-player environments with configurable card sets and one scripted opponent | `DominionBuyPhaseEnv`, `DummieBot`, `pyminion` | `train_agent.py` (config entry point) |
-| **train_dqn.py** | `train_buy_phase(config)` | Main DQN training loop; epsilon-greedy exploration, replay buffer, target network syncs, action masking | `torch`, `training_io.TrainingRunWriter`, environment from `make_env()` | `train_agent.py` |
-| **dummie_bot.py** | `DummieBot` (class) | Simple baseline bot with hardcoded buy priority (Province > Duchy > Estate); implements `pyminion.bots.Bot` interface | `pyminion.bots.Bot`, `pyminion.expansions.base` | `dominion_env_factory.make_env()` (as RL agent) |
-| **training_io.py** | `TrainingRunWriter` (class) | Serializes training artifacts; saves checkpoints (.pt), episode metrics (CSV), turn events (JSONL), manages data/training/run_XXX/ structure | `pathlib`, `torch`, `json`, `csv` | `train_dqn.train_buy_phase()` |
-| **logging_utils.py** | `setup_logging()` | Configures Python logging for training sessions | `logging` | `train_agent.py`, training modules |
-| **wrappers.py** | `DominionBuyPhaseEnv` (alias) | Lightweight wrapper/alias; placeholder for future multi-phase extensions (e.g., `ActionPhaseEnv`) | `dominion_env.DominionBuyPhaseEnv` | `dominion_env_factory.make_env()` |
-| **card_catalog.py** | `BASE_CARDS` (dict/list) | Enumerated list of available cards in base Dominion set; card name → ID mappings | — | `dominion_env.py`, `dominion_env_factory.py` |
-| **run_dummy_agent.py** | `main()` | Manual agent runner for debugging; runs environment without training | `dominion_env_factory.make_env()` | Direct CLI invocation |
+## Running tests
 
-### Data Flow Pipeline
+From the repository root:
 
-**Typical training execution:**
+```bash
+python -m pytest tests
+```
 
-1. **Configuration** → `scripts/train_agent.py` loads hyperparameters (gamma, epsilon, LR, card set, seed)
+You can also run the vendored Pyminion test suite separately if you are changing Pyminion itself:
 
-2. **Environment Creation** → `dominion_env_factory.make_env()` instantiates:
-   - Pyminion `Game` object with the specified card set
-   - `DummieBot` as the scripted RL agent
-   - Wraps it as a `DominionBuyPhaseEnv` (Gymnasium interface)
+```bash
+python -m pytest pyminion_master/tests
+```
 
-3. **Episode Loop** (inside `train_dqn.train_buy_phase()`):
-   - `env.reset()` → Initial observation (supply state, hand state, resources)
-   - DQN Q-network selects action via ε-greedy: $Q(s, a) = \text{DQN}(s)$ masked to valid actions
-   - `env.step(action)` → 
-     - Internally executes: buy phase → cleanup phase → opponent turns → next buy phase
-     - Returns: `(observation', reward, done, info)`
-   - Store `(s, a, r, s', done)` in replay buffer
-   - Sample minibatch → compute TD loss → gradient step
-   - Update target network every $N$ steps
-   - Decay ε
+## Training workflow
 
-4. **Logging** (via `training_io.TrainingRunWriter`):
-   - Every episode: append to `episode_data_over_time.csv` (episode#, total_reward, epsilon, etc.)
-   - Every turn: append to `episodes/episode_XXXXX_turns.jsonl` (hand, buys, supply, money snapshot)
-   - Every checkpoint: save model weights to `checkpoints/checkpoint_latest.pt` and roll up best model
-   - Final: save `final_decks.json` (deck composition per player)
+The training CLI expects a JSON config file. By default it looks for `config/train_agent.json`, which is intentionally not checked in at the moment. Create it from the examples documented in `config/train_agent_example.txt`.
 
-5. **Evaluation** (post-training):
-   - `scripts/plot_episode_metrics.py`: reads `episode_data_over_time.csv` → plots reward trends
-   - `scripts/plot_final_deck_card_trends.py`: reads `final_decks.json` + episodes/ → analyzes card acquisition patterns
-   - `scripts/plot_diagnostics.py`: reads `diagnostics/*.csv` → generates training-diagnostics plots
-   - `scripts/generate_diagnostics_report.py`: reads `diagnostics/*.csv` → writes a plain-text diagnostics summary
-   - `scripts/reorganize_run_artifacts.py`: tidies output directory structure
+Minimal example:
 
-### Output Artifact Structure
+```json
+{
+  "cards": "BASE_CARDS",
+  "seed": 4991,
+  "opponent_bots": ["BigMoney"],
+  "output_dir": "data/training",
+  "run_dir": null,
+  "resume_from": null,
+  "continue_training": {
+    "enabled": false,
+    "checkpoint_path": null,
+    "output_dir": null,
+    "run_dir": null,
+    "inherit_optimizer_state": true,
+    "inherit_epsilon_schedule": true
+  },
+  "training": {
+    "episodes": 100,
+    "turn_limit": 250,
+    "batch_size": 64,
+    "gamma": 0.99,
+    "epsilon": 1.0,
+    "eps_decay": 0.9995,
+    "eps_min": 0.05,
+    "target_update": 1000,
+    "checkpoint_every": 200,
+    "latest_every": 1,
+    "save_turns": true,
+    "save_turns_every": 100,
+    "progress_bar": true,
+    "enable_diagnostics": true
+  }
+}
+```
 
-Each training run in `data/training/training_XXX/` produces:
+Run training with:
 
-| **File/Dir** | **Content** | **Format** |
-|---|---|---|
-| `episode_data_over_time.csv` | Aggregate metrics per episode: episode #, total steps, total reward, epsilon, loss | CSV (header: episode, steps, reward, epsilon, loss, ...) |
-| `model_weights_over_time.csv` | Network parameter statistics (optional); can track weight norms, gradient magnitudes | CSV |
-| `final_decks.json` | Terminal deck composition for each player at end of training | JSON dict: `{player_name: [card, card, ...]}` |
-| `episodes/episode_XXXXX_turns.jsonl` | Turn-by-turn event log per episode; each line is a turn snapshot | JSONL (one JSON object per turn with keys: hand, buys, money, supply_state, etc.) |
-| `checkpoints/checkpoint_latest.pt` | Most recent model weights + optimizer state; for resuming training | PyTorch .pt (serialized state_dict) |
-| `checkpoints/checkpoint_best.pt` | Best model by eval metric (highest reward or win rate); for inference | PyTorch .pt |
-| `checkpoints/checkpoint_XXXXX.pt` | Periodic snapshots (every N episodes) | PyTorch .pt |
+```bash
+python scripts/train_agent.py --config config/train_agent.json
+```
 
----
+### Resuming and continuing training
 
-## Diagnostics
+The trainer supports two checkpoint workflows:
 
-The training pipeline can collect extra diagnostics about the RL agent's buy decisions, affordability windows, and end-of-episode deck composition.
+1. **In-place resume** with the top-level `resume_from` field. This continues writing artifacts into the source run directory inferred from the checkpoint path.
+2. **Forked continuation** with `continue_training.enabled: true`. This loads an old checkpoint but writes new artifacts to a new run directory, optionally inheriting optimizer state and/or epsilon schedule.
 
-### Enable diagnostics
+See `config/train_agent_example.txt` for complete examples of both workflows.
 
-Set `"enable_diagnostics": true` under `"training"` in `config/train_agent.json`.
+## Training artifacts
 
-Example:
+Runs are written under `data/training/training_XXX/` unless `run_dir` chooses a specific location. The writer creates or updates these artifacts:
+
+| Path | Purpose |
+| --- | --- |
+| `episode_data_over_time.csv` | Per-episode reward, score, epsilon, loss, and timing summary. |
+| `model_weights_over_time.csv` | Index of saved checkpoints by episode. |
+| `final_decks.json` | End-of-episode deck snapshots. |
+| `episodes/.../episode_XXXXXX_turns.jsonl` | Optional turn/replay logs, stored in tiered episode folders. |
+| `checkpoints/checkpoint_latest.pt` | Latest checkpoint for resume. |
+| `checkpoints/checkpoint_ep_*/checkpoint_ep_XXXXXX.pt` | Periodic checkpoints in tiered checkpoint folders. |
+| `continuation_metadata.json` | Provenance metadata for forked continuation runs. |
+| `diagnostics/*.csv` | Optional diagnostic CSVs when diagnostics are enabled. |
+
+The repository currently includes sample diagnostics from `data/training/training_010/` but does not include full model checkpoints.
+
+## Diagnostics and analysis
+
+Enable diagnostics with:
 
 ```json
 {
@@ -286,319 +172,55 @@ Example:
 }
 ```
 
-Then run training normally:
+Then use the analysis scripts against a run's diagnostics folder:
 
-```powershell
-python scripts/train_agent.py --config config/train_agent.json
-```
-
-Each run writes a `diagnostics/` directory under `data/training/training_XXX/`.
-
-### Diagnostics outputs
-
-The `diagnostics/` directory contains:
-
-- `episode_summary.csv`: one row per episode with win/loss, reward, coin thresholds, buy counts, and final deck composition
-- `buy_decisions.csv`: one row per RL buy decision with current coins, affordable cards, selected action, epsilon, and Q-value context
-- `rolling_metrics.csv`: rolling aggregates for economy development, purchase timing, greening tempo, conditional choices, and training-process metrics
-- `coin_bucket_summary.csv`: per-episode coin-bucket action and pass-rate summaries (buckets 2,3,4,5,6,7,8+)
-- `training_step_metrics.csv`: per-update loss/TD/Q diagnostics for train-process analysis
-- `results/plots/*.png`: generated diagnostics charts
-- `results/diagnostics_report.txt`: plain-text summary and interpretation
-
-### Generate the plots and report
-
-Replace `training_XXX` with the run you want to inspect.
-
-```powershell
-python scripts/plot_diagnostics.py data/training/training_XXX/diagnostics
-python scripts/generate_diagnostics_report.py data/training/training_XXX/diagnostics
-```
-
-Example:
-
-```powershell
+```bash
 python scripts/plot_diagnostics.py data/training/training_010/diagnostics
 python scripts/generate_diagnostics_report.py data/training/training_010/diagnostics
 ```
 
-### Interpreting small runs
+The diagnostics pipeline can produce/consume:
 
-Short runs produce noisy metrics. With very small numbers of episodes, rolling diagnostics are still generated, but the charts should be treated as sanity checks rather than evidence of learning. For meaningful trend analysis, use substantially more than 10 episodes.
+- `episode_summary.csv`
+- `buy_decisions.csv`
+- `rolling_metrics.csv`
+- `coin_bucket_summary.csv`
+- `training_step_metrics.csv`
+- generated plots under `results/plots/`
+- a generated text report under `results/diagnostics_report.txt`
 
----
+For short runs, treat diagnostics as sanity checks rather than evidence of stable learning.
 
-## Design Decisions (potentially outdated section)
+## Replay viewer
 
-### 1. Single-Player Simplification
+`replay_viewer/dominion_replay_viewer.html` is a standalone browser viewer for turn JSONL logs written by training runs. Open it in a browser and load a generated `episode_XXXXXX_turns.jsonl` file from a run's `episodes/` tree.
 
-We treat Dominion as a single-player optimization problem (the RL agent plays against a fixed scripted opponent). This simplifies game state representation and agent training.
+## Implementation notes
 
-This eliminates need to model opponent behavior; focuses learning on agent's buy/action strategy against a known opponent.
+### Environment step semantics
 
-### 2. Buy-Phase Only vs. Multi-Phase Agent
+One RL `env.step(action)` corresponds to one buy decision by the RL agent. The environment then advances the game through cleanup and the opponent's turn until the next RL buy decision or terminal state. Observations combine supply counts, agent hand counts, agent owned-zone counts, opponent owned-zone counts, and scalar turn/economy/score features.
 
-**Current**: Buy-phase only
-- Simplifies observation/action space
-- RL agent sees buying decisions; internal turn automation handles action/treasure/cleanup phases
+### Action legality
 
-**Future**: Multi-phase agent
-- Extend `DominionBuyPhaseEnv` to `DominionFullEnv` that exposes action phase
-- Share or separate Q-networks between action and buy phases
-- Options: multi-headed network, phase-encoded observation, or separate models with curriculum learning
+The action space has one action per configured card plus one pass action. Legal-action masking prevents the trainer from selecting or bootstrapping against impossible buys; pass is always legal.
 
-### 3. Separate Models vs. Shared Model (Action + Buy Phases)
+### DQN design
 
-If extending to multi-phase agents, options include:
+The current neural-network baseline is a Dueling DQN MLP with:
 
-| Approach | Advantage | Disadvantage |
-|----------|-----------|--------------|
-| **Separate models** | Clear separation of concerns; independent skill learning | 2× parameters; potential redundancy in learning |
-| **Multi-headed network** | Shared body learns common features (coins, hand state); separate output heads | Slightly more complex; coordination overhead |
-| **Phase-encoded single network** | Single model handles both phases; phase signal in observation | All outputs must have consistent size; less modular |
-| **Curriculum learning** | Train separate models first, then fine-tune joint model | Multi-stage training; more bookkeeping |
+- input `LayerNorm`
+- three shared fully connected ReLU layers
+- separate value and advantage heads
+- epsilon-greedy exploration over legal actions only
+- replay-buffer sampling
+- Double DQN target computation
+- periodic hard target-network syncs
 
+## Near-term project direction
 
----
-
-## Detailed DQN Structure Overview
-
-This section provides a deeper technical breakdown of the DQN implementation used in `src/agent_rl/train_dqn.py` and how it interacts with the buy-phase environment.
-
-### DQN Structure (at a glance)
-
-The implemented network is a **dueling DQN** with one shared MLP trunk and two output heads:
-
-| Stage | Layer | Output shape (single sample) | Purpose |
-|---|---|---|---|
-| Input | Observation vector | `(4K + 6,)` | Encodes supply, hand, deck zones, opponent zones, and scalar turn/economy features |
-| Normalize | `LayerNorm(input_dim)` | `(4K + 6,)` | Stabilizes feature scales across heterogeneous numeric inputs |
-| Trunk-1 | `Linear(input_dim, 256)` + ReLU | `(256,)` | First shared representation layer |
-| Trunk-2 | `Linear(256, 256)` + ReLU | `(256,)` | Higher-capacity shared feature extraction |
-| Trunk-3 | `Linear(256, 128)` + ReLU | `(128,)` | Compressed latent state representation |
-| Value stream | `Linear(128,128)` + ReLU + `Linear(128,1)` | `(1,)` | Estimates scalar state value `V(s)` |
-| Advantage stream | `Linear(128,128)` + ReLU + `Linear(128,K+1)` | `(K+1,)` | Estimates per-action advantages `A(s,a)` |
-| Aggregation | `Q = V + (A - mean(A))` | `(K+1,)` | Produces final Q-values over all buy actions + pass |
-
-In other words, for each observation, the network outputs one Q-value per action slot in the fixed action space (`K` cards + pass). Illegal actions are then masked out before greedy action selection and before next-state argmax in Double DQN target computation.
-
-### 1) Learning Setup: What the Agent Actually Learns
-
-The current agent learns a **buy-phase policy** only. At each environment step, it chooses one discrete action from:
-
-- `0..K-1`: buy one of the `K` tracked cards in `card_names`
-- `K`: pass (buy nothing)
-
-The action dimension is therefore `K + 1`.
-
-Formally, the network approximates:
-
-\[
-Q_\theta(s, a) \approx \mathbb{E}\left[\sum_{t=0}^{\infty} \gamma^t r_{t+1} \mid s_0=s, a_0=a\right]
-\]
-
-where the transition dynamics are induced by full Dominion turn progression (agent buy + cleanup + opponent turns + next agent turn).
-
----
-
-### 2) State (Observation) Structure
-
-The environment observation is a flat vector with shape:
-
-\[
-\text{obs\_dim} = 4K + 6
-\]
-
-concatenating:
-
-1. **Supply counts** (`K`): remaining cards per supply pile
-2. **Agent hand counts** (`K`): card histogram for current hand
-3. **Agent zone counts** (`K`): deck + hand + discard histogram
-4. **Opponent zone counts** (`K`): single-opponent deck + hand + discard histogram
-5. **Scalar features** (`6`):
-   - actions remaining
-   - buys remaining
-   - money available
-   - turn index
-   - current score difference (agent minus opponent)
-   - total owned cards in agent zones
-
-This representation mixes **economy state**, **deck composition**, **supply depletion**, and **game progression** in one vector suitable for MLP processing.
-
----
-
-### 3) Action-Space Constraints via Legal Masking
-
-Although the action space is fixed-size, Dominion legality changes by state. The implementation constructs a binary mask each step:
-
-- action is legal if pile exists, pile non-empty, cost ≤ current money, and buys > 0
-- pass action is always legal
-
-Masking is used in two places:
-
-1. **Behavior policy** (selection): illegal actions are forced to very negative Q before argmax
-2. **Bootstrap target** (Double DQN): next-state argmax is computed only over legal actions
-
-This is critical: it prevents the learner from exploiting impossible actions and reduces overestimation artifacts from invalid max operations.
-
----
-
-### 4) Network Architecture: Dueling DQN MLP
-
-The model class is `DuelingDQN`, with a shared trunk plus value/advantage heads.
-
-#### Shared trunk
-
-- `LayerNorm(input_dim)`
-- `Linear(input_dim, 256)` + ReLU
-- `Linear(256, 256)` + ReLU
-- `Linear(256, 128)` + ReLU
-
-#### Heads
-
-- **Value head**: `128 -> 128 -> 1`
-- **Advantage head**: `128 -> 128 -> (K+1)`
-
-Combined as:
-
-\[
-Q(s,a)=V(s) + \left(A(s,a) - \frac{1}{|\mathcal{A}|}\sum_{a'}A(s,a')\right)
-\]
-
-This dueling factorization helps when many actions have similar effects by allowing the network to separately model:
-
-- overall state quality (`V(s)`)
-- relative preference among actions (`A(s,a)`)
-
-LayerNorm at input stabilizes training under heterogeneous feature scales (supply counts, score deltas, money, turn index, etc.).
-
----
-
-### 5) Exploration Strategy
-
-The policy is **epsilon-greedy** with multiplicative decay:
-
-- Start: `epsilon` (default 1.0)
-- Per step update: `epsilon <- max(eps_min, epsilon * eps_decay)`
-- Floor: `eps_min` (default 0.05)
-
-When exploring, a random action is sampled **only from legal actions**. This keeps exploration realistic and avoids wasting transitions on impossible moves.
-
----
-
-### 6) Replay Buffer and Off-Policy Learning
-
-Transitions are stored in a uniform replay buffer (`deque`), each tuple containing:
-
-\[
-(s_t, a_t, r_t, s_{t+1}, done_t, mask_{t+1})
-\]
-
-where `mask_{t+1}` is explicitly persisted so target computation can respect future legality at train time.
-
-Training starts once replay size reaches `batch_size`, then each update samples a random minibatch to reduce temporal correlation and improve sample efficiency.
-
----
-
-### 7) Target Computation: Double DQN with Masked Argmax
-
-For each sampled transition, the training code computes:
-
-1. **Current estimate**
-
-$Q_\theta(s_t,a_t)$
-
-2. **Action selection network** (online net, masked legality)
-
-$a^* = \arg\max_a Q_\theta(s_{t+1},a)\quad\text{with illegal actions excluded}$
-
-3. **Action evaluation network** (target net)
-
-$V_{t+1}=Q_{\bar\theta}(s_{t+1},a^*)$
-
-4. **Bootstrapped target**
-
-$y_t = r_t + \gamma(1-d_t)V_{t+1}$
-
-5. **Loss**
-
-$\mathcal{L}=\text{MSE}\left(Q_\theta(s_t,a_t), y_t\right)$
-
-This is Double DQN because argmax uses the online network while value extraction uses the target network.
-
----
-
-### 8) Optimization and Stability Mechanisms
-
-- Optimizer: **Adam** (`lr=1e-3`)
-- Loss: **MSELoss**
-- Gradient step: one update per environment step after warmup threshold
-- Target sync: hard copy `policy_net -> target_net` every `target_update` global steps
-- Device: CUDA if available, else CPU
-
-The hard-sync target network reduces moving-target instability during bootstrapped learning.
-
----
-
-### 9) Reward Composition and Learning Signal
-
-The step reward in the buy-phase environment is shaped from multiple terms:
-
-- Illegal action penalty
-- Pass penalty (small negative)
-- Card-type-dependent shaping (curse/victory/treasure effects)
-- Deck dilution penalty based on owned-card count
-- Terminal/game-end score-based adjustments
-- End-of-episode score differential augmentation in trainer
-
-This produces a dense training signal intended to accelerate learning of economically coherent purchase behavior, while still tying outcomes to final Dominion scoring dynamics.
-
----
-
-### 10) Temporal Granularity and Credit Assignment
-
-One RL `step` corresponds to **one agent buy decision**, but the environment transition spans:
-
-1. agent buy
-2. cleanup/end-turn
-3. full opponent turns
-4. start of next agent buy phase
-
-Therefore the MDP is effectively semi-aggregated at decision points. The Q-function must learn long-horizon consequences of buy choices through intervening opponent and draw dynamics.
-
----
-
-### 11) Logging, Checkpointing, and Diagnostics Integration
-
-The DQN loop is tightly integrated with run artifact tooling:
-
-- episode metrics CSV logging
-- turn-event JSONL persistence
-- periodic/latest checkpoint snapshots (`policy`, `target`, optimizer, epsilon, step counters)
-- optional diagnostics:
-  - buy decisions + chosen Q values
-  - top-k legal Q candidates
-  - training-step loss / TD-error traces
-  - episode summary and rolling metrics
-
-This makes the implementation useful not only for training, but for **policy-behavior analysis** and debugging failure modes (e.g., over-passing, greening too early, low-economy traps).
-
----
-
-### 12) Why This DQN Design Fits the Current Project Stage
-
-The current design is a pragmatic baseline for Dominion buy-phase RL because it combines:
-
-- simple vector observations (fast experimentation)
-- legal-action masking (domain correctness)
-- dueling architecture (better action discrimination)
-- Double DQN targets (reduced overestimation)
-- replay + target net (standard deep RL stability toolkit)
-- rich artifact logging (analysis-first workflow)
-
-In short, it is not yet the final architecture for full Dominion mastery, but it is a strong and extensible baseline for iterative research on buy-phase policy quality, reward shaping, and deck-building dynamics.
-
----
-
-<!-- ![Test image 2](test_02.png) -->
-<!-- ![Test image 3](test_03.png) -->
+- Add a checked-in dependency specification for the root project.
+- Add a checked-in starter JSON config or config-generation helper.
+- Expand automated tests around trainer I/O, checkpoint resume, and diagnostics.
+- Evaluate learned policies against scripted baselines over repeated seeded games.
+- Extend beyond buy-phase-only control toward action/buy multi-phase agents.
