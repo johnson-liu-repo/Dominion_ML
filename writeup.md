@@ -64,10 +64,28 @@ a = \pi(s) \in 𝒜
 $$
 
 where $\pi(s)$ is a policy mapping each state $s$ to an action $a$.
-While in a given state, the agent picks the action that gives it the greatest reward.
+Acting on a deterministic policy, the agent picks the action that gives it the greatest reward.
 A stochastic policy $\pi(a \mid s)$ maps states to distributions over actions.
 
-At time $t$, the return 
+The state-value function
+
+$$
+V^\pi(s) = 𝔼\big[G_t \mid S_t = s\big]
+$$
+
+gives the expected return for the agent if it starts in state $s$ and follows policy $\pi$ in all future steps.
+The state-action value function
+
+$$
+Q^\pi(s,a) = 𝔼\big[G_t \mid S_t = s, A_t = a\big]
+$$
+
+gives the expected return for the agent if it starts in state $s$ and follows action $a$ and then policy $\pi$ forwards.
+The optimal policy is one in which the action-value function is maximized:
+
+$$
+\pi_\*(s) \in \mathop{\rm argmax}_{a} \ q_\*(s,a)
+$$
 
 ### Bellman Equations
 
