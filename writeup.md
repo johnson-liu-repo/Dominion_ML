@@ -46,13 +46,13 @@ where $𝒮$ is the state space, $𝒜$ is the action space, $𝒫 = P(s' \mid s
 Generally the reward is written as
 
 $$
-r(s,a,s') = 𝔼\big[ R_{t+1} \mid S_t = s, A_t = a, S_{t+1} = s' \big]
+r(s,a,s') = 𝔼\left[ R_{t+1} \mid S_t = s, A_t = a, S_{t+1} = s' \right]
 $$
 
 MDPs have the property where the probability of an event happening in the present $(s, a)$ is independent of the process's history:
 
 $$
-P \big(S_{t_1} \mid S_t, A_t \big) = P \big( S_{t+1} \mid S_t, A_t, S_{t-1}, A_{t-1}, \ldots \big) \ .
+P \big( S_{t_1} \mid S_t, A_t \big) = P \big( S_{t+1} \mid S_t, A_t, S_{t-1}, A_{t-1}, \ldots \big) \ .
 $$
 
 ### Policies, Returns, and Value Functions
@@ -69,15 +69,17 @@ A stochastic policy $\pi(a \mid s)$ maps states to distributions over actions.
 
 The state-value function
 
+<b id="eq-quadratic"></b>
+
 $$
-V^\pi(s) = 𝔼\big[G_t \mid S_t = s\big]
+V^\pi(s) = 𝔼\left[ G_t \mid S_t = s \right]  \qquad \text{(1)} \%\%\ MAGIT_PARSER_PROTECT%%
 $$
 
 gives the expected return for the agent if it starts in state $s$ and follows policy $\pi$ in all future steps.
 The state-action value function
 
 $$
-Q^\pi(s,a) = 𝔼\big[G_t \mid S_t = s, A_t = a\big]
+Q^\pi(s,a) = 𝔼\left[ G_t \mid S_t = s, A_t = a\right ]
 $$
 
 gives the expected return for the agent if it starts in state $s$ and follows action $a$ and then policy $\pi$ forwards.
@@ -88,8 +90,30 @@ $$
 $$
 
 ### Bellman Equations
+The Bellman Expectation Equations are recursive equations used for policy evaluation of fixed policies.
+Starting with the [state-value equation](#policies-returns-and-value-functions) and substituting in the definition of $G_t$, we have
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+$$
+V^\pi(s) = 𝔼\left[ \sum_{k=0}^{\infty} \gamma^k R_{t+k+1} │ S_t = s \right] \ .
+$$
+
+Separating the first term from the rest of the summation, factoring out a $\gamma$ from the remaining sum, and reindexing, we have
+
+$$
+V^\pi(s) = 𝔼\left[ \gamma^0 R_{t+1} + \gamma \sum_{k=0}^{\infty} \gamma^k R_{t+k+2} │ S_t = s\right ] \ .
+$$
+
+And applying linearity of expectation, this becomes
+
+$$
+V^\pi(s) = 𝔼\left[ \gamma^0 R_{t+1} │ S_t = s \right] + \gamma 𝔼\left[ \sum_{k=0}^{\infty} \gamma^k R_{t+k+2} │ S_t = s \right]
+$$
+
+$$
+V^\pi(s) = 𝔼\left[ R_{t+1} │ S_t = s \right] + \gamma 𝔼\left[ G_{t+1} │ S_t = s \right] \ .
+$$
+
+This equation says that the value of the current state under policy $\pi$ is the sum of the expected immediate reward of transitioning from state $s$ to $s'$ and the discounted expected future return $G_{t+1}$ starting from the next time step.
 
 ### Temporal-Difference Learning
 
