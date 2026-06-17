@@ -114,6 +114,22 @@ V^\pi(s) = 𝔼\left[ R_{t+1} │ S_t = s \right] + \gamma 𝔼\left[ G_{t+1} �
 $$
 
 This equation says that the value of the current state under policy $\pi$ is the sum of the expected immediate reward of transitioning from state $s$ to $s'$ and the discounted expected future return $G_{t+1}$ starting from the next time step.
+The expected immediate reward for being in the current state is computed as the summation over all possible actions and all possible successor states while multiplying together the probability that the agent will take action $a$ ($\pi(a|s)$) while in state $s$, the probability that the environment will transistion to state $s'$ ($P(s' | s, a)$), and the reward for transitioning to state $s'$ through action $a$ ($r(s, a, s')$):
+
+$$
+𝔼\left[ R_{t+1} │ S_t = s \right] = \sum_{a \in 𝒜} \pi(a | s) \sum_{s' \in 𝒮} P(s' | s, a) r(s, a, s') \ .
+$$
+The expected future return for being in state $s$ is found through summing over all actions and all states $s'$ and multiplying $\pi(a | s)$, $P(s' | s, a)$, and the state-value of the next state ($V^\pi (s')$):
+
+$$
+𝔼\left[ G_{t+1} │ S_t = s \right] = \sum_{a \in 𝒜} \pi(a | s) \sum_{s' \in 𝒮} P(s' | s, a) V^\pi(s') \ .
+$$
+
+Put together, we have
+
+$$
+V^\pi(s) = \sum_{a \in 𝒜} \left( \pi(a | s) \sum_{s' \in 𝒮} \left[ P(s,a,s') \left( r(s,a,s') + \gamma V^\pi(s') \right) \right] \right)
+$$
 
 ### Temporal-Difference Learning
 
