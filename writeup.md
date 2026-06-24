@@ -128,8 +128,27 @@ $$
 Put together, we have
 
 $$
-V^\pi(s) = \sum_{a \in 𝒜} \left( \pi(a | s) \sum_{s' \in 𝒮} \left[ P(s,a,s') \left( r(s,a,s') + \gamma V^\pi(s') \right) \right] \right)
+V^\pi(s) = \sum_{a \in 𝒜} \left( \pi(a | s) \sum_{s' \in 𝒮} \left[ P(s,a,s') \left( r(s,a,s') + \gamma V^\pi(s') \right) \right] \right) \ .
 $$
+
+The $Q-value$ of a state-action pair is defined as the reward received for taking action $a$ in state $s$ plus the discounted expected value of being in the new state:
+
+$$
+Q(s, a) = r(s, a) + \gamma \sum_{s' \in 𝒮} P(s' | s, a) V^\pi (s') \ . \qquad \text{(2)} \%\%\ MAGIT_PARSER_PROTECT%%
+$$
+
+If the agent follows an optimal policy $\pi^*$, then the value of being in some state is equal to the return that the agent gets from taking the optimal action within that state corresponding to the largest possible $Q$-value out of all of the agent's options:
+
+$$
+V^\*(s) = \max_a Q^\*(s,a) \ .
+$$
+
+The [state-action value equation](#bellman-equations) is then
+
+$$
+Q^\*(s, a) = r(s, a) + \gamma \sum_{s' \in 𝒮} P(s' | s, a) \max_a Q^\*(s,a) \ .
+$$
+
 
 ### Temporal-Difference Learning
 
