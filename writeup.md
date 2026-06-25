@@ -156,10 +156,10 @@ The agent then observes the immediate reward for its action and the value of the
 
 ### Temporal-Difference Learning
 
-Because the agent does not know the possibilitie of the state transitions when taking action $a$ in state $s$, $Q(s,a)$ cannot be directly computed.
-Instead, the model uses Monte Carlo estimation to iteratively update the $Q$-values of state-action pairs.
-After intializing $Q$-values (usually to 0), the agent repeatedly samples the environment to make updates to the estimation of $Q(S,A)$.
-Starting from some state and acting through policy $\pi$, the agent will visit the possible next states with frequencies that match the actual next state probility distribution.
+Because the agent does not know the probabilities of the state transitions when taking action $a$ in state $s$, $Q(s,a)$ cannot be directly computed.
+Instead, the model uses Monte Carlo sampling and bootstrapping to iteratively update the $Q$-values of state-action pairs.
+After initializing $Q$-values (usually to 0), the agent repeatedly samples the environment to make updates to the estimation of $Q(S,A)$.
+Starting from some state and acting through policy $\pi$, the agent will visit the possible next states with frequencies that match the actual next state probability distribution.
 Over many iterations, this sampling takes the place of the summation over probabilities in $Q(S,A)$ through averaging over many outcomes.
 Adapting the formula for computing $Q(S,A)$ to use in temporal-difference updates, we have
 
@@ -174,14 +174,16 @@ Q(s,a) \leftarrow (1 - \alpha)Q(s,a) + \alpha\left[ r(s,a,s') + \gamma\max_{a'}Q
 $$
 
 where $Q(s,a)$ is the old estimated value of the state-action pair, $r(s,a,s') + \gamma\max_{a'}Q(s',a')$ is the target for the update, and $\alpha$ is the learning rate.
+Gradually, $Q(S,A)$ converges onto the expectation in the Bellman optimality equation.
 
 ## Q-Learning
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-
 ### Exploration and ϵ-Greedy Action Selection
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+Using an $\epislon$-greedy policy, the agent takes action $\argmax_{a}Q*(s,a)$
+
+
 
 ### Tabular Q-Learning
 
