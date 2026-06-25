@@ -146,13 +146,34 @@ $$
 The [state-action value equation](#bellman-equations) is then
 
 $$
-Q^\*(s, a) = r(s, a) + \gamma \sum_{s' \in 𝒮} P(s' | s, a) \max_a Q^\*(s,a) \ .
+Q^\*(s, a) = r(s, a) + \gamma \sum_{s' \in 𝒮} P(s' | s, a) \max_{a'} Q^\*(s',a') \ .
 $$
 
+Although the agent is taking its best possible action, there is some uncertainty in the state transition within the environment, expressed in the summation over $P(s' | s, a)$.
+Typically, the agent does not know the environment's probability distribution for next state transitions.
+Rather than summing over all possible actions allowed within the current state to compute the expected return, the agent uses the current value for $Q(s,a)$ and some policy, such as $\epsilon$-greedy, to decide how to act.
+The agent then observes the immediate reward for its action and the value of the new state to compute a target value to update the $Q$-value of the state-action pair that lead to the new state.
 
 ### Temporal-Difference Learning
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Because the agent does not know the possibilitie of the state transitions when taking action $a$ in state $s$, $Q(s,a)$ cannot be directly computed.
+Instead, the model uses Monte Carlo estimation to iteratively update the $Q$-values of state-action pairs.
+After intializing $Q$-values (usually to 0), the agent repeatedly samples the environment to make updates to the estimation of $Q(S,A)$.
+Starting from some state and acting through policy $\pi$, the agent will visit the possible next states with frequencies that match the actual next state probility distribution.
+Over many iterations, this sampling takes the place of the summation over probabilities in $Q(S,A)$ through averaging over many outcomes.
+Adapting the formula for computing $Q(S,A)$ to use in temporal-difference updates, we have
+
+$$
+Q(s,a) \leftarrow Q(s,a) + \alpha \left[ r(s,a,s') + \gamma\max_{a'}Q(s',a') - Q(s,a) \right]
+$$
+
+or
+
+$$
+Q(s,a) \leftarrow (1 - \alpha)Q(s,a) + \alpha\left[ r(s,a,s') + \gamma\max_{a'}Q(s',a') \right]
+$$
+
+where $Q(s,a)$ is the old estimated value of the state-action pair, $r(s,a,s') + \gamma\max_{a'}Q(s',a')$ is the target for the update, and $\alpha$ is the learning rate.
 
 ## Q-Learning
 
