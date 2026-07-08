@@ -181,7 +181,7 @@ Gradually, $Q(S,A)$ converges onto the expectation in the Bellman optimality equ
 ### Exploration and ϵ-Greedy Action Selection
 
 
-Using an $\epislon$-greedy policy, the agent takes action $\argmax_{a}Q*(s,a)$
+Using an $\epsilon$-greedy policy, the agent takes action $\text{argmax}_{a}Q*(s,a)$
 
 
 

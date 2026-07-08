@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dominion · RL Match Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0b0c0e; --bg2:#0e0f12;
+  --surface:#121316; --surface2:#16181c; --surface3:#1e2126;
+  --line:rgba(231,230,226,.10); --line2:rgba(231,230,226,.19);
+  --grid:rgba(231,230,226,.035);
+  --text:#e7e6e2; --dim:#9a988f; --faint:#5f5e57;
+  --gold:#f0a23c; --gold-deep:#c47e22;        /* RL ember — the signature accent */
+  --rl:#f0a23c; --opp:#69a6bf;                 /* opponent steel/ice */
+  --good:#6bb88a; --bad:#d27873;
+  --treasure:#e3ad53; --victory:#6bb88a; --action:#69a6bf; --curse:#b487c9;
+  --shadow:0 1px 0 rgba(0,0,0,.4);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{font-family:'JetBrains Mono','Manrope',ui-monospace,monospace;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+/* engineering graticule + vignette — precise, not decorative */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:
+  repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 26px),
+  repeating-linear-gradient(90deg,var(--grid) 0 1px,transparent 1px 26px),
+  radial-gradient(130% 90% at 50% 0%,transparent 60%,rgba(0,0,0,.5) 100%);}
+#ambient{display:none;}
+#sweep{position:fixed;inset:0;pointer-events:none;z-index:30;overflow:hidden;}
+#sweep i{position:absolute;top:-10%;left:-30%;width:18%;height:120%;background:linear-gradient(105deg,transparent,rgba(240,162,60,.05),transparent);transform:skewX(-12deg);opacity:0;}
+#sweep,#sweep.go i{display:none;}
+
+#confetti{position:fixed;inset:0;z-index:9998;pointer-events:none;display:none;}
+
+.shell{position:relative;z-index:2;max-width:1240px;margin:0 auto;padding:0 24px 48px;}
+
+/* hairline-framed module with corner registration ticks — the core panel idiom */
+.panel,.seat,.supply,.chart-box,.stat-card,#rp-scoreboard,.transport,.player-compare-row,.cmp-card,.cmp-pickers,.game-item{position:relative;}
+.tick-frame::before,.tick-frame::after{content:'';position:absolute;width:7px;height:7px;pointer-events:none;opacity:.45;}
+
+/* ── INSTRUMENT HEADER ── */
+.chrome{position:sticky;top:0;z-index:40;margin:0 -26px 0;padding:0 24px;background:rgba(11,12,14,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line2);}
+.chrome-top{display:flex;align-items:center;gap:16px;padding:12px 0 12px;}
+.wordmark{display:flex;align-items:center;gap:8px;}
+.wordmark .glyph{font-family:'Fraunces',serif;font-weight:900;font-size:23px;line-height:1;color:var(--gold);}
+.wordmark .name{font-family:'Fraunces',serif;font-weight:900;font-size:19px;letter-spacing:-.01em;line-height:1;}
+.wordmark .name em{font-style:normal;color:var(--gold);}
+.wordmark .sub{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);margin-left:2px;align-self:center;border-left:1px solid var(--line2);padding-left:12px;}
+.chrome-stat{margin-left:auto;display:flex;gap:0;align-items:stretch;border:1px solid var(--line);}
+.cs-cell{padding:4px 12px;border-left:1px solid var(--line);text-align:right;}
+.cs-cell:first-child{border-left:none;}
+.cs-cell .k{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:1px;}
+.cs-cell .v{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
+.cs-cell .v.on{color:var(--gold);}
+.btn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-radius:3px;padding:8px 16px;cursor:pointer;border:1px solid transparent;transition:all .12s;white-space:nowrap;}
+.btn.primary{background:var(--gold);color:#140d02;}
+.btn.primary:hover{background:#ffb74d;}
+.btn.ghost{background:transparent;border-color:var(--line2);color:var(--text);}
+.btn.ghost:hover{background:var(--surface3);border-color:var(--gold-deep);}
+.btn.sm{padding:8px 12px;font-size:10px;}
+.btn.danger{background:transparent;border-color:rgba(210,120,115,.4);color:#d99490;}
+.btn.danger:hover{background:rgba(210,120,115,.12);}
+
+/* tabs — channel selectors */
+.tabs{display:flex;gap:0;position:relative;border-top:1px solid var(--line);}
+.tab-btn{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);background:none;border:none;border-right:1px solid var(--line);padding:8px 16px 12px;cursor:pointer;position:relative;transition:all .14s;display:flex;align-items:center;gap:8px;}
+.tab-btn .idx{font-size:9px;color:var(--faint);font-weight:700;}
+.tab-btn:hover{color:var(--text);background:var(--surface);}
+.tab-btn.active{color:var(--gold);background:var(--surface);}
+.tab-btn.active .idx{color:var(--gold);}
+.tab-btn::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .2s cubic-bezier(.3,.7,.3,1);}
+.tab-btn.active::after{transform:scaleX(1);}
+
+/* load bar */
+#load-bar{display:none;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap;}
+.load-stat{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);}
+.load-stat b{color:var(--gold);font-weight:700;}
+.pill{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:3px;border:1px solid var(--line);color:var(--faint);}
+.pill.on{border-color:rgba(107,184,138,.4);color:var(--good);}
+.diag-btn{display:inline-flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:3px;border:1px solid var(--line);background:none;color:var(--faint);cursor:pointer;transition:all .12s;}
+.diag-btn:hover{color:var(--text);border-color:var(--line2);}
+.diag-dot{width:7px;height:7px;border-radius:50%;background:var(--faint);box-shadow:0 0 0 0 currentColor;}
+.diag-dot.ok{background:var(--good);}
+.diag-dot.warn{background:var(--gold);animation:diagPulse 2s ease-in-out infinite;}
+.diag-dot.err{background:var(--bad);animation:diagPulse 1.4s ease-in-out infinite;}
+@keyframes diagPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,162,60,.5);}50%{box-shadow:0 0 0 4px rgba(240,162,60,0);}}
+.diag-btn .diag-dot.err~#diag-label,.diag-btn.has-err{color:var(--bad);}
+#diag-panel{margin-top:8px;border:1px solid var(--line2);border-radius:4px;background:var(--surface);padding:0;overflow:hidden;animation:fadeUp .25s ease;}
+.diag-head{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);}
+.diag-head .x{margin-left:auto;cursor:pointer;color:var(--faint);font-size:13px;line-height:1;}
+.diag-head .x:hover{color:var(--text);}
+.diag-list{max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--surface3) transparent;}
+.diag-list::-webkit-scrollbar{width:5px;}.diag-list::-webkit-scrollbar-thumb{background:var(--surface3);}
+.diag-row{display:flex;gap:12px;align-items:flex-start;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;line-height:1.5;}
+.diag-row:last-child{border-bottom:none;}
+.diag-row .ic{flex-shrink:0;width:15px;height:15px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:9px;margin-top:1px;}
+.diag-row.err .ic{background:rgba(210,120,115,.16);color:var(--bad);}
+.diag-row.warn .ic{background:rgba(240,162,60,.16);color:var(--gold);}
+.diag-row.ok .ic{background:rgba(107,184,138,.16);color:var(--good);}
+.diag-row .body{flex:1;min-width:0;}
+.diag-row .body b{color:var(--text);font-weight:600;}
+.diag-row .body .sub{color:var(--faint);font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:2px;}
+
+/* ── LOADER ── */
+#load-screen{display:flex;flex-direction:column;align-items:center;gap:16px;padding:64px 0 80px;text-align:center;}
+.drop{width:100%;max-width:560px;border:1px dashed var(--line2);background:var(--surface);border-radius:4px;padding:40px 32px;cursor:pointer;transition:all .16s;position:relative;}
+.drop:hover,.drop.drag-over{border-color:var(--gold);background:var(--surface2);}
+.drop.loading{border-color:var(--gold-deep);pointer-events:none;}
+.drop.loading h2::after{content:' · reading…';color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:400;}
+.drop .ic{font-size:28px;margin-bottom:12px;color:var(--gold);}
+.drop h2{font-family:'Fraunces',serif;font-weight:600;font-size:24px;margin-bottom:8px;letter-spacing:-.01em;}
+.drop p{font-size:12.5px;color:var(--dim);line-height:1.6;}
+.drop .ft{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);margin-top:12px;letter-spacing:.04em;}
+.lrow{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+
+/* ── TABS / PANELS ── */
+.tab-panel{display:none;animation:fadeUp .3s ease;}
+.tab-panel.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.panel-pad{padding-top:20px;}
+
+/* section heading — ruled with a measure tick */
+.sec-h{display:flex;align-items:center;gap:12px;margin:0 0 16px;}
+.sec-h .ttl{font-family:'Fraunces',serif;font-weight:600;font-size:18px;letter-spacing:-.01em;position:relative;padding-left:12px;}
+.sec-h .ttl::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:15px;background:var(--gold);}
+.sec-h .rule{flex:1;height:7px;align-self:center;background-image:repeating-linear-gradient(90deg,var(--line2) 0 1px,transparent 1px 7px);border-bottom:1px solid var(--line);}
+.sec-h .meta{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:var(--faint);text-transform:uppercase;}
+.sec-block{margin-bottom:32px;}
+
+/* ════════ REPLAY ════════ */
+#replay-content{display:none;}
+.rp-grid{display:grid;grid-template-columns:208px 1fr;gap:20px;padding-top:20px;}
+@media(max-width:820px){.rp-grid{grid-template-columns:1fr;}}
+/* rail */
+.rail{display:flex;flex-direction:column;gap:8px;min-width:0;}
+.rail-h{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);padding-bottom:4px;border-bottom:1px solid var(--line);}
+#game-search{width:100%;background:var(--surface);border:1px solid var(--line2);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11.5px;padding:8px 8px;border-radius:3px;}
+#game-search:focus{outline:none;border-color:var(--gold-deep);}
+.outcome-filter{display:flex;gap:0;border:1px solid var(--line);}
+.of-chip{flex:1;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;padding:4px 0;border:none;border-right:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;transition:all .12s;}
+.of-chip:last-child{border-right:none;}
+.of-chip:hover{color:var(--text);background:var(--surface);}
+.of-chip.on{color:var(--gold);background:var(--surface2);}
+.of-chip[data-f="win"].on{color:var(--good);}
+.of-chip[data-f="loss"].on{color:var(--bad);}
+#games-list{display:flex;flex-direction:column;gap:0;max-height:74vh;overflow-y:auto;border:1px solid var(--line);scrollbar-width:thin;scrollbar-color:var(--surface3) transparent;}
+#games-list::-webkit-scrollbar{width:5px;}#games-list::-webkit-scrollbar-thumb{background:var(--surface3);}
+.game-item{padding:8px 12px;background:none;border:none;border-bottom:1px solid var(--line);border-left:2px solid transparent;cursor:pointer;transition:all .12s;}
+.game-item:last-child{border-bottom:none;}
+.game-item:hover{background:var(--surface);}
+.game-item.active{border-left-color:var(--gold);background:var(--surface2);}
+.gi-top{display:flex;align-items:center;justify-content:space-between;gap:4px;}
+.gi-name{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--text);}
+.gi-outcome{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;display:flex;gap:4px;align-items:center;}
+.gi-outcome i{font-style:normal;font-weight:500;opacity:.7;}
+.gi-win{color:var(--good);}.gi-loss{color:var(--bad);}.gi-tie{color:var(--dim);}
+.gi-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--faint);margin-top:4px;}
+.rail-note{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--faint);}
+.rail-empty{padding:20px 12px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);line-height:1.6;}
+.link-btn{background:none;border:none;color:var(--gold);font-family:inherit;font-size:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:2px;padding:0;}
+.link-btn:hover{color:var(--text);}
+
+.rp-main{min-width:0;position:relative;}
+/* scoreboard — instrument readout */
+.rp-top{display:flex;align-items:stretch;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
+#rp-scoreboard{flex:1;min-width:300px;display:flex;align-items:center;gap:20px;background:var(--surface);border:1px solid var(--line2);border-radius:4px;padding:12px 24px;position:relative;overflow:hidden;}
+#rp-scoreboard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);}
+
+
+.sb-side{text-align:center;min-width:90px;flex:1;}
+.sb-name{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;}
+.sb-name.rl{color:var(--rl);}.sb-name.opp{color:var(--opp);}
+.sb-score{font-family:'Fraunces',serif;font-weight:900;font-size:48px;line-height:.86;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+.sb-side:first-child .sb-score{color:var(--rl);}.sb-side:last-child .sb-score{color:var(--opp);}
+.sb-score.bump{animation:bump .42s cubic-bezier(.3,.8,.3,1.3);}
+@keyframes bump{0%{transform:scale(1);}40%{transform:scale(1.12);}100%{transform:scale(1);}}
+.sb-score.victor{}
+
+.sb-mid{text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.sb-vs{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);font-weight:700;letter-spacing:.24em;}
+/* a measured VP gauge instead of a plain bar */
+.sb-bar{width:86px;height:9px;background:var(--surface3);overflow:hidden;display:flex;position:relative;border:1px solid var(--line);}
+.sb-bar::after{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 1px,transparent 1px 8px);pointer-events:none;}
+.sb-bar i{height:100%;transition:width .5s cubic-bezier(.3,.7,.3,1);}
+.sb-bar .ia{background:var(--rl);}.sb-bar .ib{background:var(--opp);}
+.verdict{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:0 16px;border-radius:4px;white-space:nowrap;display:flex;align-items:center;border:1px solid var(--line2);}
+.verdict.win{color:var(--good);background:transparent;border-color:rgba(107,184,138,.5);}
+.verdict.loss{color:var(--bad);background:transparent;border-color:rgba(210,120,115,.5);}
+.verdict.draw,.verdict.tie{color:var(--dim);background:transparent;}
+.verdict.show{animation:slam .5s cubic-bezier(.25,.9,.3,1.1);}
+.verdict.win.celebrate{}
+
+
+/* turn bar */
+.turnbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.turnbadge{font-family:'Fraunces',serif;font-weight:900;font-size:14px;letter-spacing:.01em;color:#140d02;background:var(--gold);padding:4px 16px;border-radius:3px;min-width:100px;text-align:center;}
+.turnbadge.start{background:transparent;color:var(--dim);border:1px solid var(--line2);}
+.turnbadge.slam{animation:slam .45s cubic-bezier(.25,.9,.3,1.1);}
+@keyframes slam{0%{opacity:.4;transform:translateY(-2px);}100%{opacity:1;transform:none;}}
+.turnline{flex:1;height:7px;background-image:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 9px);}
+.turnnote{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);letter-spacing:.04em;}
+
+/* seats — framed instrument modules with corner ticks */
+.seats{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:620px){.seats{grid-template-columns:1fr;}}
+.seat{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:16px 16px 16px;transition:border-color .25s;}
+/* corner registration ticks */
+.seat::before,.seat::after{content:'';position:absolute;width:8px;height:8px;border-color:var(--line2);border-style:solid;opacity:.7;transition:border-color .25s;}
+.seat::before{top:6px;left:6px;border-width:1px 0 0 1px;}
+.seat::after{top:6px;right:6px;border-width:1px 1px 0 0;}
+.seat .seat-foot-l,.seat .seat-foot-r{content:'';position:absolute;width:8px;height:8px;border-color:var(--line2);border-style:solid;opacity:.7;bottom:6px;}
+.seat-topbar{position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .25s;}
+.seat.rl .seat-topbar{background:var(--rl);}
+.seat.opp .seat-topbar{background:var(--opp);}
+.seat.rl.active{border-color:rgba(240,162,60,.45);}
+.seat.opp.active{border-color:rgba(105,166,191,.45);}
+.seat.active .seat-topbar{opacity:1;}
+.seat.rl.active::before,.seat.rl.active::after{border-color:var(--rl);opacity:1;}
+.seat.opp.active::before,.seat.opp.active::after{border-color:var(--opp);opacity:1;}
+
+
+
+.seat-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;}
+.seat-id{display:flex;align-items:center;gap:8px;}
+.avatar{width:34px;height:34px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:900;font-size:15px;border:1px solid var(--line2);}
+.seat.rl .avatar{background:rgba(240,162,60,.13);color:var(--rl);border-color:rgba(240,162,60,.4);}
+.seat.opp .avatar{background:rgba(105,166,191,.13);color:var(--opp);border-color:rgba(105,166,191,.4);}
+.seat-name{font-family:'Fraunces',serif;font-weight:600;font-size:16px;line-height:1;letter-spacing:-.01em;}
+.seat-role{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:4px;}
+.stats{display:flex;gap:0;border:1px solid var(--line);}
+.stat{text-align:center;background:none;border:none;border-left:1px solid var(--line);padding:4px 12px;min-width:42px;}
+.stat:first-child{border-left:none;}
+.stat .n{font-family:'Fraunces',serif;font-weight:700;font-size:16px;line-height:1;font-variant-numeric:tabular-nums;}
+.stat .n.vp{color:var(--good);}
+.stat .l{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.08em;color:var(--faint);margin-top:4px;}
+.zone-label{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:0 0 8px;}
+.zone-label .ln{flex:1;height:1px;background:var(--line);}
+.zone-label .ct{color:var(--dim);}
+.cards{display:flex;flex-wrap:wrap;gap:8px;min-height:94px;align-content:flex-start;}
+.cards.buys{min-height:94px;margin-top:12px;}
+.empty{font-size:12px;color:var(--faint);font-style:italic;padding:4px 2px;}
+
+/* CARD */
+.dcard{position:relative;width:60px;height:86px;flex-shrink:0;border-radius:9px;padding:4px 4px 4px;display:flex;flex-direction:column;
+  background:linear-gradient(162deg,var(--c-bg2),var(--c-bg));border:1px solid var(--c-edge);color:var(--c-fg);
+  box-shadow:0 5px 13px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.04),inset 0 1px 0 rgba(255,255,255,.08);
+  transition:transform .18s cubic-bezier(.2,.7,.3,1),box-shadow .18s;
+  animation:deal .4s cubic-bezier(.2,.8,.3,1.1) both;}
+.dcard:hover{transform:translateY(-4px);box-shadow:0 10px 22px rgba(0,0,0,.5);z-index:6;}
+@keyframes deal{0%{opacity:0;transform:translateY(8px);}100%{opacity:1;transform:none;}}
+.dcard-title{font:600 8.5px/1.04 'Fraunces';text-align:center;min-height:2em;display:flex;align-items:center;justify-content:center;letter-spacing:.01em;padding:1px 1px 0;color:var(--c-fg);}
+.dcard-art{flex:1;display:flex;align-items:center;justify-content:center;border-radius:5px;margin:1px 0;
+  background:radial-gradient(ellipse at 50% 32%,var(--c-arthi),transparent 70%),linear-gradient(180deg,rgba(0,0,0,.16),rgba(0,0,0,.34));
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.04);overflow:hidden;}
+.dcard-art svg{filter:drop-shadow(0 1px 1px rgba(0,0,0,.5));opacity:.95;}
+.dcard-type{font:700 6.5px/1 'JetBrains Mono';letter-spacing:.1em;text-transform:uppercase;text-align:center;opacity:.46;margin-top:1px;}
+.dcard-cost{position:absolute;bottom:-6px;left:-6px;width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 10px 'Fraunces';background:radial-gradient(circle at 35% 28%,#f5dd8f,#c89233 70%,#9a6f22);color:#3a2a08;border:1.5px solid #6f4f15;box-shadow:0 2px 5px rgba(0,0,0,.5),inset 0 1px 1px rgba(255,255,255,.5);overflow:hidden;}
+
+
+.dcard-vp{position:absolute;bottom:-6px;right:-6px;min-width:19px;height:19px;padding:0 4px;border-radius:6px;display:flex;align-items:center;justify-content:center;font:800 9.5px 'Fraunces';background:linear-gradient(145deg,#5fc88a,#2f9d5e);color:#06200f;border:1px solid #1c6b3c;box-shadow:0 2px 5px rgba(0,0,0,.45);}
+.dcard-vp.neg{background:linear-gradient(145deg,#c08ad8,#8a4fb0);color:#1c0a26;border-color:#5a2f78;}
+.dcard-count{position:absolute;top:-7px;right:-7px;min-width:19px;height:19px;padding:0 4px;border-radius:10px;display:flex;align-items:center;justify-content:center;font:800 10px 'Fraunces';background:linear-gradient(145deg,#f0f2f7,#c8ccd6);color:#1a1d24;border:1px solid rgba(0,0,0,.2);box-shadow:0 2px 6px rgba(0,0,0,.5);}
+.dcard.t-treasure{--c-bg:#1c1710;--c-bg2:#2a2114;--c-edge:rgba(227,173,83,.42);--c-fg:#f2d293;--c-glow:rgba(227,173,83,.28);--c-arthi:rgba(227,173,83,.2);}
+.dcard.t-victory{--c-bg:#101e16;--c-bg2:#16291d;--c-edge:rgba(95,200,138,.4);--c-fg:#a9e3c1;--c-glow:rgba(95,200,138,.24);--c-arthi:rgba(95,200,138,.18);}
+.dcard.t-action{--c-bg:#101820;--c-bg2:#162130;--c-edge:rgba(116,171,226,.4);--c-fg:#bad6f0;--c-glow:rgba(116,171,226,.24);--c-arthi:rgba(116,171,226,.18);}
+.dcard.t-curse{--c-bg:#1a1226;--c-bg2:#231832;--c-edge:rgba(189,138,216,.42);--c-fg:#dcc2ec;--c-glow:rgba(189,138,216,.24);--c-arthi:rgba(189,138,216,.18);}
+.dcard.t-unknown{--c-bg:#181b22;--c-bg2:#222632;--c-edge:rgba(160,168,184,.32);--c-fg:#cdd2dc;--c-glow:rgba(160,168,184,.18);--c-arthi:rgba(160,168,184,.12);}
+
+
+
+.dcard.is-buy{box-shadow:0 6px 16px rgba(0,0,0,.45),0 0 0 1px var(--c-edge),0 0 20px var(--c-glow);}
+.dcard.landing{animation:deal .32s ease both;}
+
+.dcard.flying-card{position:fixed;z-index:9999;pointer-events:none;animation:none !important;box-shadow:0 22px 50px rgba(0,0,0,.7),0 0 36px var(--c-glow),0 0 70px var(--c-glow);will-change:left,top,transform;}
+.dcard.flying-card::after{display:none;}
+
+/* ── card deal-in (single subtle rise, no 3D flip) ── */
+.dcard.dealing{animation:deal .34s ease both;}
+
+/* ── subtle landing accent on a bought card (the payoff of the fly) ── */
+.ring-pulse{position:fixed;border-radius:50%;border:1px solid var(--c-edge,rgba(240,162,60,.5));z-index:9997;pointer-events:none;will-change:transform,opacity;}
+
+.token{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 12px;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:.04em;animation:deal .3s ease both;}
+.token.pass{background:var(--surface);border:1px dashed var(--line2);color:var(--dim);}
+.token.illegal{background:rgba(210,120,115,.12);border:1px solid rgba(210,120,115,.4);color:#d99490;}
+
+.coin-tally{display:inline-flex;align-items:center;gap:4px;color:var(--treasure);font-weight:600;}
+
+/* ── lead indicator: a quiet static marker over whoever is ahead ── */
+.sb-side{position:relative;}
+.sb-crown{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--gold);opacity:0;transition:opacity .25s;}
+.sb-side.leading .sb-crown{opacity:.9;}
+.lead-banner,.lead-banner.show{display:none;}
+
+
+/* supply */
+.supply{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:16px 16px;margin-bottom:16px;}
+.supply-head{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+#supply-track{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:thin;scrollbar-color:var(--surface3) transparent;}
+#supply-track::-webkit-scrollbar{height:6px;}#supply-track::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
+.pile{position:relative;flex-shrink:0;}
+/* stacked-card illusion behind each pile face */
+.pile::before,.pile::after{content:'';position:absolute;inset:0;border-radius:9px;background:var(--surface3);border:1px solid var(--line);z-index:-1;transition:transform .3s ease,opacity .3s ease;}
+.pile::before{transform:translate(3px,3px);}
+.pile::after{transform:translate(6px,6px);opacity:.55;}
+.pile.low::after{opacity:0;transform:translate(3px,3px);}
+.pile.low::before{transform:translate(2px,2px);}
+.pile.depleted::before,.pile.depleted::after{opacity:0;}
+.pile.depleted .dcard{opacity:.3;filter:grayscale(.7);}
+.pile.depleted .stamp-out{opacity:1;transform:translate(-50%,-50%) rotate(-14deg) scale(1);}
+.stamp-out{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-14deg) scale(1.6);opacity:0;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;letter-spacing:.1em;color:var(--bad);border:2px solid var(--bad);border-radius:3px;padding:2px 4px;z-index:5;pointer-events:none;transition:opacity .35s ease,transform .35s cubic-bezier(.3,.8,.3,1.4);background:rgba(11,12,14,.6);}
+.pile .remain{position:absolute;top:-7px;left:-7px;min-width:20px;height:20px;padding:0 4px;border-radius:3px;display:flex;align-items:center;justify-content:center;font:800 10px 'JetBrains Mono';background:var(--bg);color:var(--text);border:1px solid var(--line2);z-index:6;transition:transform .25s;}
+.pile .remain.pop{animation:remainPop .4s cubic-bezier(.3,.8,.3,1.4);}
+@keyframes remainPop{0%{transform:scale(1);}45%{transform:scale(1.45);background:var(--gold);color:#140d02;}100%{transform:scale(1);}}
+
+
+.pile .deplete{position:absolute;left:5px;right:5px;bottom:1px;height:3px;border-radius:2px;background:rgba(0,0,0,.4);overflow:hidden;z-index:3;}
+.pile .deplete i{display:block;height:100%;background:var(--c-edge);transition:width .45s ease;}
+
+/* transport — tape deck */
+.transport{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:12px 16px;flex-wrap:wrap;}
+.tbtn{width:38px;height:36px;border-radius:3px;border:1px solid var(--line2);background:transparent;color:var(--text);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.tbtn:hover{background:var(--surface3);border-color:var(--gold-deep);}.tbtn:active{transform:scale(.92);}
+.tbtn.play{width:46px;background:var(--gold);border-color:transparent;color:#140d02;}
+
+
+.tbtn:disabled{opacity:.3;cursor:default;}.tbtn:disabled:hover{background:transparent;border-color:var(--line2);}
+.scrub{flex:1;min-width:150px;display:flex;flex-direction:column;gap:8px;}
+#turn-slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:linear-gradient(90deg,var(--gold) 0%,var(--gold) var(--prog,0%),var(--surface3) var(--prog,0%));outline:none;cursor:pointer;}
+#turn-slider::-webkit-slider-thumb{-webkit-appearance:none;width:4px;height:16px;border-radius:1px;background:var(--text);box-shadow:0 0 0 1px var(--bg);cursor:pointer;}
+#turn-slider::-moz-range-thumb{width:4px;height:16px;border:none;border-radius:1px;background:var(--text);cursor:pointer;}
+#timeline-track{display:flex;gap:2px;}
+.tl-dot{flex:1;height:16px;background:var(--surface3);cursor:pointer;transition:transform .12s;min-width:0;border-top:1px solid var(--line);}
+.tl-dot:hover{transform:scaleY(1.25);}
+.tl-dot.buy{background:var(--gold);opacity:.45;}
+.tl-dot.pass{background:var(--surface3);}
+.tl-dot.illegal{background:rgba(210,120,115,.5);}
+.tl-dot.start{background:var(--line2);}
+.tl-dot.cur{background:var(--gold);opacity:1;z-index:2;box-shadow:0 0 0 1px var(--gold);}
+.tpos{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;min-width:104px;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.02em;}
+.tpos .m{color:var(--faint);font-weight:400;}
+.speeds{display:flex;gap:0;border:1px solid var(--line);}
+.speed-btn{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;border:none;border-left:1px solid var(--line);background:none;color:var(--dim);padding:8px 8px;cursor:pointer;transition:all .12s;}
+.speed-btn:first-child{border-left:none;}
+.speed-btn.active{background:var(--surface3);color:var(--gold);}
+
+/* ════════ shared analytics chrome ════════ */
+.empty-stats{text-align:center;padding:56px 20px;color:var(--faint);font-size:13px;font-family:'JetBrains Mono',monospace;}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;margin-bottom:16px;border:1px solid var(--line);}
+.stat-card{background:none;border:none;border-left:1px solid var(--line);border-top:1px solid var(--line);border-radius:0;padding:12px 16px;position:relative;}
+.stat-card::before{content:'';position:absolute;top:-1px;left:0;width:24px;height:2px;background:var(--gold);}
+.sc-label{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;}
+.sc-value{font-family:'Fraunces',serif;font-weight:900;font-size:30px;line-height:.92;color:var(--text);font-variant-numeric:tabular-nums;}
+.sc-value.win{color:var(--good);}.sc-value.loss{color:var(--bad);}
+.sc-sub{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--dim);margin-top:4px;}
+.src-note{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);margin-bottom:8px;}
+.src-tag{padding:2px 8px;border-radius:3px;border:1px solid var(--line2);color:var(--gold);font-size:9.5px;}
+.chart-grid{display:grid;gap:12px;}.chart-grid.cols-2{grid-template-columns:1fr 1fr;}
+@media(max-width:880px){.chart-grid.cols-2{grid-template-columns:1fr;}}
+.chart-box{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:16px;}
+.chart-box-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;}
+.chart-box-title{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);}
+.png-btn{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.04em;padding:4px 8px;border:1px solid var(--line);background:none;color:var(--dim);border-radius:3px;cursor:pointer;transition:all .12s;white-space:nowrap;}
+.png-btn:hover{color:var(--gold);border-color:var(--line2);}
+.chart-wrap{position:relative;}
+.sb-x{overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--surface3) transparent;}
+.sb-x::-webkit-scrollbar{height:6px;}.sb-x::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
+.section-ctrls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto;}
+.mini-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);}
+.win-input{font-family:'JetBrains Mono',monospace;background:var(--surface);border:1px solid var(--line2);color:var(--text);font-size:11px;padding:4px 8px;border-radius:3px;width:66px;}
+.filter-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--faint);}
+.player-toggle{font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 12px;border-radius:3px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;transition:all .12s;}
+.player-toggle.on{border-color:var(--line2);color:var(--text);background:var(--surface3);}
+.player-compare{display:grid;gap:12px;}
+.player-compare-row{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:12px 16px;}
+.pcr-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.pcr-name{font-family:'Fraunces',serif;font-weight:600;font-size:16px;}
+.pcr-stats{display:flex;gap:16px;flex-wrap:wrap;}
+.pcr-stat{text-align:center;}
+.pcr-stat-v{font-family:'Fraunces',serif;font-weight:700;font-size:16px;}
+.pcr-stat-l{font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin-top:4px;}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:4px;scrollbar-width:thin;scrollbar-color:var(--surface3) transparent;}
+.tbl-wrap::-webkit-scrollbar{height:6px;}.tbl-wrap::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
+table.dtable{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:11.5px;}
+table.dtable th{font-size:9px;letter-spacing:.07em;text-transform:uppercase;padding:8px 12px;text-align:center;background:var(--surface2);border-bottom:1px solid var(--line2);color:var(--faint);cursor:pointer;white-space:nowrap;user-select:none;position:sticky;top:0;}
+table.dtable th:hover{color:var(--gold);}
+table.dtable th.col-episode{text-align:left;position:sticky;left:0;z-index:2;}
+table.dtable td{padding:8px 12px;text-align:center;border-bottom:1px solid var(--line);color:var(--dim);}
+table.dtable td.col-episode{text-align:left;color:var(--text);background:var(--surface);position:sticky;left:0;cursor:pointer;}
+table.dtable td.col-episode:hover{color:var(--gold);}
+table.dtable tr:hover td{background:rgba(240,162,60,.05);}
+table.dtable tr.clickable{cursor:pointer;}
+table.dtable tr.totals-row td{font-weight:700;color:var(--gold);background:rgba(240,162,60,.08);border-top:1px solid var(--line2);}
+.win-cell{color:var(--good);font-weight:700;}.loss-cell{color:var(--bad);font-weight:700;}.tie-cell{color:var(--dim);}
+.cell-val{display:inline-block;min-width:1.1rem;padding:2px 4px;border-radius:5px;}
+.cell-treasure{background:rgba(227,173,83,.16);color:var(--treasure);}.cell-victory{background:rgba(107,184,138,.16);color:var(--victory);}
+.cell-curse{background:rgba(180,135,201,.18);color:var(--curse);}.cell-action{background:rgba(105,166,191,.16);color:var(--action);}.cell-unknown{background:var(--surface3);color:var(--dim);}
+.cell-zero{color:var(--faint);opacity:.5;}
+.card-th.th-treasure{color:var(--treasure);}.card-th.th-victory{color:var(--victory);}.card-th.th-curse{color:var(--curse);}.card-th.th-action{color:var(--action);}.card-th.th-unknown{color:var(--dim);}
+.sort-arr{font-size:8px;margin-left:4px;opacity:.7;}
+.pager{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.pager-btn{font-family:'JetBrains Mono',monospace;font-size:10.5px;padding:4px 12px;border:1px solid var(--line);background:var(--surface2);color:var(--text);border-radius:3px;cursor:pointer;}
+.pager-btn:hover{background:var(--surface3);}.pager-btn:disabled{opacity:.3;cursor:default;}
+.pager-info{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);}
+.cb-controls{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.cb-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);}
+.cb-player-btns,.cb-card-filter,.cb-mode-btns{display:flex;gap:4px;flex-wrap:wrap;}
+.type-toggle,.cb-mode{font-family:'JetBrains Mono',monospace;font-size:10.5px;padding:4px 12px;border:1px solid var(--line);background:none;color:var(--dim);border-radius:3px;cursor:pointer;transition:all .12s;}
+.type-toggle.on,.cb-mode.on{border-color:var(--line2);color:var(--text);background:var(--surface3);}
+.type-toggle.treasure.on{color:var(--treasure);border-color:rgba(227,173,83,.4);background:rgba(227,173,83,.1);}
+.type-toggle.victory.on{color:var(--victory);border-color:rgba(107,184,138,.4);background:rgba(107,184,138,.1);}
+.type-toggle.curse.on{color:var(--curse);border-color:rgba(180,135,201,.4);background:rgba(180,135,201,.1);}
+.type-toggle.action.on{color:var(--action);border-color:rgba(105,166,191,.4);background:rgba(105,166,191,.1);}
+.cb-mode.on{color:var(--gold);border-color:var(--gold-deep);background:rgba(240,162,60,.12);}
+.cmp-pickers{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--surface);border:1px solid var(--line);border-radius:4px;}
+.cmp-picker{display:flex;align-items:center;gap:8px;}
+.cmp-select,#strat-card{font-family:'JetBrains Mono',monospace;background:var(--surface2);border:1px solid var(--line2);color:var(--text);font-size:11.5px;padding:8px 8px;border-radius:3px;max-width:240px;cursor:pointer;}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:680px){.cmp-grid{grid-template-columns:1fr;}}
+.cmp-card{background:linear-gradient(180deg,var(--surface2),var(--surface));border:1px solid var(--line);border-radius:4px;padding:16px 16px;box-shadow:var(--shadow);}
+.cmp-card.col-a{border-color:rgba(240,162,60,.4);}
+.cmp-card.col-b{border-color:rgba(105,166,191,.4);}
+.cmp-card-title{font-family:'Fraunces',serif;font-weight:600;font-size:15px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.cmp-ep-a{color:var(--rl);}.cmp-ep-b{color:var(--opp);}
+.cmp-result{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:3px;border:1px solid var(--line2);}
+.cmp-stat{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.cmp-stat:last-child{border-bottom:none;}
+.cmp-stat-l{font-size:12px;color:var(--dim);}
+.cmp-stat-v{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);font-weight:500;}
+.cmp-deck-diff{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:4px;overflow:hidden;}
+.ddiff-row{display:grid;grid-template-columns:1fr 56px 56px 70px;gap:8px;align-items:center;padding:4px 12px;background:none;border:none;border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:11.5px;}
+.ddiff-row.head{background:var(--surface2);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--line2);}
+.ddiff-num{text-align:center;}
+.ddiff-delta{text-align:center;font-weight:700;border-radius:3px;padding:1px 4px;}
+.ddiff-card{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tdot{display:inline-block;width:7px;height:7px;border-radius:2px;flex-shrink:0;vertical-align:middle;margin-right:5px;}
+.delta-pos{color:var(--good);background:rgba(107,184,138,.1);}
+.delta-neg{color:var(--bad);background:rgba(224,114,111,.1);}
+.delta-zero{color:var(--faint);}
+
+#error-toast{display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:12px;padding:12px 20px;border-radius:4px;z-index:10000;border:1px solid var(--line2);background:var(--surface2);color:var(--text);max-width:560px;}
+#error-toast.err{border-color:rgba(210,120,115,.5);color:#e3a8a4;}
+#error-toast.info{border-color:rgba(107,184,138,.45);color:var(--good);}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;animation-iteration-count:1 !important;}}
+</style>
+</head>
+<body>
+<div id="error-toast"></div>
+
+<div class="shell">
+  <div class="chrome">
+    <div class="chrome-top">
+      <div class="wordmark">
+        <span class="glyph">♦</span>
+        <span class="name">Dominion <em>RL</em> Studio</span>
+        <span class="sub">match instrument</span>
+      </div>
+      <div class="chrome-stat" id="chrome-stat" style="display:none;">
+        <div class="cs-cell"><span class="k">Episode</span><span class="v on" id="rp-ep">—</span></div>
+        <div class="cs-cell"><span class="k">Turns</span><span class="v" id="rp-turns">—</span></div>
+        <div class="cs-cell"><span class="k">Players</span><span class="v" id="rp-players">—</span></div>
+        <div class="cs-cell"><span class="k">RL deck</span><span class="v" id="rp-deckcount">—</span></div>
+      </div>
+    </div>
+    <div class="tabs" id="tab-nav" style="display:none;">
+      <button class="tab-btn active" onclick="switchTab('replay')"><span class="idx">01</span>Replay</button>
+      <button class="tab-btn" onclick="switchTab('cardbuys')"><span class="idx">02</span>Card Buys</button>
+      <button class="tab-btn" onclick="switchTab('stats')"><span class="idx">03</span>Statistics</button>
+      <button class="tab-btn" onclick="switchTab('training')"><span class="idx">04</span>Training</button>
+      <button class="tab-btn" onclick="switchTab('compare')"><span class="idx">05</span>Compare</button>
+    </div>
+    <div id="load-bar">
+      <input type="file" id="add-file-input" multiple accept=".jsonl,.json,.txt,.csv" style="display:none;">
+      <button class="btn ghost sm" onclick="document.getElementById('add-file-input').click()">+ Add files</button>
+      <div class="load-stat" id="load-stat">0 games</div>
+      <span class="pill" id="pill-decks">final_decks</span>
+      <span class="pill" id="pill-metrics">metrics csv</span>
+      <button class="diag-btn" id="diag-btn" onclick="toggleDiag()" title="Data integrity check"><span class="diag-dot" id="diag-dot"></span><span id="diag-label">checks</span></button>
+      <button class="btn danger sm" onclick="clearAll()" style="margin-left:auto;">Clear all</button>
+    </div>
+    <div id="diag-panel" style="display:none;"></div>
+  </div>
+
+  <!-- LOADER -->
+  <div id="load-screen">
+    <div class="drop" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <div class="ic">🎴</div>
+      <h2>Load a training run</h2>
+      <p>Turn logs drive the playback · final_decks.json &amp; metrics.csv sharpen the analytics</p>
+      <div class="ft">episode_*_turns.jsonl &nbsp;·&nbsp; final_decks.json &nbsp;·&nbsp; episode_data_over_time.csv</div>
+    </div>
+    <div class="lrow">
+      <button class="btn primary" onclick="document.getElementById('file-input').click()">Browse files</button>
+      <button class="btn ghost" onclick="loadDemo()">▶ Watch a sample game</button>
+    </div>
+    <input type="file" id="file-input" multiple accept=".jsonl,.json,.txt,.csv" style="display:none;">
+    <textarea id="paste-area" style="display:none;"></textarea>
+  </div>
+
+  <!-- ════ REPLAY ════ -->
+  <div id="tab-replay" class="tab-panel active">
+    <div id="replay-content">
+      <div class="rp-grid">
+        <div class="rail">
+          <div class="rail-h">Games</div>
+          <input type="text" id="game-search" placeholder="Search episode…" oninput="refreshGamesList()">
+          <div class="outcome-filter" id="outcome-filter">
+            <button class="of-chip on" data-f="all" onclick="setOutcomeFilter('all')">All</button>
+            <button class="of-chip" data-f="win" onclick="setOutcomeFilter('win')">W</button>
+            <button class="of-chip" data-f="loss" onclick="setOutcomeFilter('loss')">L</button>
+            <button class="of-chip" data-f="tie" onclick="setOutcomeFilter('tie')">T</button>
+          </div>
+          <div id="games-list"></div>
+          <div class="rail-note" id="sidebar-note"></div>
+        </div>
+
+        <div class="rp-main">
+          <div class="rp-top">
+            <div id="rp-scoreboard"></div>
+            <div class="verdict draw" id="rp-verdict">—</div>
+          </div>
+          <div class="turnbar">
+            <div class="turnbadge" id="turnbadge">START</div>
+            <div class="turnline"></div>
+            <div class="turnnote" id="turnnote"></div>
+          </div>
+          <div class="seats">
+            <div class="seat rl" id="seat-a"></div>
+            <div class="seat opp" id="seat-b"></div>
+          </div>
+          <div class="supply">
+            <div class="supply-head">⬡ Kingdom Supply <span style="margin-left:auto;text-transform:none;letter-spacing:.02em;">remaining in each pile</span></div>
+            <div id="supply-track"></div>
+          </div>
+          <div class="transport">
+            <button class="tbtn" id="btn-first" onclick="goFirst()">⏮</button>
+            <button class="tbtn" id="btn-prev" onclick="goPrev()">◀</button>
+            <button class="tbtn play" id="play-btn" onclick="togglePlay()">▶</button>
+            <button class="tbtn" id="btn-next" onclick="goNext()">▶</button>
+            <button class="tbtn" id="btn-last" onclick="goLast()">⏭</button>
+            <div class="scrub">
+              <input type="range" id="turn-slider" min="0" value="0">
+              <div id="timeline-track"></div>
+            </div>
+            <div class="tpos" id="turn-label">TURN —</div>
+            <div class="speeds">
+              <button class="speed-btn" onclick="setSpeed(0)">0.5×</button>
+              <button class="speed-btn active" onclick="setSpeed(1)">1×</button>
+              <button class="speed-btn" onclick="setSpeed(2)">2×</button>
+              <button class="speed-btn" onclick="setSpeed(3)">4×</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ CARD BUYS ════ -->
+  <div id="tab-cardbuys" class="tab-panel">
+    <div class="panel-pad">
+      <div id="cb-empty" class="empty-stats">Load game files to see per-card data.</div>
+      <div id="cb-content" style="display:none;">
+        <div class="sec-h"><span class="ttl">Card Acquisition Matrix</span><span class="rule"></span></div>
+        <div class="cb-controls">
+          <span class="cb-label">Player</span>
+          <div class="cb-player-btns" id="cb-player-btns"></div>
+          <span class="cb-label" style="margin-left:6px;">Mode</span>
+          <div class="cb-mode-btns">
+            <button class="cb-mode on" data-mode="buys" onclick="cbSetMode('buys')">Cards bought</button>
+            <button class="cb-mode" data-mode="deck" onclick="cbSetMode('deck')">Final deck</button>
+          </div>
+          <span class="cb-label" style="margin-left:6px;">Types</span>
+          <div class="cb-card-filter" id="cb-type-filters">
+            <button class="type-toggle treasure on" data-type="treasure" onclick="cbToggleType(this)">Treasure</button>
+            <button class="type-toggle victory on" data-type="victory" onclick="cbToggleType(this)">Victory</button>
+            <button class="type-toggle curse on" data-type="curse" onclick="cbToggleType(this)">Curse</button>
+            <button class="type-toggle action on" data-type="action" onclick="cbToggleType(this)">Action</button>
+          </div>
+          <button class="png-btn" style="margin-left:auto;" onclick="exportCardBuysCSV()">⤓ Export CSV</button>
+        </div>
+        <div class="src-note" id="cb-src-note"></div>
+        <div class="tbl-wrap"><table class="dtable" id="cb-tbl"><thead id="cb-thead"></thead><tbody id="cb-tbody"></tbody></table></div>
+        <div class="pager" id="cb-pager"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ STATISTICS ════ -->
+  <div id="tab-stats" class="tab-panel">
+    <div class="panel-pad">
+      <div id="stats-empty" class="empty-stats">Load game files to see statistics.</div>
+      <div id="stats-content" style="display:none;">
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Overview</span><span class="rule"></span></div>
+          <div class="stat-cards">
+            <div class="stat-card"><div class="sc-label">Games</div><div class="sc-value" id="sc-games">0</div></div>
+            <div class="stat-card"><div class="sc-label">RL win rate</div><div class="sc-value" id="sc-winrate">—</div><div class="sc-sub" id="sc-record">—</div></div>
+            <div class="stat-card"><div class="sc-label">Avg score diff</div><div class="sc-value" id="sc-scorediff">—</div><div class="sc-sub">RL − best opp</div></div>
+            <div class="stat-card"><div class="sc-label">Avg game length</div><div class="sc-value" id="sc-avglen">—</div><div class="sc-sub">turns</div></div>
+            <div class="stat-card"><div class="sc-label">Most bought</div><div class="sc-value" id="sc-topcard" style="font-size:18px;">—</div></div>
+            <div class="stat-card"><div class="sc-label">Total cards bought</div><div class="sc-value" id="sc-totalbought">0</div></div>
+          </div>
+          <div class="src-note" id="stats-src-note"></div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Player Breakdown</span><span class="rule"></span></div>
+          <div class="player-compare" id="player-compare"></div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Opening &amp; Endgame</span><span class="rule"></span><span class="meta">RL agent</span></div>
+          <div class="stat-cards" style="margin-bottom:13px;">
+            <div class="stat-card"><div class="sc-label">Avg 1st Province turn</div><div class="sc-value" id="sc-firstprov">—</div><div class="sc-sub" id="sc-firstprov-sub">across games</div></div>
+            <div class="stat-card"><div class="sc-label">Avg empty piles</div><div class="sc-value" id="sc-emptypiles">—</div><div class="sc-sub">at game end</div></div>
+            <div class="stat-card"><div class="sc-label">Most common opening</div><div class="sc-value" id="sc-openpair" style="font-size:15px;">—</div><div class="sc-sub">T1 + T2 buys</div></div>
+          </div>
+          <div class="chart-grid cols-2">
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">RL opening buys (T1–2)</span><button class="png-btn" onclick="exportChart('opening')">⤓ PNG</button></div><div class="sb-x"><div class="chart-wrap" id="opening-wrap" style="height:210px;"><canvas id="chart-opening"></canvas></div></div></div>
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">How games ended</span><button class="png-btn" onclick="exportChart('endreason')">⤓ PNG</button></div><div class="chart-wrap" style="height:210px;"><canvas id="chart-endreason"></canvas></div></div>
+          </div>
+          <div class="chart-box" style="margin-top:13px;"><div class="chart-box-head"><span class="chart-box-title">First-Province turn distribution</span><button class="png-btn" onclick="exportChart('firstprov')">⤓ PNG</button></div><div class="chart-wrap" style="height:200px;"><canvas id="chart-firstprov"></canvas></div></div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Cards Bought per Player</span><span class="rule"></span>
+            <span class="section-ctrls"><span class="filter-label">Players</span><span id="player-toggles" style="display:flex;gap:4px;flex-wrap:wrap;"></span></span>
+          </div>
+          <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Total buys by card</span><button class="png-btn" onclick="exportChart('buys')">⤓ PNG</button></div><div class="sb-x"><div class="chart-wrap" id="buys-chart-wrap" style="min-height:200px;"><canvas id="chart-buys"></canvas></div></div></div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Composition</span><span class="rule"></span></div>
+          <div class="chart-grid cols-2">
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Buys by card type</span><button class="png-btn" onclick="exportChart('types')">⤓ PNG</button></div><div class="chart-wrap" style="height:210px;"><canvas id="chart-types"></canvas></div></div>
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title" id="deck-chart-title">Avg final deck</span><button class="png-btn" onclick="exportChart('deck')">⤓ PNG</button></div><div class="chart-wrap" style="height:210px;"><canvas id="chart-deck"></canvas></div></div>
+          </div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Pacing</span><span class="rule"></span></div>
+          <div class="chart-grid cols-2">
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Turns per game</span><button class="png-btn" onclick="exportChart('lengths')">⤓ PNG</button></div><div class="chart-wrap" style="height:210px;"><canvas id="chart-lengths"></canvas></div></div>
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Cumulative buys (avg, normalised)</span><button class="png-btn" onclick="exportChart('pacing')">⤓ PNG</button></div><div class="chart-wrap" style="height:210px;"><canvas id="chart-pacing"></canvas></div></div>
+          </div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Victory Acquisition</span><span class="rule"></span></div>
+          <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Cumulative VP cards (avg, normalised)</span><button class="png-btn" onclick="exportChart('victory')">⤓ PNG</button></div><div class="chart-wrap" style="height:220px;"><canvas id="chart-victory"></canvas></div></div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">All Games</span><span class="rule"></span><span class="meta">click a row to replay</span></div>
+          <div class="tbl-wrap">
+            <table class="dtable">
+              <thead><tr>
+                <th class="col-episode" onclick="sortTable('episode')">Episode<span class="sort-arr" id="sort-episode"></span></th>
+                <th onclick="sortTable('turns')">Turns<span class="sort-arr" id="sort-turns"></span></th>
+                <th>Players</th>
+                <th onclick="sortTable('outcome')">Result<span class="sort-arr" id="sort-outcome"></span></th>
+                <th onclick="sortTable('sd')">Score Δ<span class="sort-arr" id="sort-sd"></span></th>
+                <th onclick="sortTable('rlVP')">RL VP<span class="sort-arr" id="sort-rlVP"></span></th>
+                <th onclick="sortTable('oppVP')">Opp VP<span class="sort-arr" id="sort-oppVP"></span></th>
+                <th onclick="sortTable('rlBuys')">RL buys<span class="sort-arr" id="sort-rlBuys"></span></th>
+                <th onclick="sortTable('rlProv')">RL prov<span class="sort-arr" id="sort-rlProv"></span></th>
+              </tr></thead>
+              <tbody id="games-tbl-body"></tbody>
+            </table>
+          </div>
+          <div class="pager" id="games-pager"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ TRAINING ════ -->
+  <div id="tab-training" class="tab-panel">
+    <div class="panel-pad">
+      <div id="train-empty" class="empty-stats">Load <b>episode_data_over_time.csv</b>, <b>final_decks.json</b>, or replay files to see training curves.</div>
+      <div id="train-content" style="display:none;">
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Training Outcome</span><span class="rule"></span></div>
+          <div class="stat-cards">
+            <div class="stat-card"><div class="sc-label">Episodes</div><div class="sc-value" id="tr-episodes">0</div><div class="sc-sub" id="tr-range"></div></div>
+            <div class="stat-card"><div class="sc-label">Overall win rate</div><div class="sc-value" id="tr-winrate">—</div><div class="sc-sub" id="tr-record"></div></div>
+            <div class="stat-card"><div class="sc-label">Last 10% win rate</div><div class="sc-value" id="tr-winrate-recent">—</div><div class="sc-sub">most recent</div></div>
+            <div class="stat-card"><div class="sc-label">Avg score diff</div><div class="sc-value" id="tr-scorediff">—</div></div>
+            <div class="stat-card"><div class="sc-label">Avg reward</div><div class="sc-value" id="tr-reward">—</div></div>
+            <div class="stat-card"><div class="sc-label">Illegal buy rate</div><div class="sc-value" id="tr-illegal">—</div><div class="sc-sub">RL, replays</div></div>
+          </div>
+          <div class="src-note" id="train-src-note"></div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Win Rate over Training</span><span class="rule"></span>
+            <span class="section-ctrls"><span class="mini-label">rolling window</span><input type="number" id="win-window" class="win-input" min="1" value="100" onchange="refreshTraining()"><span class="mini-label">eps</span></span>
+          </div>
+          <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">RL win rate (rolling mean)</span><button class="png-btn" onclick="exportChart('trWin')">⤓ PNG</button></div><div class="chart-wrap" style="height:240px;"><canvas id="chart-trWin"></canvas></div></div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Strategy Evolution</span><span class="rule"></span>
+            <span class="section-ctrls"><span class="mini-label">card</span><select id="strat-card" onchange="refreshTraining()"></select><span class="mini-label">bins</span><input type="number" id="strat-bins" class="win-input" min="2" max="60" value="20" onchange="refreshTraining()"></span>
+          </div>
+          <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Avg buys/game over training (RL)</span><button class="png-btn" onclick="exportChart('trStrat')">⤓ PNG</button></div><div class="chart-wrap" style="height:230px;"><canvas id="chart-trStrat"></canvas></div></div>
+          <div class="chart-grid cols-2" style="margin-top:13px;">
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">First-Province turn over training</span><button class="png-btn" onclick="exportChart('trFirstProv')">⤓ PNG</button></div><div class="chart-wrap" style="height:210px;"><canvas id="chart-trFirstProv"></canvas></div></div>
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Game length over training</span><button class="png-btn" onclick="exportChart('trLen')">⤓ PNG</button></div><div class="chart-wrap" style="height:210px;"><canvas id="chart-trLen"></canvas></div></div>
+          </div>
+          <div class="src-note" id="strat-note"></div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Score Diff &amp; Reward</span><span class="rule"></span></div>
+          <div class="chart-grid cols-2">
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Score diff over training (rolling)</span><button class="png-btn" onclick="exportChart('trScore')">⤓ PNG</button></div><div class="chart-wrap" style="height:215px;"><canvas id="chart-trScore"></canvas></div></div>
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Reward over training (rolling)</span><button class="png-btn" onclick="exportChart('trReward')">⤓ PNG</button></div><div class="chart-wrap" style="height:215px;"><canvas id="chart-trReward"></canvas></div></div>
+          </div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Distribution &amp; Exploration</span><span class="rule"></span></div>
+          <div class="chart-grid cols-2">
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Score differential distribution</span><button class="png-btn" onclick="exportChart('trHist')">⤓ PNG</button></div><div class="chart-wrap" style="height:215px;"><canvas id="chart-trHist"></canvas></div></div>
+            <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Epsilon decay</span><button class="png-btn" onclick="exportChart('trEps')">⤓ PNG</button></div><div class="chart-wrap" style="height:215px;"><canvas id="chart-trEps"></canvas></div></div>
+          </div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Illegal Buy Rate</span><span class="rule"></span></div>
+          <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">RL illegal buy fraction per episode</span><button class="png-btn" onclick="exportChart('trIllegal')">⤓ PNG</button></div><div class="chart-wrap" style="height:215px;"><canvas id="chart-trIllegal"></canvas></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ COMPARE ════ -->
+  <div id="tab-compare" class="tab-panel">
+    <div class="panel-pad">
+      <div id="cmp-empty" class="empty-stats">Load at least two games to compare them side by side.</div>
+      <div id="cmp-content" style="display:none;">
+        <div class="sec-h"><span class="ttl">Head to Head</span><span class="rule"></span></div>
+        <div class="cmp-pickers">
+          <div class="cmp-picker"><span class="cb-label">Episode A</span><select id="cmp-a" class="cmp-select" onchange="refreshCompare()"></select></div>
+          <button class="btn ghost sm" onclick="cmpSwap()">⇄</button>
+          <div class="cmp-picker"><span class="cb-label">Episode B</span><select id="cmp-b" class="cmp-select" onchange="refreshCompare()"></select></div>
+          <button class="btn ghost sm" style="margin-left:auto;" onclick="cmpEarlyLate()">⤢ Earliest vs Latest</button>
+        </div>
+        <div class="cmp-grid" id="cmp-summary"></div>
+        <div class="sec-block" style="margin-top:18px;">
+          <div class="sec-h"><span class="ttl">Cumulative RL Buys — A vs B</span><span class="rule"></span></div>
+          <div class="chart-box"><div class="chart-box-head"><span class="chart-box-title">Buys accrued by turn</span><button class="png-btn" onclick="exportChart('cmpPacing')">⤓ PNG</button></div><div class="chart-wrap" style="height:240px;"><canvas id="chart-cmpPacing"></canvas></div></div>
+        </div>
+        <div class="sec-block">
+          <div class="sec-h"><span class="ttl">Final Deck Difference</span><span class="rule"></span><span class="meta">RL agent <span class="src-tag" id="cmp-deck-src"></span></span></div>
+          <div class="cmp-deck-diff" id="cmp-deck-diff"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+
+// ══════════════════════════════════════════════════════════════
+//  Chart.js plugins: dark background (for PNG export) + reference lines
+// ══════════════════════════════════════════════════════════════
+Chart.register({
+  id:'darkbg',
+  beforeDraw(chart){const{ctx,width,height}=chart;ctx.save();ctx.globalCompositeOperation='destination-over';ctx.fillStyle='#121316';ctx.fillRect(0,0,width,height);ctx.restore();}
+});
+// Horizontal reference lines via options.plugins.refline.lines = [{y, color, label, dash}]
+Chart.register({
+  id:'refline',
+  afterDatasetsDraw(chart,args,opts){
+    const lines=opts&&opts.lines;if(!lines||!lines.length)return;
+    const{ctx,chartArea:{left,right},scales:{y}}=chart;if(!y)return;
+    ctx.save();
+    for(const ln of lines){
+      if(ln.y==null||ln.y<y.min||ln.y>y.max)continue;
+      const py=y.getPixelForValue(ln.y);
+      ctx.beginPath();ctx.setLineDash(ln.dash||[4,4]);ctx.lineWidth=1;
+      ctx.strokeStyle=ln.color||'rgba(231,230,226,.35)';
+      ctx.moveTo(left,py);ctx.lineTo(right,py);ctx.stroke();
+      if(ln.label){
+        ctx.setLineDash([]);ctx.font="9px 'JetBrains Mono',monospace";
+        ctx.fillStyle=ln.color||'rgba(231,230,226,.55)';ctx.textAlign='right';ctx.textBaseline='bottom';
+        ctx.fillText(ln.label,right-3,py-2);
+      }
+    }
+    ctx.restore();
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+//  CONSTANTS — card catalog (Dominion base set, 1E + 2E)
+// ══════════════════════════════════════════════════════════════
+const PILE_STARTS={Province:8,Duchy:8,Estate:8,Gardens:8,Colony:12,Gold:30,Silver:40,Copper:46,Curse:10};
+const DEFAULT_PILE=10;
+const SUPPLY_ORDER=['Province','Duchy','Estate','Gardens','Colony','Gold','Silver','Copper','Curse'];
+const ALWAYS_SHOW=new Set(['Province','Duchy','Estate','Gold','Silver','Copper','Curse']);
+
+const TREASURE_SET=new Set(['copper','silver','gold','platinum','potion']);
+const VICTORY_SET=new Set(['estate','duchy','province','colony','gardens','great hall','nobles','island','vineyard','farmland','fairgrounds','silk road','feodum','duke','distant lands','harem','mill','overgrown estate']);
+const CURSE_SET=new Set(['curse']);
+// Full base-set action list (1E + 2E) so unknowns can be flagged rather than mislabeled
+const ACTION_SET=new Set([
+  'cellar','chapel','moat','harbinger','merchant','vassal','village','workshop',
+  'bureaucrat','militia','moneylender','poacher','remodel','smithy','throne room',
+  'bandit','council room','festival','laboratory','library','market','mine','sentry',
+  'witch','artisan','adventurer','chancellor','feast','spy','thief','woodcutter'
+]);
+
+const EMOJIS={gold:'🥇',silver:'🥈',copper:'🟤',province:'🏆',duchy:'🏰',estate:'🏡',gardens:'🌿',curse:'💀',colony:'🌍',smithy:'⚒️',mine:'⚒️',witch:'🧙',militia:'⚔️',market:'🏪',laboratory:'🔬',library:'📚',village:'🏘️',workshop:'🔨',festival:'🎪',cellar:'🏚️',chapel:'⛪',moat:'🛡️',bureaucrat:'📜',moneylender:'💰',remodel:'🔧','throne room':'👑','council room':'🏛️',adventurer:'🗺️',bandit:'🗡️',merchant:'⚓',poacher:'🏹',artisan:'🎨',sentry:'🔍',harbinger:'🔔',vassal:'🤺',spy:'🕵️',thief:'🦹',chancellor:'📯',feast:'🍖',woodcutter:'🪓'};
+
+const SPEED_PRESETS=[{ms:2000},{ms:1000},{ms:500},{ms:250}];
+const SKIP_ANIM=300;
+const EXTRA_COLORS=['rgba(200,140,140,0.82)','rgba(140,200,180,0.82)','rgba(200,180,140,0.82)'];
+const MAX_CHART_POINTS=260;
+const PAGE_SIZE=25;
+const SIDEBAR_CAP=500;
+
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+let allGames=new Map();          // key -> gameData (replays)
+let finalDecksByEp=new Map();    // episode -> {players:[{player_id,cards,total_cards,vp,vpInfo}]}
+let metricsByEp=new Map();       // episode -> {episode,steps,reward,score_diff,epsilon}
+let activeKey=null;
+let chartInstances={};
+let activePlayerFilter=new Set();
+let sidebarOutcome='all';      // all | win | loss | tie
+let cmpA=null, cmpB=null;      // compare tab selections
+// stats games table
+let sortCol='episode', sortAsc=true, gamesPage=0;
+// card buys
+let cbActivePlayer=null, cbMode='buys', cbActiveTypes=new Set(['treasure','victory','curse','action']);
+let cbSortCol=null, cbSortAsc=true, cbPage=0;
+
+let R={turns:[],turnMap:{},players:[],currentIdx:0,supplyCards:[],pileStates:[],pileEls:{},playerBuyEls:{},isPlaying:false,playSpeed:1000,autoTimer:null,isAnimating:false};
+
+// ══════════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════════
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const sid=s=>String(s).replace(/[^a-zA-Z0-9_-]/g,'_');
+function ctype(n){const k=String(n).toLowerCase();if(CURSE_SET.has(k))return'curse';if(VICTORY_SET.has(k))return'victory';if(TREASURE_SET.has(k))return'treasure';if(ACTION_SET.has(k))return'action';return'unknown';}
+function em(n){return EMOJIS[String(n).toLowerCase()]||'🃏';}
+// small inline type-keyed dot — used in tables/labels instead of emoji for a consistent set
+const TYPE_HEX={treasure:'#e3ad53',victory:'#6bb88a',action:'#69a6bf',curse:'#b487c9',unknown:'#9a988f'};
+function typeDot(n){return `<span class="tdot" style="background:${TYPE_HEX[ctype(n)]}"></span>`;}
+function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:0;}
+function isRLName(p){return /rl|agent/i.test(p);}
+function fmtPct(x){return (x*100).toFixed(1)+'%';}
+function playerColor(pid,players){const i=players.indexOf(pid);if(i===0)return{bg:'rgba(230,183,94,0.85)',border:'rgba(230,183,94,1)'};if(i===1)return{bg:'rgba(116,171,226,0.85)',border:'rgba(116,171,226,1)'};return{bg:EXTRA_COLORS[(i-2)%EXTRA_COLORS.length],border:EXTRA_COLORS[(i-2)%EXTRA_COLORS.length].replace('0.82','1')};}
+function downsample(xs,ys,maxPts){if(xs.length<=maxPts)return{xs,ys};const out_x=[],out_y=[];const step=(xs.length-1)/(maxPts-1);for(let i=0;i<maxPts;i++){const idx=Math.round(i*step);out_x.push(xs[idx]);out_y.push(ys[idx]);}return{xs:out_x,ys:out_y};}
+function rollingMean(vals,w){const out=[];let sum=0;const q=[];for(let i=0;i<vals.length;i++){const v=vals[i];if(v==null){out.push(out.length?out[out.length-1]:null);continue;}q.push(v);sum+=v;if(q.length>w)sum-=q.shift();out.push(sum/q.length);}return out;}
+
+// ══════════════════════════════════════════════════════════════
+//  VP COMPUTATION
+// ══════════════════════════════════════════════════════════════
+function vpFromDeck(deck){
+  const size=Object.values(deck).reduce((a,b)=>a+b,0);
+  let vp=0;
+  const g=(k)=>{for(const[name,n] of Object.entries(deck))if(name.toLowerCase()===k.toLowerCase())return n;return 0;};
+  vp+=g('Province')*6; vp+=g('Colony')*10; vp+=g('Duchy')*3; vp+=g('Estate')*1;
+  vp+=g('Gardens')*Math.floor(size/10); vp+=g('Nobles')*2; vp+=g('Great Hall')*1;
+  vp+=g('Island')*2; vp+=g('Harem')*2; vp+=g('Duke')* (Math.max(0,g('Duchy'))); vp+=g('Mill')*1;
+  vp-=g('Curse')*1;
+  return{vp,deckSize:size,deck};
+}
+function vpFromBuys(buys){
+  const deck={Copper:7,Estate:3};
+  for(const[c,n] of Object.entries(buys))deck[c]=(deck[c]||0)+n;
+  return vpFromDeck(deck);
+}
+
+// ── economy & deck reconstruction (estimated: starting deck + buys) ──
+const COIN={copper:1,silver:2,gold:3,platinum:5};
+function treasureValue(deck){let v=0;for(const[n,c] of Object.entries(deck)){const k=n.toLowerCase();if(COIN[k])v+=COIN[k]*c;}return v;}
+function deckThroughTurn(gd,player,turnIdx){
+  const deck={Copper:7,Estate:3};
+  for(let i=1;i<=turnIdx&&i<gd.turns.length;i++){
+    for(const ev of gd.turnMap[gd.turns[i]]||[]){if(ev.player_id!==player)continue;for(const b of ev.buys||[])if(b!=='PASS'&&b!=='ILLEGAL')deck[b]=(deck[b]||0)+1;}
+  }
+  return deck;
+}
+function deckSize(deck){return Object.values(deck).reduce((a,b)=>a+b,0);}
+function gamesSortedByEp(){return[...allGames.entries()].sort((a,b)=>(a[1].episodeId??0)-(b[1].episodeId??0));}
+
+// ── card metadata for faithful card faces ──
+const COSTS={copper:0,silver:3,gold:6,platinum:9,curse:0,
+  estate:2,duchy:5,province:8,colony:11,gardens:4,
+  cellar:2,chapel:2,moat:2,harbinger:3,merchant:3,vassal:3,village:3,workshop:3,
+  bureaucrat:4,militia:4,moneylender:4,poacher:4,remodel:4,smithy:4,'throne room':4,
+  bandit:5,'council room':5,festival:5,laboratory:5,library:5,market:5,mine:5,sentry:5,witch:5,artisan:6,
+  adventurer:6,chancellor:3,feast:4,spy:4,thief:4,woodcutter:3};
+const CARD_VP={estate:1,duchy:3,province:6,colony:10,curse:-1};
+function cardCost(n){const k=String(n).toLowerCase();return k in COSTS?COSTS[k]:null;}
+function cardVP(n){const k=String(n).toLowerCase();return k in CARD_VP?CARD_VP[k]:null;}
+function typeLabel(t){return{treasure:'Treasure',victory:'Victory',curse:'Curse',action:'Action',unknown:'Card'}[t]||'Card';}
+// Build a faithful mini card-face. opts: {count, buy:bool, dimmed:bool}
+// ── bespoke SVG card art (auto-tints to the card's type colour via currentColor) ──
+function svg(inner){return `<svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">${inner}</svg>`;}
+// a minted coin disc with milled edge + inner ring; `motif` drawn in the centre
+function coin(motif){
+  return svg(`<circle cx="16" cy="16" r="12.5" fill="currentColor" fill-opacity=".09"/>
+    <circle cx="16" cy="16" r="12.5" stroke-dasharray="1.3 1.7" stroke-width="1.1"/>
+    <circle cx="16" cy="16" r="9" stroke-width="1.1" stroke-opacity=".75"/>${motif}`);
+}
+const CARD_ART={
+  // ── treasures: coins with escalating richness ──
+  copper:coin('<circle cx="16" cy="16" r="2.4" fill="currentColor"/>'),
+  silver:coin('<circle cx="12.4" cy="16" r="2" fill="currentColor"/><circle cx="19.6" cy="16" r="2" fill="currentColor"/>'),
+  gold:coin('<g stroke-width="1.3"><path d="M16 9.5v13M9.5 16h13M11.4 11.4l9.2 9.2M20.6 11.4l-9.2 9.2"/></g><circle cx="16" cy="16" r="2.1" fill="currentColor" stroke="none"/>'),
+  platinum:coin('<g stroke-width="1.2"><path d="M16 8.5v15M8.5 16h15M10.7 10.7l10.6 10.6M21.3 10.7L10.7 21.3"/></g><circle cx="16" cy="16" r="2.3" fill="currentColor" stroke="none"/>'),
+  potion:svg('<path d="M13 5h6M14 5v4l-4.2 7.4A4.5 4.5 0 0 0 13.7 23h4.6a4.5 4.5 0 0 0 3.9-6.6L18 9V5"/><path d="M11.3 17h9.4" stroke-opacity=".7"/><circle cx="15" cy="19.5" r="1" fill="currentColor" stroke="none"/><circle cx="18.4" cy="18" r=".8" fill="currentColor" stroke="none"/>'),
+  // ── victory: escalating estates ──
+  estate:svg('<path d="M7 16 16 9l9 7"/><path d="M9.5 14.5V24h13v-9.5"/><rect x="14" y="18" width="4" height="6" stroke-opacity=".8"/>'),
+  duchy:svg('<path d="M6 15l5-4 5 4 5-4 5 4"/><path d="M8 13.5V24h16V13.5"/><rect x="11" y="18" width="3.2" height="6"/><rect x="17.8" y="18" width="3.2" height="6" stroke-opacity=".8"/>'),
+  province:svg('<path d="M7 24V13l2-2 2 2v-2.5h10V11l2-2 2 2v11"/><path d="M7 14h18" stroke-opacity=".6"/><rect x="14" y="17" width="4" height="7"/><path d="M9 13.2v-2M23 13.2v-2" stroke-opacity=".7"/>'),
+  colony:svg('<path d="M5 24V12l2-2 2 2V9l2-2 2 2 3-3 3 3 2-2 2 2v3l2-2 2 2v12"/><path d="M5 14h22" stroke-opacity=".55"/><rect x="14" y="17.5" width="4" height="6.5"/><path d="M16 7V4M16 4l3 1.4" stroke-opacity=".8"/>'),
+  gardens:svg('<path d="M16 24c0-5 3-7 6-7-1 4-3 7-6 7zM16 24c0-5-3-7-6-7 1 4 3 7 6 7z"/><path d="M16 24v-9M16 17c0-2.5 1.6-4 4-4-.4 2.6-1.8 4-4 4zM16 14c0-2.5-1.6-4-4-4 .4 2.6 1.8 4 4 4z"/>'),
+  curse:svg('<path d="M16 6a8 8 0 0 0-8 8c0 3 1.6 5 3 6v3h10v-3c1.4-1 3-3 3-6a8 8 0 0 0-8-8z"/><circle cx="12.6" cy="14.5" r="1.8" fill="currentColor" stroke="none"/><circle cx="19.4" cy="14.5" r="1.8" fill="currentColor" stroke="none"/><path d="M13 23v-2M16 23v-2.5M19 23v-2" stroke-opacity=".8"/>'),
+};
+const ACTION_ART={
+  witch:svg('<path d="M16 5l-7 14h14L16 5z"/><path d="M6 19h20" stroke-width="2"/><circle cx="16" cy="11" r="1.2" fill="currentColor" stroke="none"/><path d="M24 8l1.6.6M25 6l.4 1.7M26.6 9.2L25 9.4" stroke-opacity=".8" stroke-width="1.2"/>'),
+  smithy:svg('<path d="M6 12h10l4 3h6v4h-6l-4 3H6z"/><path d="M9 12V9M13 12V9" stroke-opacity=".7"/><path d="M20 15v4" stroke-opacity=".6"/>'),
+  militia:svg('<path d="M9 6l13 13M9 8V6h2M22 19l2 2-2 2-2-2z"/><path d="M23 6L10 19M23 8V6h-2M10 19l-2 2 2 2 2-2z"/>'),
+  market:svg('<path d="M6 12l2-4h16l2 4"/><path d="M7 12v12h18V12"/><path d="M6 12h20" stroke-opacity=".5"/><rect x="13.5" y="16" width="5" height="8"/><path d="M9 8v4M16 8v4M23 8v4" stroke-opacity=".5"/>'),
+  laboratory:svg('<path d="M13 5v6l-5 9a3 3 0 0 0 2.7 4.5h10.6A3 3 0 0 0 24 20l-5-9V5"/><path d="M11 5h10" /><path d="M10.5 18h11" stroke-opacity=".6"/><circle cx="14" cy="20" r="1" fill="currentColor" stroke="none"/><circle cx="18" cy="21" r=".9" fill="currentColor" stroke="none"/>'),
+  library:svg('<rect x="7" y="6" width="5" height="20" rx="1"/><rect x="13.5" y="6" width="5" height="20" rx="1"/><path d="M20 7l4.5 1-3 19-4.5-1z"/><path d="M7 11h5M13.5 11h5" stroke-opacity=".6"/>'),
+  village:svg('<path d="M5 17l5-4 5 4M7 16v8h6v-8"/><path d="M16 15l6-5 6 5M19 14v10h6V14"/><rect x="9" y="19" width="2.5" height="5" stroke-opacity=".7"/>'),
+  mine:svg('<path d="M7 9c4-2 9 3 11 9M7 9l-1.5 3.5M7 9l3.3-.6"/><path d="M18 18l7 7M16.5 19.5l3-3" stroke-width="2"/>'),
+  moat:svg('<path d="M16 5c5 2 8 5 8 11 0 5-4 9-8 11-4-2-8-6-8-11 0-6 3-9 8-11z"/><path d="M16 8c3.3 1.5 5.3 3.5 5.3 8 0 3.6-2.7 6.6-5.3 8" stroke-opacity=".55"/>'),
+  chapel:svg('<path d="M16 4v5M13.5 6.5h5" stroke-width="1.3"/><path d="M9 14l7-4 7 4"/><path d="M11 13v11h10V13"/><path d="M14 24v-5h4v5" stroke-opacity=".8"/>'),
+  cellar:svg('<ellipse cx="16" cy="8" rx="8" ry="2.5"/><path d="M8 8v16c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5V8"/><path d="M8 16c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5" stroke-opacity=".5"/>'),
+  bureaucrat:svg('<path d="M9 6h14l-1 20H10z"/><path d="M11 11h10M11 15h10M11 19h7" stroke-opacity=".7" stroke-width="1.3"/>'),
+  moneylender:coin('<path d="M16 10v12M13 12.5h4.5a2 2 0 0 1 0 4H13M13 16.5h4.5a2 2 0 0 1 0 4H13" stroke-width="1.3"/>'),
+  remodel:svg('<path d="M20 6l6 6-3 3-6-6z"/><path d="M17 9L6 20v6h6L23 15" /><path d="M6 20l6 6" stroke-opacity=".5"/>'),
+  'throne room':svg('<path d="M8 13l3-5 5 4 5-4 3 5"/><path d="M8 13v11h16V13"/><path d="M11 24v-6h10v6" stroke-opacity=".7"/><path d="M16 8V4" stroke-opacity=".7"/>'),
+  bandit:svg('<path d="M6 13h20l-2 4H8z"/><path d="M9 17l2 8M23 17l-2 8" stroke-opacity=".7"/><circle cx="12.5" cy="15" r="1" fill="currentColor" stroke="none"/><circle cx="19.5" cy="15" r="1" fill="currentColor" stroke="none"/>'),
+  'council room':svg('<path d="M5 13l11-7 11 7"/><path d="M7 12v12h18V12"/><path d="M10 24V14M16 24V14M22 24V14" stroke-opacity=".6"/>'),
+  festival:svg('<path d="M16 5v8M9 9l7 4 7-4"/><path d="M8 26c1-7 3.6-11 8-11s7 4 8 11z"/><path d="M11 26l2.5-8M21 26l-2.5-8" stroke-opacity=".5"/>'),
+  merchant:svg('<path d="M6 9h3l3 12h9l3-9H10"/><circle cx="13" cy="25" r="1.6"/><circle cx="20" cy="25" r="1.6"/>'),
+  poacher:svg('<path d="M9 5v22M9 5c8 1 8 7 0 8" /><path d="M22 16l4-3-4-3v2h-5v2h5z" stroke-opacity=".8"/>'),
+  artisan:svg('<path d="M16 5l3 5 5-2-2 5 5 3-5 3 2 5-5-2-3 5-3-5-5 2 2-5-5-3 5-3-2-5 5 2z"/><circle cx="16" cy="16" r="3"/>'),
+  sentry:svg('<circle cx="14" cy="14" r="7"/><path d="M19 19l7 7" stroke-width="2"/><path d="M14 10v8M10 14h8" stroke-opacity=".5" stroke-width="1.2"/>'),
+  harbinger:svg('<path d="M16 6a5 5 0 0 0-5 5c0 5-2 7-2 7h14s-2-2-2-7a5 5 0 0 0-5-5z"/><path d="M14 24a2 2 0 0 0 4 0" stroke-opacity=".8"/>'),
+  vassal:svg('<circle cx="16" cy="10" r="4"/><path d="M9 26c0-5 3-8 7-8s7 3 7 8"/>'),
+  adventurer:svg('<circle cx="16" cy="16" r="11"/><path d="M16 5v22M5 16h22" stroke-opacity=".4"/><path d="M16 16l6-6-3 8-7 3 4-5z" fill="currentColor" stroke="none" fill-opacity=".8"/>'),
+  woodcutter:svg('<path d="M20 6l4 4-9 9-4-4z"/><path d="M11 15L5 21v5h5l6-6" /><path d="M22 8l3-3" stroke-opacity=".6"/>'),
+};
+function cardArt(name){
+  const k=String(name).toLowerCase();
+  if(CARD_ART[k])return CARD_ART[k];
+  if(ACTION_ART[k])return ACTION_ART[k];
+  // typed fallbacks so unknown cards still look intentional
+  const t=ctype(name);
+  if(t==='treasure')return coin('<circle cx="16" cy="16" r="2.2" fill="currentColor" stroke="none"/>');
+  if(t==='victory')return CARD_ART.estate;
+  if(t==='curse')return CARD_ART.curse;
+  if(t==='action')return svg('<circle cx="16" cy="16" r="8"/><path d="M16 8v-3M16 27v-3M8 16H5M27 16h-3M10.3 10.3L8.2 8.2M23.8 23.8l-2.1-2.1M21.7 10.3l2.1-2.1M10.3 21.7l-2.1 2.1"/><circle cx="16" cy="16" r="2.6" fill="currentColor" stroke="none"/>');
+  return svg('<rect x="8" y="6" width="16" height="20" rx="2"/><path d="M11 12h10M11 16h10M11 20h6" stroke-opacity=".6"/>');
+}
+
+function cardFace(name,opts={}){
+  const t=ctype(name),cost=cardCost(name),vp=cardVP(name);
+  const cls=['dcard',`t-${t}`];if(opts.buy)cls.push('is-buy');if(opts.dimmed)cls.push('dimmed');if(opts.deal)cls.push('dealing');
+  let badges='';
+  if(opts.count>1)badges+=`<span class="dcard-count">×${opts.count}</span>`;
+  if(cost!=null)badges+=`<span class="dcard-cost" title="cost ${cost}">${cost}</span>`;
+  if(vp!=null)badges+=`<span class="dcard-vp${vp<0?' neg':''}" title="${vp} victory points">${vp>0?'+':''}${vp}</span>`;
+  else if(String(name).toLowerCase()==='gardens')badges+=`<span class="dcard-vp" title="1 VP per 10 cards">▦</span>`;
+  return `<div class="${cls.join(' ')}" title="${esc(name)}${cost!=null?' · cost '+cost:''}">
+    <div class="dcard-title">${esc(name)}</div>
+    <div class="dcard-art">${cardArt(name)}</div>
+    <div class="dcard-type">${typeLabel(t)}</div>${badges}</div>`;
+}
+function handCoinValue(handCounts){let v=0;for(const[n,c] of Object.entries(handCounts)){const k=n.toLowerCase();if(COIN[k])v+=COIN[k]*c;}return v;}
+
+// ══════════════════════════════════════════════════════════════
+//  FILE DETECTION + PARSING
+// ══════════════════════════════════════════════════════════════
+function parseJSONL(text){return text.trim().split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{try{return JSON.parse(l);}catch{return null;}}).filter(Boolean);}
+
+function parseCSV(text){
+  const lines=text.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+  if(lines.length<2)return null;
+  const header=lines[0].split(',').map(h=>h.trim());
+  const idx={};header.forEach((h,i)=>idx[h]=i);
+  if(idx.episode===undefined)return null;
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    const c=lines[i].split(',');
+    const ep=parseInt(c[idx.episode]);if(isNaN(ep))continue;
+    const num=k=>{const v=c[idx[k]];if(v===undefined||v==='')return null;const f=parseFloat(v);return isNaN(f)?null:f;};
+    rows.push({episode:ep,steps:num('steps'),reward:num('reward'),score_diff:num('score_diff'),epsilon:num('epsilon')});
+  }
+  return rows.length?rows:null;
+}
+
+// returns {type, payload}
+function detectFile(text,filename){
+  const fnl=filename.toLowerCase();
+  // CSV
+  if(fnl.endsWith('.csv')||(/episode/i.test(text.split('\n')[0])&&/(score_diff|reward|epsilon)/i.test(text.split('\n')[0]))){
+    const rows=parseCSV(text);
+    if(rows)return{type:'metrics',payload:rows};
+  }
+  // Try whole-text JSON (final_decks.json is a pretty-printed array)
+  const trimmed=text.trim();
+  if(trimmed.startsWith('[')){
+    try{
+      const arr=JSON.parse(trimmed);
+      if(Array.isArray(arr)&&arr.length){
+        const f=arr[0];
+        if(f&&Array.isArray(f.players)&&f.players[0]&&f.players[0].cards)return{type:'finaldecks',payload:arr};
+        if(f&&(f.turn!==undefined))return{type:'replay',payload:arr};
+      }
+    }catch{}
+  }
+  // JSONL replay
+  const evts=parseJSONL(text);
+  if(evts.length&&(evts[0].turn!==undefined||evts[0].buys!==undefined))return{type:'replay',payload:evts,filename};
+  // single JSON object?
+  if(trimmed.startsWith('{')){
+    try{const o=JSON.parse(trimmed);if(o.turn!==undefined)return{type:'replay',payload:[o]};}catch{}
+  }
+  return{type:'unknown'};
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BUILD GAME DATA (replay)
+// ══════════════════════════════════════════════════════════════
+function buildGameData(events,filename){
+  if(!events.length)return null;
+  const turnMap={};const pset=new Set();let episodeId=null;
+  for(const ev of events){
+    const t=parseInt(ev.turn);if(isNaN(t))continue;
+    (turnMap[t]||(turnMap[t]=[])).push(ev);
+    if(ev.player_id)pset.add(ev.player_id);
+    if(ev.episode!=null)episodeId=ev.episode;
+  }
+  const realTurns=Object.keys(turnMap).map(Number).sort((a,b)=>a-b);
+  if(!realTurns.length)return null;
+  turnMap[0]=[];                       // virtual turn 0 (start)
+  const turns=[0,...realTurns];
+  const players=[...pset];
+  const ri=players.findIndex(isRLName);
+  if(ri>0){const[r]=players.splice(ri,1);players.unshift(r);}
+
+  const bought=new Set();
+  for(const t of realTurns)for(const ev of turnMap[t]||[])for(const b of ev.buys||[])if(b!=='PASS'&&b!=='ILLEGAL')bought.add(b);
+  for(const c of ALWAYS_SHOW)bought.add(c);
+  const known=SUPPLY_ORDER.filter(c=>bought.has(c));
+  const actions=[...bought].filter(c=>!SUPPLY_ORDER.includes(c)).sort((a,b)=>a.localeCompare(b));
+  const supplyCards=[...known,...actions];
+
+  const init={};for(const c of supplyCards)init[c]=PILE_STARTS[c]||DEFAULT_PILE;
+  const pileStates=[{...init}];
+  for(let i=0;i<turns.length;i++){
+    const s={...pileStates[i]};
+    for(const ev of turnMap[turns[i]]||[])for(const b of ev.buys||[])if(b!=='PASS'&&b!=='ILLEGAL'&&s[b]!==undefined)s[b]=Math.max(0,s[b]-1);
+    pileStates.push(s);
+  }
+
+  // buys matrix + illegal counts
+  const buysMatrix={};for(const p of players)buysMatrix[p]={};
+  let rlIllegal=0, rlDecisions=0;
+  const rl=players[0];
+  for(const t of realTurns)for(const ev of turnMap[t]||[]){
+    if(!buysMatrix[ev.player_id])buysMatrix[ev.player_id]={};
+    for(const b of ev.buys||[]){
+      if(ev.player_id===rl){rlDecisions++;if(b==='ILLEGAL')rlIllegal++;}
+      if(b!=='PASS'&&b!=='ILLEGAL')buysMatrix[ev.player_id][b]=(buysMatrix[ev.player_id][b]||0)+1;
+    }
+  }
+
+  const vpEst={};for(const p of players)vpEst[p]=vpFromBuys(buysMatrix[p]);
+
+  // opening buys (turns 1-2) + first-Province turn, per player
+  const firstProvince={},opening={};
+  for(const p of players){firstProvince[p]=null;opening[p]={1:[],2:[]};}
+  for(const t of realTurns)for(const ev of turnMap[t]||[]){
+    const p=ev.player_id;if(!opening[p]){opening[p]={1:[],2:[]};firstProvince[p]=null;}
+    for(const b of ev.buys||[]){
+      if(b==='Province'&&firstProvince[p]==null)firstProvince[p]=t;
+      if((t===1||t===2)&&b!=='PASS'&&b!=='ILLEGAL')opening[p][t].push(b);
+    }
+  }
+  // endgame: final pile state -> empties / reason
+  const endState=pileStates[pileStates.length-1]||{};
+  let emptyPiles=0;const emptied=[];
+  for(const c of supplyCards)if((endState[c]??1)===0){emptyPiles++;emptied.push(c);}
+  const provinceOut=(endState['Province']??1)===0;
+  const colonyOut=supplyCards.includes('Colony')&&(endState['Colony']??1)===0;
+  const endReason=provinceOut?'Provinces out':(emptyPiles>=3?'3-pile ending':'turn cutoff');
+
+  return{filename,episodeId,turns,turnMap,players,supplyCards,pileStates,buysMatrix,vpEst,
+    illegalRate:rlDecisions?rlIllegal/rlDecisions:null,
+    firstProvince,opening,endState,emptyPiles,emptied,endReason,provinceOut,colonyOut};
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RESOLVE FINAL DECK / VP for a game
+// ══════════════════════════════════════════════════════════════
+function getFinalDeck(episodeId){return episodeId!=null?finalDecksByEp.get(episodeId):null;}
+
+// Returns {players:{pid:{vp,deck,deckSize}}, source:'real'|'est'}
+function resolveDecks(gd){
+  const fd=getFinalDeck(gd.episodeId);
+  if(fd){
+    const out={};
+    for(const pl of fd.players){
+      const r=vpFromDeck(pl.cards||{});
+      out[pl.player_id]=r;
+    }
+    return{players:out,source:'real'};
+  }
+  const out={};for(const p of gd.players)out[p]=gd.vpEst[p];
+  return{players:out,source:'est'};
+}
+
+// Outcome for one game: {sd, result, source}  (sd = RL - best opp VP/score)
+function rlVsBest(players){           // players: [{id,vp}] -> {rlVP,best}
+  const ri=players.findIndex(p=>isRLName(p.id));
+  const rlIdx=ri>=0?ri:0;
+  const rlVP=players[rlIdx]?.vp??0;
+  const others=players.filter((_,i)=>i!==rlIdx).map(p=>p.vp);
+  return{rlVP,best:others.length?Math.max(...others):0};
+}
+function gameOutcome(gd){
+  // 1) Prefer CSV score_diff for this episode
+  const m=gd.episodeId!=null?metricsByEp.get(gd.episodeId):null;
+  if(m&&m.score_diff!=null)return{sd:m.score_diff,result:m.score_diff>0?'win':m.score_diff<0?'loss':'tie',source:'csv'};
+  // 2) Real final deck — use the deck file's own player roster
+  const fd=getFinalDeck(gd.episodeId);
+  if(fd){
+    const ps=fd.players.map(p=>({id:p.player_id,vp:vpFromDeck(p.cards||{}).vp}));
+    const{rlVP,best}=rlVsBest(ps);const sd=rlVP-best;
+    return{sd,result:sd>0?'win':sd<0?'loss':'tie',source:'deck'};
+  }
+  // 3) Estimate from replay buys
+  const ps=gd.players.map(p=>({id:p,vp:gd.vpEst[p]?.vp??0}));
+  const{rlVP,best}=rlVsBest(ps);const sd=rlVP-best;
+  return{sd,result:sd>0?'win':sd<0?'loss':'tie',source:'est'};
+}
+
+// ══════════════════════════════════════════════════════════════
+//  FILE LOADING
+// ══════════════════════════════════════════════════════════════
+const MAX_FILE_MB=60;
+function loadFiles(files){
+  let done=0,ok=0,fail=0,addedGames=0,addedDecks=0,addedMetrics=0;const failNames=[];
+  const n=files.length;
+  // size guard
+  for(const f of files){if(f.size>MAX_FILE_MB*1024*1024){showError(`"${f.name}" is ${(f.size/1048576).toFixed(0)} MB — over the ${MAX_FILE_MB} MB limit. Split it or load fewer episodes.`);return;}}
+  const drop=document.getElementById('drop-zone');if(drop&&!allGames.size)drop.classList.add('loading');
+  function finish(){
+    if(done<n)return;
+    if(drop)drop.classList.remove('loading');
+    if(ok){showUI();if(!activeKey&&allGames.size)activateGame([...allGames.keys()][0]);refreshGamesList();updatePills();cbRefresh();refreshStats();refreshTraining();populateCompareSelectors();runDiagnostics();
+      const bits=[];if(addedGames)bits.push(`${addedGames} game${addedGames>1?'s':''}`);if(addedDecks)bits.push(`${addedDecks} final-deck set${addedDecks>1?'s':''}`);if(addedMetrics)bits.push(`${addedMetrics} metric row${addedMetrics>1?'s':''}`);
+      if(bits.length)showInfo(`Loaded ${bits.join(' · ')}.`);
+    }
+    if(fail)showError(`Couldn't read ${fail} file${fail>1?'s':''}: ${failNames.slice(0,3).join(', ')}${failNames.length>3?'…':''}. Expected turn JSONL, final_decks.json, or metrics CSV.`);
+  }
+  for(const file of files){
+    const r=new FileReader();
+    r.onload=ev=>{
+      done++;
+      let res;try{res=detectFile(ev.target.result,file.name);}catch(e){res={type:'unknown'};}
+      if(res.type==='replay'){
+        const gd=buildGameData(res.payload,file.name);
+        if(gd){const key=`${file.name}__ep${gd.episodeId??Math.random().toFixed(6)}`;allGames.set(key,gd);ok++;addedGames++;}
+        else {fail++;failNames.push(file.name);}
+      }else if(res.type==='finaldecks'){
+        let any=false;for(const entry of res.payload){if(entry.episode==null||!Array.isArray(entry.players))continue;finalDecksByEp.set(entry.episode,entry);addedDecks++;any=true;}
+        if(any)ok++;else{fail++;failNames.push(file.name);}
+      }else if(res.type==='metrics'){
+        for(const row of res.payload)metricsByEp.set(row.episode,row);
+        addedMetrics+=res.payload.length;ok++;
+      }else {fail++;failNames.push(file.name);}
+      finish();
+    };
+    r.onerror=()=>{done++;fail++;failNames.push(file.name);finish();};
+    r.readAsText(file);
+  }
+}
+
+function loadFromPaste(){
+  const text=document.getElementById('paste-area')?.value?.trim();
+  if(!text){showError('Paste area is empty.');return;}
+  const res=detectFile(text,'pasted.jsonl');
+  if(res.type!=='replay'){showError('Pasted content is not valid turn JSONL.');return;}
+  const gd=buildGameData(res.payload,'pasted-data');
+  if(!gd){showError('No valid turn data found.');return;}
+  const key=`paste_${Date.now()}`;allGames.set(key,gd);
+  showUI();activateGame(key);refreshGamesList();updatePills();cbRefresh();refreshStats();refreshTraining();populateCompareSelectors();runDiagnostics();
+}
+
+function clearAll(){
+  stopPlay();R.isAnimating=false;R.animGen=(R.animGen||0)+1;
+  document.querySelectorAll('.flying-card,.spark,.ring-pulse').forEach(el=>el.remove());
+  R.turns=[];R.turnMap={};R.players=[];R.supplyCards=[];R.pileStates=[];R.currentIdx=0;
+  allGames.clear();finalDecksByEp.clear();metricsByEp.clear();activeKey=null;destroyAllCharts();
+  activePlayerFilter=new Set();cbActivePlayer=null;gamesPage=0;cbPage=0;cmpA=null;cmpB=null;
+  diagResults=[];diagOpen=false;const dp=document.getElementById('diag-panel');if(dp)dp.style.display='none';
+  sidebarOutcome='all';document.querySelectorAll('#outcome-filter .of-chip').forEach(b=>b.classList.toggle('on',b.dataset.f==='all'));
+  document.getElementById('load-screen').style.display='flex';
+  document.getElementById('replay-content').style.display='none';
+  document.getElementById('load-bar').style.display='none';
+  document.getElementById('tab-nav').style.display='none';
+  const cs=document.getElementById('chrome-stat');if(cs)cs.style.display='none';
+  document.getElementById('stats-content').style.display='none';document.getElementById('stats-empty').style.display='block';
+  document.getElementById('cb-content').style.display='none';document.getElementById('cb-empty').style.display='block';
+  document.getElementById('train-content').style.display='none';document.getElementById('train-empty').style.display='block';
+  document.getElementById('cmp-content').style.display='none';document.getElementById('cmp-empty').style.display='block';
+  switchTab('replay');
+}
+
+function showUI(){
+  document.getElementById('load-screen').style.display='none';
+  const cs=document.getElementById('chrome-stat');if(cs)cs.style.display='flex';
+  document.getElementById('replay-content').style.display='block';
+  document.getElementById('load-bar').style.display='flex';
+  document.getElementById('tab-nav').style.display='flex';
+}
+function updatePills(){
+  document.getElementById('pill-decks').classList.toggle('on',finalDecksByEp.size>0);
+  document.getElementById('pill-decks').textContent=finalDecksByEp.size?`final_decks ✓ (${finalDecksByEp.size})`:'final_decks';
+  document.getElementById('pill-metrics').classList.toggle('on',metricsByEp.size>0);
+  document.getElementById('pill-metrics').textContent=metricsByEp.size?`metrics ✓ (${metricsByEp.size})`:'metrics csv';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DATA-INTEGRITY SELF-CHECK
+// ══════════════════════════════════════════════════════════════
+let diagResults=[],diagOpen=false;
+function runDiagnostics(){
+  const out=[];
+  const add=(level,title,sub)=>out.push({level,title,sub});
+  const games=[...allGames.values()];
+  const epOf=g=>g.episodeId;
+  // 1) duplicate episode ids among replays
+  const epCounts={};for(const g of games)if(g.episodeId!=null)epCounts[g.episodeId]=(epCounts[g.episodeId]||0)+1;
+  const dups=Object.entries(epCounts).filter(([,c])=>c>1).map(([e])=>e);
+  if(dups.length)add('warn',`${dups.length} duplicate episode id${dups.length>1?'s':''} across replays`,`Episodes ${dups.slice(0,8).join(', ')}${dups.length>8?'…':''} — later loads may shadow earlier ones.`);
+  // 2) final_decks / metrics referencing episodes with no replay
+  const replayEps=new Set(games.map(epOf).filter(e=>e!=null));
+  const deckOnly=[...finalDecksByEp.keys()].filter(e=>!replayEps.has(e));
+  const metricOnly=[...metricsByEp.keys()].filter(e=>!replayEps.has(e));
+  if(deckOnly.length)add('ok',`${deckOnly.length} final-deck record${deckOnly.length>1?'s':''} without a replay`,`Used for stats/training only (no turn-by-turn playback). e.g. ${deckOnly.slice(0,6).join(', ')}${deckOnly.length>6?'…':''}`);
+  if(metricOnly.length)add('ok',`${metricOnly.length} metric row${metricOnly.length>1?'s':''} without a replay`,`Training curves use these; they won't appear in the replay rail.`);
+  // 3) replays with no matching final_decks (VP is estimated)
+  if(finalDecksByEp.size){
+    const noDeck=games.filter(g=>g.episodeId==null||!finalDecksByEp.has(g.episodeId));
+    if(noDeck.length)add('warn',`${noDeck.length} replay${noDeck.length>1?'s':''} fall back to estimated decks`,`No final_decks.json entry — VP & deck come from starting deck + buys, ignoring trashed/gained cards.`);
+  }else if(games.length){
+    add('warn','No final_decks.json loaded','All VP/decks are estimated from buys. Load final_decks.json for exact end-state.');
+  }
+  // 4) illegal-buy presence
+  let illegalGames=0,illegalTotal=0,decisionTotal=0;
+  for(const g of games){if(g.illegalRate!=null){decisionTotal++;if(g.illegalRate>0)illegalGames++;illegalTotal+=g.illegalRate;}}
+  if(illegalGames)add('warn',`RL made illegal buys in ${illegalGames} game${illegalGames>1?'s':''}`,`Avg illegal-buy rate ${(illegalTotal/Math.max(1,decisionTotal)*100).toFixed(1)}% across replays — see Training ▸ Illegal Buy Rate.`);
+  // 5) pile underflow / overbuy (more buys than pile could supply)
+  const underflow=[];
+  for(const g of games){
+    const end=g.pileStates&&g.pileStates[g.pileStates.length-1];if(!end)continue;
+    let bad=false;for(const c of g.supplyCards||[]){const start=PILE_STARTS[c]||DEFAULT_PILE;const bought=Object.values(g.turnMap||{}).flat().reduce((s,ev)=>s+((ev.buys||[]).filter(b=>b===c).length),0);if(bought>start){bad=true;break;}}
+    if(bad)underflow.push(g.episodeId??'?');
+  }
+  if(underflow.length)add('err',`${underflow.length} game${underflow.length>1?'s':''} buy more of a card than the pile holds`,`Episodes ${underflow.slice(0,8).join(', ')}${underflow.length>8?'…':''} — log may double-count gains, or pile sizes differ from base set.`);
+  // 6) games with no recorded buys at all
+  const emptyGames=games.filter(g=>!Object.values(g.buysMatrix||{}).some(m=>Object.keys(m).length));
+  if(emptyGames.length)add('warn',`${emptyGames.length} game${emptyGames.length>1?'s':''} have no recorded buys`,`Players passed every turn, or the buys field was empty in the log.`);
+  // 7) single-player games (no opponent)
+  const solo=games.filter(g=>g.players.length<2);
+  if(solo.length)add('warn',`${solo.length} game${solo.length>1?'s':''} have only one player`,`Score differential is computed against 0 for these.`);
+  // 8) all clear
+  if(!out.length&&games.length)add('ok','No data issues detected',`${games.length} game${games.length>1?'s':''} parsed cleanly with consistent piles, decks, and outcomes.`);
+  diagResults=out;
+  // update dot
+  const dot=document.getElementById('diag-dot'),label=document.getElementById('diag-label'),btn=document.getElementById('diag-btn');
+  const errs=out.filter(o=>o.level==='err').length,warns=out.filter(o=>o.level==='warn').length;
+  if(dot){dot.className='diag-dot '+(errs?'err':warns?'warn':'ok');}
+  if(label)label.textContent=errs?`${errs} issue${errs>1?'s':''}`:warns?`${warns} note${warns>1?'s':''}`:'all clear';
+  if(btn)btn.classList.toggle('has-err',!!errs);
+  if(diagOpen)renderDiag();
+}
+function renderDiag(){
+  const panel=document.getElementById('diag-panel');if(!panel)return;
+  const icon={err:'!',warn:'△',ok:'✓'};
+  const rows=diagResults.map(r=>`<div class="diag-row ${r.level}"><span class="ic">${icon[r.level]}</span><div class="body"><b>${esc(r.title)}</b><div class="sub">${esc(r.sub)}</div></div></div>`).join('');
+  panel.innerHTML=`<div class="diag-head">Data integrity · ${allGames.size} game${allGames.size!==1?'s':''} loaded<span class="x" onclick="toggleDiag()">✕</span></div><div class="diag-list">${rows||'<div class="diag-row ok"><span class="ic">✓</span><div class="body"><b>Nothing loaded yet</b></div></div>'}</div>`;
+}
+function toggleDiag(){diagOpen=!diagOpen;const p=document.getElementById('diag-panel');if(!p)return;if(diagOpen){renderDiag();p.style.display='block';}else p.style.display='none';}
+
+
+// ══════════════════════════════════════════════════════════════
+//  REPLAY — animated broadcast presentation
+//  (reads from allGames / R / deckThroughTurn / gameOutcome)
+// ══════════════════════════════════════════════════════════════
+let prevVP={},wasLast=false,confettiAnim=null,prevLead=null;
+
+function activateGame(key){
+  activeKey=key;const gd=allGames.get(key);if(!gd)return;
+  stopPlay();R.isAnimating=false;R.animGen=(R.animGen||0)+1;
+  document.querySelectorAll('.flying-card,.spark,.ring-pulse').forEach(el=>el.remove());
+  R.turns=gd.turns;R.turnMap=gd.turnMap;R.players=gd.players;R.supplyCards=gd.supplyCards;R.pileStates=gd.pileStates;
+  R.pileEls={};R.playerBuyEls={};R.currentIdx=0;
+  prevVP={};wasLast=false;prevLead=null;
+  // header meta
+  const v=gameOutcome(gd);
+  setText('rp-ep',gd.episodeId??'—');
+  setText('rp-turns',gd.turns.length-1);
+  setText('rp-players',gd.players.length);
+  const dk=resolveDecks(gd);
+  setText('rp-deckcount',(dk.players[gd.players[0]]?.deckSize??'—')+' cards');
+  const vlabel=v.result==='win'?'RL WINS':v.result==='loss'?'RL LOSES':'DRAW';
+  const vh=document.getElementById('rp-verdict');
+  vh.className='verdict '+v.result;vh.textContent=`${vlabel} ${v.sd>0?'+':''}${Number.isFinite(v.sd)?v.sd:''}`;
+  const sl=document.getElementById('turn-slider');sl.min=0;sl.max=gd.turns.length-1;sl.value=0;
+  buildTimeline();buildSupplyDOM();renderTurn(0,'instant');highlightGameItem(key);
+  refreshGamesList();
+}
+function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+
+// ── sidebar list (filtered + capped) ──
+function refreshGamesList(){
+  const container=document.getElementById('games-list');if(!container)return;container.innerHTML='';
+  const q=(document.getElementById('game-search')?.value||'').toLowerCase().trim();
+  const entries=[...allGames.entries()].filter(([k,gd])=>{
+    if(sidebarOutcome!=='all'&&gameOutcome(gd).result!==sidebarOutcome)return false;
+    if(!q)return true;
+    return String(gd.episodeId).includes(q)||gd.filename.toLowerCase().includes(q);
+  });
+  const shown=entries.slice(0,SIDEBAR_CAP);
+  for(const[key,gd] of shown){
+    const oc=gameOutcome(gd);
+    const ocCls=oc.result==='win'?'gi-win':oc.result==='loss'?'gi-loss':'gi-tie';
+    const ocTxt=oc.result==='win'?'W':oc.result==='loss'?'L':'T';
+    const div=document.createElement('div');div.className='game-item'+(key===activeKey?' active':'');div.dataset.key=key;
+    div.innerHTML=`<div class="gi-top"><span class="gi-name">EP ${gd.episodeId??'?'}</span><span class="gi-outcome ${ocCls}">${ocTxt}<i>${oc.sd>0?'+':''}${Number.isFinite(oc.sd)?oc.sd:'?'}</i></span></div>
+      <div class="gi-meta">${gd.turns.length-1} turns · ${gd.players.length}p</div>`;
+    div.onclick=()=>activateGame(key);container.appendChild(div);
+  }
+  const note=document.getElementById('sidebar-note');
+  if(!entries.length&&container){
+    const hasFilter=q||sidebarOutcome!=='all';
+    container.innerHTML=`<div class="rail-empty">No games match${hasFilter?' the current filter':''}.${hasFilter?' <button class="link-btn" onclick="resetGamesFilter()">Reset</button>':''}</div>`;
+  }
+  if(note)note.textContent=entries.length>SIDEBAR_CAP?`Showing ${SIDEBAR_CAP} of ${entries.length} — refine search`:(entries.length?`${entries.length} of ${allGames.size}`:'');
+  const ls=document.getElementById('load-stat');if(ls)ls.innerHTML=`<b>${allGames.size}</b> game${allGames.size!==1?'s':''}`;
+}
+function resetGamesFilter(){const s=document.getElementById('game-search');if(s)s.value='';setOutcomeFilter('all');}
+function setOutcomeFilter(f){
+  sidebarOutcome=f;
+  document.querySelectorAll('#outcome-filter .of-chip').forEach(b=>b.classList.toggle('on',b.dataset.f===f));
+  refreshGamesList();
+}
+function highlightGameItem(key){document.querySelectorAll('.game-item').forEach(el=>el.classList.toggle('active',el.dataset.key===key));}
+
+// ══════════════════════════════════════════════════════════════
+//  SUPPLY
+// ══════════════════════════════════════════════════════════════
+function buildSupplyDOM(){
+  const track=document.getElementById('supply-track');track.innerHTML='';R.pileEls={};
+  for(const card of R.supplyCards){
+    const wrap=document.createElement('div');wrap.className='pile';
+    wrap.innerHTML=`<span class="remain">—</span>${cardFace(card,{})}<div class="stamp-out">OUT</div><div class="deplete"><i style="width:100%"></i></div>`;
+    track.appendChild(wrap);R.pileEls[card]=wrap;
+  }
+}
+function updateSupply(state,flash){
+  for(const card of R.supplyCards){
+    const w=R.pileEls[card];if(!w)continue;
+    const count=state[card]??0,start=PILE_STARTS[card]||DEFAULT_PILE;
+    const rem=w.querySelector('.remain'),bar=w.querySelector('.deplete i');const prev=parseInt(rem.textContent);
+    rem.textContent=count;bar.style.width=Math.max(0,(count/start)*100)+'%';
+    w.classList.toggle('depleted',count===0);
+    w.classList.toggle('low',count>0&&count<=Math.max(2,start*0.25));
+    if(flash&&!isNaN(prev)&&prev!==count){rem.classList.remove('pop');void rem.offsetWidth;rem.classList.add('pop');
+      if(count===0){w.classList.remove('justEmptied');void w.offsetWidth;w.classList.add('justEmptied');}}
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SCOREBOARD + SEATS
+// ══════════════════════════════════════════════════════════════
+function tweenNum(el,from,to,dur,bump){
+  if(!el)return;from=Math.round(from);to=Math.round(to);
+  if(from===to){el.textContent=to;return;}
+  if(bump){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
+  const t0=performance.now();
+  (function f(now){const k=Math.min(1,(now-t0)/dur);const e=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*e);if(k<1)requestAnimationFrame(f);})(t0);
+}
+function renderScoreboard(idx,animate){
+  const gd=allGames.get(activeKey);if(!gd)return;
+  const a=R.players[0],b=R.players[1];
+  const va=vpFromDeck(deckThroughTurn(gd,a,idx)).vp, vb=b?vpFromDeck(deckThroughTurn(gd,b,idx)).vp:0;
+  const tot=Math.max(1,Math.max(0,va)+Math.max(0,vb));
+  const fa=prevVP.a??va, fb=prevVP.b??vb;
+  const last=idx>=R.turns.length-1;
+  const lead=b?(va>vb?'a':vb>va?'b':null):'a';
+  const sb=document.getElementById('rp-scoreboard');
+  sb.innerHTML=`
+    <div class="sb-side${lead==='a'?' leading':''}" id="side-a"><div class="sb-crown">▲</div><div class="sb-name rl">${esc(a)}</div><div class="sb-score" id="score-a">${animate?fa:va}</div></div>
+    <div class="sb-mid"><div class="sb-vs">VS</div><div class="sb-bar"><i class="ia" style="width:${Math.max(0,va)/tot*100}%"></i><i class="ib" style="width:${Math.max(0,vb)/tot*100}%"></i></div></div>
+    ${b?`<div class="sb-side${lead==='b'?' leading':''}" id="side-b"><div class="sb-crown">▲</div><div class="sb-name opp">${esc(b)}</div><div class="sb-score" id="score-b">${animate?fb:vb}</div></div>`:''}`;
+  prevLead=lead;
+  const doTween=()=>{tweenNum(document.getElementById('score-a'),fa,va,520,va!==fa);if(b)tweenNum(document.getElementById('score-b'),fb,vb,520,vb!==fb);};
+  if(animate)setTimeout(doTween,40);else doTween();
+  prevVP={a:va,b:vb};
+}
+function renderSeat(slot,player,events,isTurn0,holdBuys){
+  const el=document.getElementById('seat-'+slot);if(!player){el.style.display='none';return;}el.style.display='';
+  const gd=allGames.get(activeKey);
+  const rl=isRLName(player);
+  const ev=isTurn0?null:events.find(e=>e.player_id===player);
+  const acted=!!(ev&&ev.buys&&ev.buys.some(x=>x!=='PASS'&&x!=='ILLEGAL'));
+  el.classList.toggle('active',acted);el.className='seat '+(rl?'rl':'opp')+(acted?' active':'');
+  const deck=deckThroughTurn(gd,player,R.currentIdx);const size=deckSize(deck);
+  const hand=ev?.hand||[];const hc={};for(const c of hand)hc[c]=(hc[c]||0)+1;const coins=handCoinValue(hc);
+  const order={treasure:0,victory:1,action:2,curse:3,unknown:4};
+  const handEntries=Object.entries(hc).sort((x,y)=>(order[ctype(x[0])]-order[ctype(y[0])])||x[0].localeCompare(y[0]));
+  const initials=player.replace(/[^a-zA-Z]/g,'').slice(0,2).toUpperCase()||'P';
+  let handHTML=isTurn0?'<span class="empty">Opening hand dealt at turn 1</span>'
+    :(handEntries.length?handEntries.map(([n,c])=>cardFace(n,{count:c,deal:true})).join(''):'<span class="empty">— no hand recorded —</span>');
+  let buysHTML='';
+  if(!isTurn0&&ev){
+    const real=(ev.buys||[]).filter(x=>x!=='PASS'&&x!=='ILLEGAL');
+    const pass=(ev.buys||[]).includes('PASS');const illegal=(ev.buys||[]).includes('ILLEGAL');
+    if(real.length)buysHTML=real.map(b=>`<span data-buy="${esc(b)}"></span>`).join('');
+    else if(illegal)buysHTML='<span class="token illegal">✕ Illegal move</span>';
+    else if(pass||(ev.buys||[]).length===0)buysHTML='<span class="token pass">— Buys nothing —</span>';
+  }else if(isTurn0){buysHTML='<span class="empty">—</span>';}
+  el.innerHTML=`
+    <div class="seat-topbar"></div>
+    <div class="seat-head">
+      <div class="seat-id"><div class="avatar">${initials}</div><div><div class="seat-name">${esc(player)}</div><div class="seat-role">${rl?'Reinforcement Agent':'Opponent'}</div></div></div>
+      <div class="stats">
+        <div class="stat"><div class="n vp">${vpFromDeck(deck).vp}</div><div class="l">VP</div></div>
+        <div class="stat"><div class="n">${size}</div><div class="l">Deck</div></div>
+        <div class="stat"><div class="n">${treasureValue(deck)}</div><div class="l">$</div></div>
+      </div>
+    </div>
+    <div class="zone-label">Hand <span class="ln"></span><span class="ct">${hand.length} cards${hand.length?` · <span class="coin-tally" id="coin-${slot}">◉ <b>0</b></span>`:''}</span></div>
+    <div class="cards" id="hand-${slot}">${handHTML}</div>
+    <div class="zone-label">Acquired this turn <span class="ln"></span></div>
+    <div class="cards buys" id="buys-${slot}">${buysHTML}</div>`;
+  R.playerBuyEls[player]=el.querySelector(`#buys-${slot}`);
+  // staggered flip-deal of the hand, with the coin tally counting up alongside
+  const cardEls=[...el.querySelectorAll(`#hand-${slot} .dcard`)];
+  let d=isTurn0?0:0;
+  cardEls.forEach(c=>{c.style.animationDelay=d+'ms';d+=40;});
+  if(hand.length){
+    const coinEl=el.querySelector(`#coin-${slot} b`);
+    if(coinEl)coinEl.textContent=coins;
+  }
+  el.querySelectorAll('[data-buy]').forEach(ph=>{
+    const tmp=document.createElement('div');tmp.innerHTML=cardFace(ph.dataset.buy,{buy:true});const node=tmp.firstElementChild;
+    if(holdBuys){node.style.visibility='hidden';node.style.animation='none';}
+    ph.replaceWith(node);
+  });
+}
+
+// ── fly animation ──
+function flyCard(card,fromEl,toEl,dur,gen){
+  return new Promise(res=>{
+    if(!fromEl||!toEl){res();return;}
+    const fr=fromEl.getBoundingClientRect(),tr=toEl.getBoundingClientRect();
+    const sx=fr.left,sy=fr.top,ex=tr.left,ey=tr.top;
+    const cx=(sx+ex)/2,cy=Math.min(sy,ey)-Math.max(70,Math.abs(ex-sx)*.32);
+    const tmp=document.createElement('div');tmp.innerHTML=cardFace(card,{});
+    const el=tmp.firstElementChild;el.classList.add('flying-card');
+    el.style.cssText+=`position:fixed;left:${sx}px;top:${sy}px;margin:0;`;document.body.appendChild(el);
+    const t0=performance.now(),eio=t=>t<.5?2*t*t:-1+(4-2*t)*t;
+    (function f(now){
+      // superseded by a newer turn/nav — remove immediately instead of finishing the arc
+      if(gen!=null&&gen!==R.animGen){el.remove();res();return;}
+      const raw=(now-t0)/dur;if(raw>=1){el.remove();res();return;}
+      const t=eio(Math.min(raw,1)),u=1-t;
+      el.style.left=(u*u*sx+2*u*t*cx+t*t*ex)+'px';
+      el.style.top=(u*u*sy+2*u*t*cy+t*t*ey)+'px';
+      el.style.transform=`scale(${1+.45*Math.sin(Math.PI*t)}) rotate(${raw*340}deg)`;
+      requestAnimationFrame(f);})(t0);
+  });
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+// quiet ring accent at a screen point, tinted by card type (the fly's landing cue)
+function burst(x,y,type){
+  const tint={treasure:'#e3ad53',victory:'#6bb88a',action:'#69a6bf',curse:'#b487c9',unknown:'#9a988f'}[type]||'#f0a23c';
+  const ring=document.createElement('div');ring.className='ring-pulse';
+  ring.style.cssText=`left:${x}px;top:${y}px;width:14px;height:14px;border-color:${tint};transform:translate(-50%,-50%);opacity:.55;`;
+  document.body.appendChild(ring);
+  const r0=performance.now();
+  (function rf(now){const k=Math.min(1,(now-r0)/360);const e=1-Math.pow(1-k,2);ring.style.width=(14+34*e)+'px';ring.style.height=(14+34*e)+'px';ring.style.opacity=(0.55*(1-k));if(k<1)requestAnimationFrame(rf);else ring.remove();})(r0);
+}
+async function animateBuys(idx,events){
+  R.isAnimating=true;
+  const myGen=(R.animGen=(R.animGen||0)+1);
+  // remove any flying cards/rings left over from a previous (possibly still-animating) turn
+  document.querySelectorAll('.flying-card,.ring-pulse,.spark').forEach(el=>el.remove());
+  const queue=[];
+  for(const e of events){
+    const zone=R.playerBuyEls[e.player_id];if(!zone)continue;
+    const slots=[...zone.querySelectorAll('.dcard.is-buy')];let si=0;
+    for(const b of e.buys||[]){if(b==='PASS'||b==='ILLEGAL')continue;queue.push({card:b,slot:slots[si++]});}
+  }
+  const working={...R.pileStates[idx]};updateSupply(working,false);
+  const fast=R.playSpeed<=SKIP_ANIM;
+  const dur=fast?0:Math.min(620,R.playSpeed*.6);
+  for(const{card,slot} of queue){
+    if(myGen!==R.animGen)return;          // superseded by a newer nav — abort
+    const pile=R.pileEls[card];
+    if(dur>0)await flyCard(card,pile,slot,dur,myGen);
+    if(myGen!==R.animGen)return;
+    if(slot){slot.style.visibility='';slot.style.animation='';slot.classList.add('landing');
+      if(dur>0){const r=slot.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,ctype(card));}}
+    if(working[card]!=null)working[card]=Math.max(0,working[card]-1);
+    updateSupply(working,true);
+    if(dur>0)await sleep(85);
+  }
+  if(myGen!==R.animGen)return;
+  updateSupply(R.pileStates[idx+1],false);
+  R.isAnimating=false;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CORE RENDER
+// ══════════════════════════════════════════════════════════════
+function renderTurn(idx,mode){ // mode: 'instant' | 'animate'
+  const animate=mode==='animate';
+  const tn=R.turns[idx],isTurn0=(tn===0),events=R.turnMap[tn]||[];
+  const badge=document.getElementById('turnbadge');
+  badge.textContent=isTurn0?'START':`TURN ${tn}`;badge.className='turnbadge'+(isTurn0?' start':'');
+  badge.classList.remove('slam');void badge.offsetWidth;badge.classList.add('slam');
+  setText('turnnote',isTurn0?'Opening position — supply full, decks at 7 Copper + 3 Estate':`of ${R.turns.length-1}`);
+  const sl=document.getElementById('turn-slider');sl.value=idx;sl.style.setProperty('--prog',(idx/Math.max(1,R.turns.length-1)*100)+'%');
+  setHTML('turn-label',isTurn0?'<span class="m">START</span>':`TURN ${tn} <span class="m">/ ${R.turns.length-1}</span>`);
+  document.getElementById('btn-first').disabled=idx===0;document.getElementById('btn-prev').disabled=idx===0;
+  document.getElementById('btn-next').disabled=idx>=R.turns.length-1;document.getElementById('btn-last').disabled=idx>=R.turns.length-1;
+  if(animate){const sw=document.getElementById('sweep');if(sw){sw.classList.remove('go');void sw.offsetWidth;sw.classList.add('go');}}
+  renderScoreboard(idx,animate&&!isTurn0);
+  renderSeat('a',R.players[0],events,isTurn0,animate&&!isTurn0);
+  renderSeat('b',R.players[1],events,isTurn0,animate&&!isTurn0);
+  updateDot(idx);
+  if(isTurn0){R.isAnimating=false;updateSupply(R.pileStates[0],false);maybeWin(idx);return Promise.resolve();}
+  if(animate)return animateBuys(idx,events).then(()=>maybeWin(idx));
+  updateSupply(R.pileStates[idx+1],false);maybeWin(idx);return Promise.resolve();
+}
+function setHTML(id,v){const e=document.getElementById(id);if(e)e.innerHTML=v;}
+function maybeWin(idx){
+  const last=idx>=R.turns.length-1;
+  if(last&&!wasLast){
+    const chip=document.getElementById('rp-verdict');
+    if(chip){chip.classList.remove('show');void chip.offsetWidth;chip.classList.add('show');}
+  }
+  wasLast=last;
+}
+
+// ── nav / autoplay ──
+function clearFlyArtifacts(){R.animGen=(R.animGen||0)+1;document.querySelectorAll('.flying-card,.spark,.ring-pulse').forEach(el=>el.remove());}
+function goTo(i,mode){R.currentIdx=clamp(i,0,R.turns.length-1);return renderTurn(R.currentIdx,mode||'instant');}
+function goFirst(){stopPlay();R.isAnimating=false;clearFlyArtifacts();goTo(0,'instant');}
+function goLast(){stopPlay();R.isAnimating=false;clearFlyArtifacts();goTo(R.turns.length-1,'instant');}
+function goPrev(){if(R.currentIdx>0){stopPlay();R.isAnimating=false;clearFlyArtifacts();goTo(R.currentIdx-1,'instant');}}
+function goNext(){if(R.currentIdx<R.turns.length-1){stopPlay();
+  // if a fly animation is mid-flight, snap it done and advance instantly to avoid overlap
+  const wasAnim=R.isAnimating;R.isAnimating=false;clearFlyArtifacts();
+  goTo(R.currentIdx+1,wasAnim?'instant':'animate');}}
+function togglePlay(){R.isPlaying?stopPlay():startPlay();}
+function startPlay(){if(R.currentIdx>=R.turns.length-1){R.currentIdx=0;wasLast=false;renderTurn(0,'instant');}R.isPlaying=true;const b=document.getElementById('play-btn');b.textContent='⏸';b.classList.add('playing');advLoop();}
+function stopPlay(){R.isPlaying=false;if(R.autoTimer){clearTimeout(R.autoTimer);R.autoTimer=null;}const b=document.getElementById('play-btn');if(b){b.textContent='▶';b.classList.remove('playing');}}
+const HOLD=[1100,560,300,140];
+async function advLoop(){
+  if(!R.isPlaying)return;
+  if(R.currentIdx>=R.turns.length-1){stopPlay();return;}
+  R.currentIdx++;
+  await renderTurn(R.currentIdx,'animate');
+  if(!R.isPlaying)return;
+  R.autoTimer=setTimeout(advLoop,HOLD[R.speedIdx??1]);
+}
+function setSpeed(i){R.speedIdx=i;R.playSpeed=SPEED_PRESETS[i].ms;document.querySelectorAll('.speed-btn').forEach((b,j)=>b.classList.toggle('active',j===i));}
+
+// ── timeline ──
+function buildTimeline(){
+  const track=document.getElementById('timeline-track');track.innerHTML='';
+  document.getElementById('turn-slider').max=R.turns.length-1;
+  for(let i=0;i<R.turns.length;i++){
+    const tn=R.turns[i];let cls;
+    if(tn===0)cls='start';
+    else{const buys=(R.turnMap[tn]||[]).flatMap(e=>e.buys||[]);cls=buys.some(b=>b!=='PASS'&&b!=='ILLEGAL')?'buy':buys.some(b=>b==='ILLEGAL')?'illegal':'pass';}
+    const d=document.createElement('div');d.className=`tl-dot ${cls}`;d.title=tn===0?'Start':`Turn ${tn}`;
+    d.onclick=()=>{stopPlay();R.isAnimating=false;clearFlyArtifacts();goTo(i,'instant');};track.appendChild(d);
+  }
+}
+function updateDot(idx){document.querySelectorAll('.tl-dot').forEach((d,i)=>d.classList.toggle('cur',i===idx));document.querySelectorAll('.tl-dot')[idx]?.scrollIntoView?.({behavior:'smooth',block:'nearest',inline:'center'});}
+
+document.getElementById('turn-slider').addEventListener('input',e=>{stopPlay();R.isAnimating=false;clearFlyArtifacts();goTo(parseInt(e.target.value),'instant');});
+document.addEventListener('keydown',e=>{
+  if(!R.turns.length)return;
+  const cur=document.querySelector('.tab-panel.active');if(!cur||cur.id!=='tab-replay')return;
+  const tag=e.target.tagName;
+  if(['TEXTAREA','INPUT','BUTTON','SELECT'].includes(tag)&&e.target.id!=='turn-slider')return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();goNext();}
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();goPrev();}
+  if(e.key==='Home'){e.preventDefault();goFirst();}
+  if(e.key==='End'){e.preventDefault();goLast();}
+  if(e.key===' '){e.preventDefault();togglePlay();}
+});
+
+// (confetti removed in reduction pass — verdict reveal is a quiet state change)
+
+// ══════════════════════════════════════════════════════════════
+//  CARD BUYS TAB
+// ══════════════════════════════════════════════════════════════
+function cbAllPlayers(){const s=new Set();for(const gd of allGames.values())for(const p of gd.players)s.add(p);const a=[...s];const ri=a.findIndex(isRLName);if(ri>0){const[r]=a.splice(ri,1);a.unshift(r);}return a;}
+
+// per-game card counts for selected player & mode
+function cbGameCards(gd,player){
+  if(cbMode==='deck'){
+    const fd=getFinalDeck(gd.episodeId);
+    if(fd){const pl=fd.players.find(p=>p.player_id===player);return pl?{...pl.cards}:{};}
+    // fallback: estimated deck = start + buys
+    const deck={Copper:7,Estate:3};const b=gd.buysMatrix[player]||{};for(const[c,n] of Object.entries(b))deck[c]=(deck[c]||0)+n;return deck;
+  }
+  return {...(gd.buysMatrix[player]||{})};
+}
+
+function cbRefresh(){
+  if(!allGames.size){document.getElementById('cb-content').style.display='none';document.getElementById('cb-empty').style.display='block';return;}
+  document.getElementById('cb-content').style.display='block';document.getElementById('cb-empty').style.display='none';
+  const players=cbAllPlayers();
+  if(!cbActivePlayer||!players.includes(cbActivePlayer))cbActivePlayer=players[0];
+
+  const pb=document.getElementById('cb-player-btns');pb.innerHTML='';
+  for(const p of players){const btn=document.createElement('button');btn.className='player-toggle'+(p===cbActivePlayer?' on':'');btn.textContent=p;btn.onclick=()=>{cbActivePlayer=p;cbPage=0;cbRefresh();};pb.appendChild(btn);}
+
+  // source note
+  const hasDecks=finalDecksByEp.size>0;
+  document.getElementById('cb-src-note').innerHTML = cbMode==='deck'
+    ? (hasDecks?'Final deck composition from <span class="src-tag">final_decks.json</span> (exact); episodes without a final-deck entry use start + buys estimate.':'No final_decks.json loaded — showing <span class="src-tag">estimated</span> deck (7 Copper + 3 Estate + buys).')
+    : 'Cards purchased during each match (PASS / ILLEGAL excluded).';
+
+  // gather card columns
+  const cardSet=new Set();
+  for(const gd of allGames.values())for(const c of Object.keys(cbGameCards(gd,cbActivePlayer)))cardSet.add(c);
+  for(const c of ['Province','Duchy','Estate','Gold','Silver','Copper','Curse'])cardSet.add(c);
+  let cards=[...cardSet].filter(c=>cbActiveTypes.has(ctype(c)));
+  cards.sort((a,b)=>{const ai=SUPPLY_ORDER.indexOf(a),bi=SUPPLY_ORDER.indexOf(b);if(ai!==-1&&bi!==-1)return ai-bi;if(ai!==-1)return-1;if(bi!==-1)return 1;return a.localeCompare(b);});
+
+  // sort games
+  let games=[...allGames.values()];
+  if(cbSortCol){games.sort((a,b)=>{const av=cbGameCards(a,cbActivePlayer)[cbSortCol]||0,bv=cbGameCards(b,cbActivePlayer)[cbSortCol]||0;return cbSortAsc?av-bv:bv-av;});}
+  else games.sort((a,b)=>(a.episodeId??0)-(b.episodeId??0));
+
+  // totals across ALL games
+  const totals={};for(const c of cards)totals[c]=0;
+  for(const gd of games){const cc=cbGameCards(gd,cbActivePlayer);for(const c of cards)totals[c]+=(cc[c]||0);}
+
+  // header
+  document.getElementById('cb-thead').innerHTML=`<tr>
+    <th class="col-episode" onclick="cbSortEp()">Episode${cbSortCol===null?'<span class="sort-arr">'+(cbSortAsc?'▲':'▼')+'</span>':''}</th>
+    ${cards.map(c=>`<th class="card-th th-${ctype(c)}" onclick="cbSortCard('${esc(c)}')" title="${esc(c)}">${typeDot(c)}${esc(c)}${cbSortCol===c?'<span class="sort-arr">'+(cbSortAsc?'▲':'▼')+'</span>':''}</th>`).join('')}
+    <th>Total</th></tr>`;
+
+  // pagination
+  const totalPages=Math.max(1,Math.ceil(games.length/PAGE_SIZE));
+  cbPage=clamp(cbPage,0,totalPages-1);
+  const pageGames=games.slice(cbPage*PAGE_SIZE,(cbPage+1)*PAGE_SIZE);
+
+  const tbody=document.getElementById('cb-tbody');tbody.innerHTML='';
+  for(const gd of pageGames){
+    const cc=cbGameCards(gd,cbActivePlayer);
+    const rowTotal=cards.reduce((s,c)=>s+(cc[c]||0),0);
+    const key=[...allGames.entries()].find(([k,v])=>v===gd)?.[0];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="col-episode" title="Click to replay">Ep ${gd.episodeId??'?'}</td>
+      ${cards.map(c=>{const v=cc[c]||0;return v>0?`<td><span class="cell-val cell-${ctype(c)}">${v}</span></td>`:`<td><span class="cell-zero">—</span></td>`;}).join('')}
+      <td><b>${rowTotal||'—'}</b></td>`;
+    tr.querySelector('.col-episode').onclick=()=>{if(key){activateGame(key);switchTab('replay');}};
+    tbody.appendChild(tr);
+  }
+  const grand=cards.reduce((s,c)=>s+totals[c],0);
+  const totTr=document.createElement('tr');totTr.className='totals-row';
+  totTr.innerHTML=`<td class="col-episode">TOTAL (all ${games.length})</td>${cards.map(c=>`<td>${totals[c]||'—'}</td>`).join('')}<td><b>${grand}</b></td>`;
+  tbody.appendChild(totTr);
+
+  // pager
+  const pager=document.getElementById('cb-pager');
+  pager.innerHTML=`<button class="pager-btn" ${cbPage===0?'disabled':''} onclick="cbPage=0;cbRefresh()">⏮</button>
+    <button class="pager-btn" ${cbPage===0?'disabled':''} onclick="cbPage--;cbRefresh()">◀ Prev</button>
+    <span class="pager-info">Page ${cbPage+1} / ${totalPages} · games ${cbPage*PAGE_SIZE+1}–${Math.min((cbPage+1)*PAGE_SIZE,games.length)} of ${games.length}</span>
+    <button class="pager-btn" ${cbPage>=totalPages-1?'disabled':''} onclick="cbPage++;cbRefresh()">Next ▶</button>
+    <button class="pager-btn" ${cbPage>=totalPages-1?'disabled':''} onclick="cbPage=${totalPages-1};cbRefresh()">⏭</button>`;
+}
+function cbToggleType(btn){const t=btn.dataset.type;if(cbActiveTypes.has(t)){if(cbActiveTypes.size>1)cbActiveTypes.delete(t);}else cbActiveTypes.add(t);btn.classList.toggle('on',cbActiveTypes.has(t));cbRefresh();}
+function cbSetMode(m){cbMode=m;document.querySelectorAll('.cb-mode').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));cbPage=0;cbRefresh();}
+function cbSortEp(){cbSortCol=null;cbSortAsc=!cbSortAsc;cbRefresh();}
+function cbSortCard(c){if(cbSortCol===c)cbSortAsc=!cbSortAsc;else{cbSortCol=c;cbSortAsc=false;}cbRefresh();}
+
+function exportCardBuysCSV(){
+  const players=cbAllPlayers();const player=cbActivePlayer;
+  const cardSet=new Set();for(const gd of allGames.values())for(const c of Object.keys(cbGameCards(gd,player)))cardSet.add(c);
+  for(const c of ['Province','Duchy','Estate','Gold','Silver','Copper','Curse'])cardSet.add(c);
+  let cards=[...cardSet].filter(c=>cbActiveTypes.has(ctype(c)));
+  cards.sort((a,b)=>{const ai=SUPPLY_ORDER.indexOf(a),bi=SUPPLY_ORDER.indexOf(b);if(ai!==-1&&bi!==-1)return ai-bi;if(ai!==-1)return-1;if(bi!==-1)return 1;return a.localeCompare(b);});
+  const games=[...allGames.values()].sort((a,b)=>(a.episodeId??0)-(b.episodeId??0));
+  let csv='episode,'+cards.map(c=>`"${c}"`).join(',')+',total\n';
+  const totals={};for(const c of cards)totals[c]=0;
+  for(const gd of games){const cc=cbGameCards(gd,player);const rt=cards.reduce((s,c)=>s+(cc[c]||0),0);for(const c of cards)totals[c]+=(cc[c]||0);csv+=`${gd.episodeId??''},`+cards.map(c=>cc[c]||0).join(',')+`,${rt}\n`;}
+  csv+='TOTAL,'+cards.map(c=>totals[c]).join(',')+','+cards.reduce((s,c)=>s+totals[c],0)+'\n';
+  downloadText(csv,`dominion_${cbMode}_${sid(player)}.csv`,'text/csv');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  AGGREGATE STATS
+// ══════════════════════════════════════════════════════════════
+function computeStats(){
+  if(!allGames.size)return null;
+  const pset=new Set();for(const gd of allGames.values())for(const p of gd.players)pset.add(p);
+  const allPlayers=[...pset];const ri=allPlayers.findIndex(isRLName);if(ri>0){const[r]=allPlayers.splice(ri,1);allPlayers.unshift(r);}
+
+  const aggBuys={};for(const p of allPlayers)aggBuys[p]={};
+  const gameLengths=[];const BUCKETS=20;
+  const pacingAcc={},victoryAcc={};for(const p of allPlayers){pacingAcc[p]=Array.from({length:BUCKETS},()=>[]);victoryAcc[p]=Array.from({length:BUCKETS},()=>[]);}
+  const VCARDS=new Set(['estate','duchy','province','colony','gardens']);
+
+  // win/loss
+  let wins=0,losses=0,ties=0;const sds=[];let outcomeSource='est';
+  for(const gd of allGames.values()){
+    const realTurns=gd.turns.filter(t=>t>0);gameLengths.push(realTurns.length);
+    const maxTurn=realTurns[realTurns.length-1]||1;
+    const cumBuys={},cumVP={};for(const p of allPlayers){cumBuys[p]=0;cumVP[p]=0;}
+    for(const p of allPlayers)for(const[c,n] of Object.entries(gd.buysMatrix[p]||{}))aggBuys[p][c]=(aggBuys[p][c]||0)+n;
+    for(const t of realTurns){
+      for(const ev of gd.turnMap[t]||[])for(const b of ev.buys||[])if(b!=='PASS'&&b!=='ILLEGAL'){if(cumBuys[ev.player_id]!==undefined)cumBuys[ev.player_id]++;if(VCARDS.has(b.toLowerCase())&&cumVP[ev.player_id]!==undefined)cumVP[ev.player_id]++;}
+      const bucket=Math.min(BUCKETS-1,Math.floor((t/maxTurn)*BUCKETS));
+      for(const p of allPlayers){if(cumBuys[p]!==undefined)pacingAcc[p][bucket].push(cumBuys[p]);if(cumVP[p]!==undefined)victoryAcc[p][bucket].push(cumVP[p]);}
+    }
+    const oc=gameOutcome(gd);sds.push(oc.sd);
+    if(oc.result==='win')wins++;else if(oc.result==='loss')losses++;else ties++;
+    if(oc.source==='csv')outcomeSource='csv';else if(oc.source==='deck'&&outcomeSource!=='csv')outcomeSource='deck';
+  }
+
+  const cardsSorted=[...new Set(allPlayers.flatMap(p=>Object.keys(aggBuys[p]||{})))].sort((a,b)=>{const ta=allPlayers.reduce((s,p)=>s+(aggBuys[p]?.[a]||0),0),tb=allPlayers.reduce((s,p)=>s+(aggBuys[p]?.[b]||0),0);return tb-ta;});
+  let topCard='—',topCount=0;for(const c of cardsSorted){const t=allPlayers.reduce((s,p)=>s+(aggBuys[p]?.[c]||0),0);if(t>topCount){topCount=t;topCard=c;}}
+
+  const pacingAvg={},victoryAvg={};for(const p of allPlayers){pacingAvg[p]=pacingAcc[p].map(a=>a.length?avg(a):null);victoryAvg[p]=victoryAcc[p].map(a=>a.length?avg(a):null);}
+  const typeBreakdown={};for(const p of allPlayers){typeBreakdown[p]={treasure:0,victory:0,curse:0,action:0,unknown:0};for(const[c,n] of Object.entries(aggBuys[p]||{}))typeBreakdown[p][ctype(c)]+=n;}
+
+  // Deck composition: prefer real final decks
+  const nGames=allGames.size;const deckComp={};const deckSource=finalDecksByEp.size?'real':'est';
+  for(const p of allPlayers)deckComp[p]={};
+  if(deckSource==='real'){
+    const counts={};for(const p of allPlayers)counts[p]=0;
+    for(const gd of allGames.values()){
+      const fd=getFinalDeck(gd.episodeId);if(!fd)continue;
+      for(const pl of fd.players){if(!deckComp[pl.player_id])deckComp[pl.player_id]={};counts[pl.player_id]=(counts[pl.player_id]||0)+1;for(const[c,n] of Object.entries(pl.cards||{}))deckComp[pl.player_id][c]=(deckComp[pl.player_id][c]||0)+n;}
+    }
+    for(const p of allPlayers){const cnt=counts[p]||1;for(const c of Object.keys(deckComp[p]))deckComp[p][c]/=cnt;}
+  }else{
+    for(const p of allPlayers){deckComp[p]={Copper:7,Estate:3};for(const[c,n] of Object.entries(aggBuys[p]||{}))deckComp[p][c]=(deckComp[p][c]||0)+n/nGames;}
+  }
+
+  return{allPlayers,aggBuys,cardsSorted,topCard,gameLengths,pacingAvg,victoryAvg,typeBreakdown,deckComp,deckSource,allCards:cardsSorted.length,wins,losses,ties,sds,outcomeSource};
+}
+
+function refreshStats(){
+  const s=computeStats();
+  if(!s){document.getElementById('stats-content').style.display='none';document.getElementById('stats-empty').style.display='block';return;}
+  document.getElementById('stats-content').style.display='block';document.getElementById('stats-empty').style.display='none';
+
+  const total=s.wins+s.losses+s.ties;const wr=total?s.wins/total:0;
+  document.getElementById('sc-games').textContent=allGames.size;
+  const wrEl=document.getElementById('sc-winrate');wrEl.textContent=total?fmtPct(wr):'—';wrEl.className='sc-value '+(wr>=0.5?'win':'loss');
+  document.getElementById('sc-record').textContent=`${s.wins}W · ${s.losses}L · ${s.ties}T`;
+  const sdAvg=avg(s.sds.filter(x=>Number.isFinite(x)));
+  document.getElementById('sc-scorediff').textContent=(sdAvg>0?'+':'')+sdAvg.toFixed(1);
+  document.getElementById('sc-avglen').textContent=s.gameLengths.length?Math.round(avg(s.gameLengths)):'—';
+  document.getElementById('sc-topcard').innerHTML=`${typeDot(s.topCard)}${s.topCard}`;
+  document.getElementById('sc-totalbought').textContent=s.allPlayers.reduce((sum,p)=>sum+Object.values(s.aggBuys[p]||{}).reduce((a,b)=>a+b,0),0);
+  const srcLabel={csv:'episode CSV score_diff',deck:'final_decks.json VP',est:'estimated VP from buys'}[s.outcomeSource];
+  document.getElementById('stats-src-note').innerHTML=`Win/loss & score diff source: <span class="src-tag">${srcLabel}</span> · Deck composition: <span class="src-tag">${s.deckSource==='real'?'real final decks':'estimated'}</span>`;
+
+  if(activePlayerFilter.size===0)s.allPlayers.forEach(p=>activePlayerFilter.add(p));
+  const togEl=document.getElementById('player-toggles');togEl.innerHTML='';
+  for(const p of s.allPlayers){const btn=document.createElement('button');btn.className='player-toggle'+(activePlayerFilter.has(p)?' on':'');btn.textContent=p;btn.onclick=()=>{if(activePlayerFilter.has(p)){if(activePlayerFilter.size>1)activePlayerFilter.delete(p);}else activePlayerFilter.add(p);refreshStats();};togEl.appendChild(btn);}
+
+  const pcEl=document.getElementById('player-compare');pcEl.innerHTML='';
+  for(const p of s.allPlayers){
+    const buys=Object.values(s.aggBuys[p]||{}).reduce((a,b)=>a+b,0);
+    const top=Object.entries(s.aggBuys[p]||{}).sort((a,b)=>b[1]-a[1])[0];
+    const vp=['Province','Duchy','Estate','Colony','Gardens'].reduce((sum,c)=>sum+(s.aggBuys[p]?.[c]||0),0);
+    const curses=s.aggBuys[p]?.['Curse']||0;const isRL=isRLName(p);
+    const row=document.createElement('div');row.className='player-compare-row';
+    row.innerHTML=`<div class="pcr-header"><span class="pcr-name" style="color:${isRL?'var(--rl)':'var(--opp)'}">${esc(p)}</span>
+      <div class="pcr-stats">
+        <div class="pcr-stat"><div class="pcr-stat-v">${buys}</div><div class="pcr-stat-l">Total Buys</div></div>
+        <div class="pcr-stat"><div class="pcr-stat-v">${Math.round(buys/Math.max(1,allGames.size)*10)/10}</div><div class="pcr-stat-l">Buys/Game</div></div>
+        <div class="pcr-stat"><div class="pcr-stat-v">${vp}</div><div class="pcr-stat-l">VP Cards</div></div>
+        <div class="pcr-stat"><div class="pcr-stat-v">${curses}</div><div class="pcr-stat-l">Curses</div></div>
+        <div class="pcr-stat"><div class="pcr-stat-v">${top?`${typeDot(top[0])}${top[0]}`:'—'}</div><div class="pcr-stat-l">Top Card</div></div>
+        <div class="pcr-stat"><div class="pcr-stat-v">${s.typeBreakdown[p]?.treasure||0}</div><div class="pcr-stat-l">Treasure</div></div>
+        <div class="pcr-stat"><div class="pcr-stat-v">${s.typeBreakdown[p]?.action||0}</div><div class="pcr-stat-l">Actions</div></div>
+      </div></div>`;
+    pcEl.appendChild(row);
+  }
+
+  const vis=s.allPlayers.filter(p=>activePlayerFilter.has(p));
+  const G=baseChartCfg();
+
+  {const cards=s.cardsSorted.slice(0,Math.min(30,s.cardsSorted.length)).reverse();
+   const wrap=document.getElementById('buys-chart-wrap');wrap.style.height=Math.max(200,cards.length*24*Math.max(vis.length,1)+60)+'px';
+   destroyChart('buys');const ctx=document.getElementById('chart-buys').getContext('2d');
+   const ds=vis.map(p=>{const col=playerColor(p,s.allPlayers);return{label:p,data:cards.map(c=>s.aggBuys[p]?.[c]||0),backgroundColor:col.bg,borderColor:col.border,borderWidth:1,borderRadius:2};});
+   chartInstances.buys=new Chart(ctx,{type:'bar',data:{labels:cards,datasets:ds},options:{...G,indexAxis:'y'}});}
+
+  {destroyChart('types');const ctx=document.getElementById('chart-types').getContext('2d');
+   const tc={treasure:'rgba(227,173,83,.8)',victory:'rgba(107,184,138,.8)',action:'rgba(105,166,191,.8)',curse:'rgba(180,135,201,.8)'};
+   const ds=['treasure','victory','action','curse'].map(t=>({label:t[0].toUpperCase()+t.slice(1),data:vis.map(p=>s.typeBreakdown[p]?.[t]||0),backgroundColor:tc[t],borderWidth:0,borderRadius:2}));
+   chartInstances.types=new Chart(ctx,{type:'bar',data:{labels:vis,datasets:ds},options:{...G,scales:{x:{...G.scales.x,stacked:true},y:{...G.scales.y,stacked:true}}}});}
+
+  {document.getElementById('deck-chart-title').textContent=s.deckSource==='real'?'Avg Final Deck (real)':'Avg Final Deck (estimated)';
+   destroyChart('deck');const ctx=document.getElementById('chart-deck').getContext('2d');
+   const dCards=[...new Set(vis.flatMap(p=>Object.keys(s.deckComp[p]||{})))].sort((a,b)=>{const ta=vis.reduce((x,p)=>x+(s.deckComp[p]?.[a]||0),0),tb=vis.reduce((x,p)=>x+(s.deckComp[p]?.[b]||0),0);return tb-ta;}).slice(0,10);
+   const dCols=['rgba(184,115,51,.73)','rgba(45,107,45,.73)','rgba(130,130,130,.6)','rgba(60,100,180,.68)','rgba(140,70,140,.68)','rgba(200,160,60,.68)','rgba(80,160,120,.68)','rgba(160,80,80,.68)','rgba(100,140,200,.68)','rgba(180,130,80,.68)'];
+   const ds=dCards.map((c,i)=>({label:`${c}`,data:vis.map(p=>Math.round((s.deckComp[p]?.[c]||0)*10)/10),backgroundColor:dCols[i%dCols.length],borderWidth:0,borderRadius:2}));
+   chartInstances.deck=new Chart(ctx,{type:'bar',data:{labels:vis,datasets:ds},options:{...G,scales:{x:{...G.scales.x,stacked:true},y:{...G.scales.y,stacked:true,title:axTitle('Avg cards')}}}});}
+
+  {destroyChart('lengths');const ctx=document.getElementById('chart-lengths').getContext('2d');
+   const ng=[...allGames.values()].sort((a,b)=>(a.episodeId??0)-(b.episodeId??0));
+   const {xs,ys}=downsample(ng.map(g=>`Ep ${g.episodeId??'?'}`),ng.map(g=>g.turns.length-1),MAX_CHART_POINTS);
+   chartInstances.lengths=new Chart(ctx,{type:'bar',data:{labels:xs,datasets:[{label:'Turns',data:ys,backgroundColor:'rgba(240,162,60,.5)',borderColor:'rgba(240,162,60,.85)',borderWidth:1,borderRadius:2}]},options:{...G,plugins:{legend:{display:false}}}});}
+
+  {destroyChart('pacing');const ctx=document.getElementById('chart-pacing').getContext('2d');
+   const labels=Array.from({length:20},(_,i)=>`${Math.round((i/19)*100)}%`);
+   const ds=vis.map(p=>{const col=playerColor(p,s.allPlayers);return{label:p,data:s.pacingAvg[p],borderColor:col.border,backgroundColor:col.bg.replace('0.82','0.11'),fill:true,tension:.35,pointRadius:2,borderWidth:2,spanGaps:true};});
+   chartInstances.pacing=new Chart(ctx,{type:'line',data:{labels,datasets:ds},options:{...G,scales:{x:{...G.scales.x,ticks:{...G.scales.x.ticks,maxTicksLimit:6}},y:{...G.scales.y,title:axTitle('Cumul. buys (avg)')}}}});}
+
+  {destroyChart('victory');const ctx=document.getElementById('chart-victory').getContext('2d');
+   const labels=Array.from({length:20},(_,i)=>`${Math.round((i/19)*100)}%`);
+   const ds=vis.map(p=>{const col=playerColor(p,s.allPlayers);return{label:p,data:s.victoryAvg[p],borderColor:col.border,backgroundColor:col.bg.replace('0.82','0.1'),fill:true,tension:.35,pointRadius:2,borderWidth:2,spanGaps:true};});
+   chartInstances.victory=new Chart(ctx,{type:'line',data:{labels,datasets:ds},options:{...G,scales:{x:{...G.scales.x,ticks:{...G.scales.x.ticks,maxTicksLimit:6}},y:{...G.scales.y,title:axTitle('Cumul. VP cards (avg)')}}}});}
+
+  refreshGamesTable(s);
+  renderOpeningEndgame(s);
+}
+
+// ── Opening & Endgame analysis (RL agent) ──
+function renderOpeningEndgame(s){
+  const rl=s.allPlayers[0];const G=baseChartCfg();
+  // first-province turns (RL)
+  const fpTurns=[];for(const gd of allGames.values()){const t=gd.firstProvince?.[rl];if(t!=null)fpTurns.push(t);}
+  const avgFP=fpTurns.length?avg(fpTurns):null;
+  document.getElementById('sc-firstprov').textContent=avgFP!=null?avgFP.toFixed(1):'—';
+  document.getElementById('sc-firstprov-sub').textContent=fpTurns.length?`${fpTurns.length}/${allGames.size} games bought one`:'never bought';
+  // empty piles
+  const emp=[...allGames.values()].map(gd=>gd.emptyPiles??0);
+  document.getElementById('sc-emptypiles').textContent=emp.length?avg(emp).toFixed(1):'—';
+  // opening pairs
+  const pairCount={};
+  for(const gd of allGames.values()){
+    const o=gd.opening?.[rl];if(!o)continue;
+    const t1=(o[1]||[]).slice().sort().join('+')||'∅';
+    const t2=(o[2]||[]).slice().sort().join('+')||'∅';
+    const key=`${t1} / ${t2}`;pairCount[key]=(pairCount[key]||0)+1;
+  }
+  const topPair=Object.entries(pairCount).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('sc-openpair').textContent=topPair?topPair[0]:'—';
+
+  // opening single-card buy frequency (turns 1-2 combined)
+  const openCards={};
+  for(const gd of allGames.values()){const o=gd.opening?.[rl];if(!o)continue;for(const t of[1,2])for(const c of o[t]||[])openCards[c]=(openCards[c]||0)+1;}
+  const ocEntries=Object.entries(openCards).sort((a,b)=>b[1]-a[1]).slice(0,12).reverse();
+  {destroyChart('opening');const ctx=document.getElementById('chart-opening').getContext('2d');
+   document.getElementById('opening-wrap').style.height=Math.max(160,ocEntries.length*26+40)+'px';
+   if(ocEntries.length){
+     chartInstances.opening=new Chart(ctx,{type:'bar',data:{labels:ocEntries.map(e=>e[0]),datasets:[{label:'Times bought T1–T2',data:ocEntries.map(e=>e[1]),backgroundColor:ocEntries.map(e=>typeColor(ctype(e[0]))),borderWidth:0,borderRadius:2}]},options:{...G,indexAxis:'y',plugins:{legend:{display:false}}}});
+   }else noData('chart-opening','No opening-buy data');}
+
+  // end reason doughnut
+  const reasons={};for(const gd of allGames.values()){const r=gd.endReason||'unknown';reasons[r]=(reasons[r]||0)+1;}
+  {destroyChart('endreason');const ctx=document.getElementById('chart-endreason').getContext('2d');
+   const labels=Object.keys(reasons),data=Object.values(reasons);
+   const rcol={'Provinces out':'rgba(107,184,138,.8)','3-pile ending':'rgba(240,162,60,.8)','turn cutoff':'rgba(154,152,143,.7)','unknown':'rgba(95,94,87,.6)'};
+   if(labels.length){
+     chartInstances.endreason=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:labels.map(l=>rcol[l]||'rgba(150,150,150,.6)'),borderColor:'rgba(11,12,14,.6)',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'right',labels:{color:'rgba(231,230,226,.7)',font:{family:'JetBrains Mono,monospace',size:10},boxWidth:11,usePointStyle:true,pointStyle:'rect'}},tooltip:{backgroundColor:'rgba(11,12,14,.94)',borderColor:'rgba(231,230,226,.19)',borderWidth:1,titleColor:'#f0a23c',titleFont:{family:'JetBrains Mono,monospace',size:10,weight:'700'},bodyColor:'#e7e6e2',bodyFont:{family:'JetBrains Mono,monospace',size:11},padding:8,cornerRadius:3,callbacks:{label:c=>` ${c.label}: ${c.parsed} game${c.parsed!==1?'s':''}`}}}}});
+   }else noData('chart-endreason','No endgame data');}
+
+  // first-province turn histogram
+  {destroyChart('firstprov');const ctx=document.getElementById('chart-firstprov').getContext('2d');
+   if(fpTurns.length){
+     const mx=Math.max(...fpTurns);const bins=Array(mx+1).fill(0);for(const t of fpTurns)bins[t]++;
+     const labels=bins.map((_,i)=>`T${i}`).slice(1);const data=bins.slice(1);
+     chartInstances.firstprov=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'# games',data,backgroundColor:'rgba(107,184,138,.6)',borderColor:'rgba(107,184,138,.9)',borderWidth:1,borderRadius:2}]},options:{...G,plugins:{legend:{display:false}},scales:{x:{...G.scales.x,title:axTitle('Turn of first Province')},y:{...G.scales.y,title:axTitle('# games')}}}});
+   }else noData('chart-firstprov','RL never bought a Province');}
+}
+function typeColor(t){return{treasure:'rgba(227,173,83,.8)',victory:'rgba(107,184,138,.8)',action:'rgba(105,166,191,.8)',curse:'rgba(180,135,201,.8)',unknown:'rgba(150,150,150,.6)'}[t]||'rgba(150,150,150,.6)';}
+
+function refreshGamesTable(s){
+  const rows=[];
+  for(const[key,gd] of allGames){
+    const oc=gameOutcome(gd);const dk=resolveDecks(gd);
+    const rl=gd.players[0],opp=gd.players[1]||null;
+    const rlBuys=Object.values(s.aggBuys[rl]||{}).reduce((a,b)=>a+b,0);
+    const rlProv=s.aggBuys[rl]?.['Province']||0;
+    rows.push({key,episode:gd.episodeId??-1,turns:gd.turns.length-1,players:gd.players.join(', '),
+      outcome:oc.result,sd:oc.sd,rlVP:dk.players[rl]?.vp??'—',oppVP:opp?(dk.players[opp]?.vp??'—'):'—',rlBuys,rlProv});
+  }
+  rows.sort((a,b)=>{
+    let av=a[sortCol],bv=b[sortCol];
+    if(sortCol==='outcome'){const ord={win:2,tie:1,loss:0};av=ord[a.outcome];bv=ord[b.outcome];}
+    if(typeof av==='number'&&typeof bv==='number')return sortAsc?av-bv:bv-av;
+    return sortAsc?String(av).localeCompare(String(bv)):String(bv).localeCompare(String(av));
+  });
+  const totalPages=Math.max(1,Math.ceil(rows.length/PAGE_SIZE));gamesPage=clamp(gamesPage,0,totalPages-1);
+  const page=rows.slice(gamesPage*PAGE_SIZE,(gamesPage+1)*PAGE_SIZE);
+  const tbody=document.getElementById('games-tbl-body');tbody.innerHTML='';
+  for(const r of page){
+    const ocCls=r.outcome==='win'?'win-cell':r.outcome==='loss'?'loss-cell':'tie-cell';
+    const ocTxt=r.outcome==='win'?'WIN':r.outcome==='loss'?'LOSS':'TIE';
+    const tr=document.createElement('tr');tr.className='clickable';
+    tr.innerHTML=`<td class="col-episode">${r.episode===-1?'—':r.episode}</td><td>${r.turns}</td><td>${esc(r.players)}</td>
+      <td class="${ocCls}">${ocTxt}</td><td>${Number.isFinite(r.sd)?(r.sd>0?'+':'')+r.sd:'—'}</td>
+      <td>${r.rlVP}</td><td>${r.oppVP}</td><td>${r.rlBuys}</td><td>${r.rlProv}</td>`;
+    tr.onclick=()=>{switchTab('replay');activateGame(r.key);};tbody.appendChild(tr);
+  }
+  ['episode','turns','outcome','sd','rlVP','oppVP','rlBuys','rlProv'].forEach(c=>{const el=document.getElementById('sort-'+c);if(el)el.textContent=c===sortCol?(sortAsc?'▲':'▼'):'';});
+  const pager=document.getElementById('games-pager');
+  pager.innerHTML=`<button class="pager-btn" ${gamesPage===0?'disabled':''} onclick="gamesPage=0;refreshStatsTableOnly()">⏮</button>
+    <button class="pager-btn" ${gamesPage===0?'disabled':''} onclick="gamesPage--;refreshStatsTableOnly()">◀ Prev</button>
+    <span class="pager-info">Page ${gamesPage+1} / ${totalPages} · ${gamesPage*PAGE_SIZE+1}–${Math.min((gamesPage+1)*PAGE_SIZE,rows.length)} of ${rows.length}</span>
+    <button class="pager-btn" ${gamesPage>=totalPages-1?'disabled':''} onclick="gamesPage++;refreshStatsTableOnly()">Next ▶</button>
+    <button class="pager-btn" ${gamesPage>=totalPages-1?'disabled':''} onclick="gamesPage=${totalPages-1};refreshStatsTableOnly()">⏭</button>`;
+}
+function refreshStatsTableOnly(){const s=computeStats();if(s)refreshGamesTable(s);}
+function sortTable(col){if(sortCol===col)sortAsc=!sortAsc;else{sortCol=col;sortAsc=true;}gamesPage=0;refreshStatsTableOnly();}
+
+// ══════════════════════════════════════════════════════════════
+//  TRAINING TAB (learning curves)
+// ══════════════════════════════════════════════════════════════
+// Build ordered per-episode series. Priority: CSV metrics; supplement with games.
+function buildTrainingSeries(){
+  // collect episodes from metrics, games, final decks
+  const epSet=new Set();
+  for(const ep of metricsByEp.keys())epSet.add(ep);
+  for(const gd of allGames.values())if(gd.episodeId!=null)epSet.add(gd.episodeId);
+  for(const ep of finalDecksByEp.keys())epSet.add(ep);
+  const eps=[...epSet].sort((a,b)=>a-b);
+  if(!eps.length)return null;
+
+  const gameByEp=new Map();for(const gd of allGames.values())if(gd.episodeId!=null)gameByEp.set(gd.episodeId,gd);
+
+  const rows=[];
+  let sdSource='est';
+  for(const ep of eps){
+    const m=metricsByEp.get(ep);
+    const gd=gameByEp.get(ep);
+    let sd=null,reward=null,epsilon=null,illegal=null;
+    if(m){reward=m.reward;epsilon=m.epsilon;if(m.score_diff!=null){sd=m.score_diff;sdSource='csv';}}
+    if(sd==null){
+      if(gd){const oc=gameOutcome(gd);sd=oc.sd;if(oc.source==='deck'&&sdSource!=='csv')sdSource='deck';}
+      else if(finalDecksByEp.has(ep)){
+        const fd=finalDecksByEp.get(ep);const ps=fd.players.map(p=>({id:p.player_id,vp:vpFromDeck(p.cards||{}).vp}));
+        const ri=ps.findIndex(p=>isRLName(p.id));const rlVP=ri>=0?ps[ri].vp:(ps[0]?.vp||0);
+        const best=Math.max(...ps.filter((_,i)=>i!==(ri>=0?ri:0)).map(p=>p.vp),0);
+        sd=rlVP-best;if(sdSource!=='csv')sdSource='deck';
+      }
+    }
+    if(gd&&gd.illegalRate!=null)illegal=gd.illegalRate;
+    rows.push({ep,sd,reward,epsilon,illegal});
+  }
+  return{rows,sdSource,hasCSV:metricsByEp.size>0};
+}
+
+function refreshTraining(){
+  const T=buildTrainingSeries();
+  if(!T){document.getElementById('train-content').style.display='none';document.getElementById('train-empty').style.display='block';return;}
+  document.getElementById('train-content').style.display='block';document.getElementById('train-empty').style.display='none';
+
+  const rows=T.rows;
+  const winLabels=rows.map(r=>r.sd==null?null:(r.sd>0?1:r.sd<0?0:0.5));
+  const validWins=winLabels.filter(x=>x!=null);
+  const overallWR=validWins.length?avg(validWins):0;
+  // count W/L/T
+  let w=0,l=0,t=0;for(const r of rows){if(r.sd==null)continue;if(r.sd>0)w++;else if(r.sd<0)l++;else t++;}
+  // recent 10%
+  const tail=Math.max(1,Math.floor(rows.length*0.1));
+  const recent=winLabels.slice(-tail).filter(x=>x!=null);
+  const recentWR=recent.length?avg(recent):null;
+  const sdVals=rows.map(r=>r.sd).filter(x=>x!=null);
+  const rewardVals=rows.map(r=>r.reward).filter(x=>x!=null);
+  const illegalVals=rows.map(r=>r.illegal).filter(x=>x!=null);
+
+  document.getElementById('tr-episodes').textContent=rows.length;
+  document.getElementById('tr-range').textContent=rows.length?`ep ${rows[0].ep}–${rows[rows.length-1].ep}`:'';
+  const wrEl=document.getElementById('tr-winrate');wrEl.textContent=validWins.length?fmtPct(overallWR):'—';wrEl.className='sc-value '+(overallWR>=0.5?'win':'loss');
+  document.getElementById('tr-record').textContent=`${w}W · ${l}L · ${t}T`;
+  const rwrEl=document.getElementById('tr-winrate-recent');rwrEl.textContent=recentWR!=null?fmtPct(recentWR):'—';rwrEl.className='sc-value '+((recentWR??0)>=0.5?'win':'loss');
+  document.getElementById('tr-scorediff').textContent=sdVals.length?((avg(sdVals)>0?'+':'')+avg(sdVals).toFixed(2)):'—';
+  document.getElementById('tr-reward').textContent=rewardVals.length?avg(rewardVals).toFixed(2):'—';
+  document.getElementById('tr-illegal').textContent=illegalVals.length?fmtPct(avg(illegalVals)):'—';
+
+  const srcLabel={csv:'episode_data_over_time.csv (score_diff)',deck:'final_decks.json (VP)',est:'estimated from replay buys'}[T.sdSource];
+  document.getElementById('train-src-note').innerHTML=`Outcome source: <span class="src-tag">${srcLabel}</span>${T.hasCSV?' · reward & epsilon from CSV':' · load the CSV for reward / epsilon curves'}`;
+
+  const G=baseChartCfg();
+  const W=clamp(parseInt(document.getElementById('win-window').value)||100,1,Math.max(1,rows.length));
+  const eps=rows.map(r=>r.ep);
+
+  // Win rate rolling
+  {destroyChart('trWin');const ctx=document.getElementById('chart-trWin').getContext('2d');
+   const roll=rollingMean(winLabels,W).map(v=>v==null?null:v*100);
+   const {xs,ys}=downsample(eps,roll,MAX_CHART_POINTS);
+   chartInstances.trWin=new Chart(ctx,{type:'line',data:{labels:xs,datasets:[
+     {label:`Win rate (ma${W})`,data:ys,borderColor:'rgba(107,184,138,1)',backgroundColor:'rgba(107,184,138,.12)',fill:true,tension:.3,pointRadius:0,borderWidth:2,spanGaps:true}
+   ]},options:{...G,plugins:{...G.plugins,legend:{display:false},refline:{lines:[{y:50,label:'even · 50%',color:'rgba(231,230,226,.4)'}]},tooltip:{...G.plugins.tooltip,callbacks:{label:c=>` ${c.parsed.y==null?'—':c.parsed.y.toFixed(1)+'% win'}`}}},scales:{x:{...G.scales.x,title:axTitle('Episode →'),ticks:{...G.scales.x.ticks,maxTicksLimit:10}},y:{...G.scales.y,min:0,max:100,title:axTitle('Win %')}}}});}
+
+  // Score diff rolling
+  {destroyChart('trScore');const ctx=document.getElementById('chart-trScore').getContext('2d');
+   const roll=rollingMean(rows.map(r=>r.sd),W);
+   const {xs,ys}=downsample(eps,roll,MAX_CHART_POINTS);
+   chartInstances.trScore=new Chart(ctx,{type:'line',data:{labels:xs,datasets:[
+     {label:`Score diff (ma${W})`,data:ys,borderColor:'rgba(240,162,60,1)',backgroundColor:'rgba(240,162,60,.12)',fill:true,tension:.3,pointRadius:0,borderWidth:2,spanGaps:true}
+   ]},options:{...G,plugins:{...G.plugins,legend:{display:false},refline:{lines:[{y:0,label:'tie · 0',color:'rgba(231,230,226,.4)'}]},tooltip:{...G.plugins.tooltip,callbacks:{label:c=>` ${c.parsed.y==null?'—':(c.parsed.y>0?'+':'')+c.parsed.y.toFixed(2)+' VP'}`}}},scales:{x:{...G.scales.x,title:axTitle('Episode →'),ticks:{...G.scales.x.ticks,maxTicksLimit:10}},y:{...G.scales.y,title:axTitle('RL − opp')}}}});}
+
+  // Reward rolling
+  {destroyChart('trReward');const ctx=document.getElementById('chart-trReward').getContext('2d');
+   if(rewardVals.length){
+     const roll=rollingMean(rows.map(r=>r.reward),W);const {xs,ys}=downsample(eps,roll,MAX_CHART_POINTS);
+     chartInstances.trReward=new Chart(ctx,{type:'line',data:{labels:xs,datasets:[{label:`Reward (ma${W})`,data:ys,borderColor:'rgba(105,166,191,1)',backgroundColor:'rgba(105,166,191,.12)',fill:true,tension:.3,pointRadius:0,borderWidth:2,spanGaps:true}]},options:{...G,plugins:{...G.plugins,legend:{display:false},refline:{lines:[{y:0,color:'rgba(231,230,226,.28)'}]}},scales:{x:{...G.scales.x,title:axTitle('Episode →'),ticks:{...G.scales.x.ticks,maxTicksLimit:10}},y:{...G.scales.y,title:axTitle('Reward')}}}});
+   }else{noData('chart-trReward','Load episode_data_over_time.csv for reward');}
+  }
+
+  // Score diff histogram
+  {destroyChart('trHist');const ctx=document.getElementById('chart-trHist').getContext('2d');
+   if(sdVals.length){
+     const mn=Math.min(...sdVals),mx=Math.max(...sdVals);const nb=Math.min(21,Math.max(5,Math.round(Math.sqrt(sdVals.length))));
+     const span=(mx-mn)||1;const bins=Array(nb).fill(0);const labels=[];
+     for(let i=0;i<nb;i++)labels.push((mn+span*(i+0.5)/nb).toFixed(1));
+     for(const v of sdVals){let b=Math.floor((v-mn)/span*nb);b=clamp(b,0,nb-1);bins[b]++;}
+     const colors=labels.map((_,i)=>{const center=mn+span*(i+0.5)/nb;return center>0?'rgba(107,184,138,.7)':center<0?'rgba(210,120,115,.7)':'rgba(154,152,143,.7)';});
+     chartInstances.trHist=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Games',data:bins,backgroundColor:colors,borderWidth:0,borderRadius:1}]},options:{...G,plugins:{...G.plugins,legend:{display:false},tooltip:{...G.plugins.tooltip,callbacks:{title:items=>`score diff ≈ ${items[0].label}`,label:c=>` ${c.parsed.y} game${c.parsed.y!==1?'s':''}`}}},scales:{x:{...G.scales.x,title:axTitle('Score diff (RL − opp)')},y:{...G.scales.y,title:axTitle('# games')}}}});
+   }else noData('chart-trHist','No score data');
+  }
+
+  // Epsilon decay
+  {destroyChart('trEps');const ctx=document.getElementById('chart-trEps').getContext('2d');
+   const epsVals=rows.map(r=>r.epsilon);
+   if(epsVals.some(x=>x!=null)){
+     const {xs,ys}=downsample(eps,epsVals,MAX_CHART_POINTS);
+     chartInstances.trEps=new Chart(ctx,{type:'line',data:{labels:xs,datasets:[{label:'Epsilon',data:ys,borderColor:'rgba(240,162,60,.9)',backgroundColor:'rgba(240,162,60,.08)',fill:true,tension:.2,pointRadius:0,borderWidth:2,spanGaps:true}]},options:{...G,scales:{x:{...G.scales.x,title:axTitle('Episode'),ticks:{...G.scales.x.ticks,maxTicksLimit:10}},y:{...G.scales.y,min:0,title:axTitle('ε')}}}});
+   }else noData('chart-trEps','Load CSV for epsilon');
+  }
+
+  // Illegal rate
+  {destroyChart('trIllegal');const ctx=document.getElementById('chart-trIllegal').getContext('2d');
+   const pts=rows.filter(r=>r.illegal!=null);
+   if(pts.length){
+     chartInstances.trIllegal=new Chart(ctx,{type:'line',data:{labels:pts.map(r=>r.ep),datasets:[{label:'Illegal buy rate',data:pts.map(r=>r.illegal*100),borderColor:'rgba(210,120,115,.9)',backgroundColor:'rgba(210,120,115,.12)',fill:true,tension:.2,pointRadius:pts.length<80?3:0,borderWidth:2,spanGaps:true}]},options:{...G,scales:{x:{...G.scales.x,title:axTitle('Episode'),ticks:{...G.scales.x.ticks,maxTicksLimit:10}},y:{...G.scales.y,min:0,title:axTitle('Illegal %')}}}});
+   }else noData('chart-trIllegal','Load replay JSONL files for illegal-rate data');
+  }
+
+  renderStrategyEvolution(G);
+}
+
+// ── Strategy evolution: bin replay games by episode, track buy-rate / openings ──
+function renderStrategyEvolution(G){
+  const sortedGames=gamesSortedByEp().map(([k,gd])=>gd).filter(gd=>gd.episodeId!=null);
+  const note=document.getElementById('strat-note');
+  if(sortedGames.length<2){
+    ['trStrat','trFirstProv','trLen'].forEach(id=>destroyChart(id));
+    ['chart-trStrat','chart-trFirstProv','chart-trLen'].forEach(c=>noData(c,'Load replay JSONL files (≥2 episodes) for strategy curves'));
+    note.textContent='';return;
+  }
+  const rl=sortedGames[0].players[0];
+  // populate card selector once (preserve choice)
+  const sel=document.getElementById('strat-card');
+  const cardSet=new Set();for(const gd of sortedGames)for(const c of Object.keys(gd.buysMatrix[rl]||{}))cardSet.add(c);
+  for(const c of ['Province','Gold','Silver','Duchy','Estate','Curse'])cardSet.add(c);
+  const cards=[...cardSet].sort((a,b)=>{const ai=SUPPLY_ORDER.indexOf(a),bi=SUPPLY_ORDER.indexOf(b);if(ai!==-1&&bi!==-1)return ai-bi;if(ai!==-1)return-1;if(bi!==-1)return 1;return a.localeCompare(b);});
+  const prev=sel.value;
+  sel.innerHTML=cards.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  sel.value=cards.includes(prev)?prev:(cards.includes('Province')?'Province':cards[0]);
+  const card=sel.value;
+
+  const nBins=clamp(parseInt(document.getElementById('strat-bins').value)||20,2,60);
+  const N=sortedGames.length;const per=N/nBins;
+  const binCard=[],binFP=[],binLen=[],binLabels=[];
+  for(let b=0;b<nBins;b++){
+    const lo=Math.floor(b*per),hi=Math.floor((b+1)*per);const slice=sortedGames.slice(lo,Math.max(lo+1,hi));
+    if(!slice.length){binCard.push(null);binFP.push(null);binLen.push(null);binLabels.push('');continue;}
+    binCard.push(avg(slice.map(gd=>gd.buysMatrix[rl]?.[card]||0)));
+    const fps=slice.map(gd=>gd.firstProvince?.[rl]).filter(x=>x!=null);
+    binFP.push(fps.length?avg(fps):null);
+    binLen.push(avg(slice.map(gd=>gd.turns.length-1)));
+    binLabels.push(`ep ${slice[0].episodeId}–${slice[slice.length-1].episodeId}`);
+  }
+  note.innerHTML=`Binned <span class="src-tag">${N}</span> replayed episodes into ${nBins} windows (~${Math.max(1,Math.round(per))} games each), ordered by episode number. Buy counts are exact from replays; first-Province turn excludes games where none was bought.`;
+
+  {destroyChart('trStrat');const ctx=document.getElementById('chart-trStrat').getContext('2d');
+   chartInstances.trStrat=new Chart(ctx,{type:'line',data:{labels:binLabels,datasets:[{label:`${card} buys/game`,data:binCard,borderColor:typeColor(ctype(card)).replace('.78','1'),backgroundColor:typeColor(ctype(card)).replace('0.78','0.13'),fill:true,tension:.3,pointRadius:binCard.length<40?3:0,borderWidth:2,spanGaps:true}]},options:{...G,plugins:{legend:{display:false}},scales:{x:{...G.scales.x,title:axTitle('Training progress →'),ticks:{...G.scales.x.ticks,maxTicksLimit:8}},y:{...G.scales.y,min:0,title:axTitle(`Avg ${card}/game`)}}}});}
+
+  {destroyChart('trFirstProv');const ctx=document.getElementById('chart-trFirstProv').getContext('2d');
+   chartInstances.trFirstProv=new Chart(ctx,{type:'line',data:{labels:binLabels,datasets:[{label:'1st Province turn',data:binFP,borderColor:'rgba(107,184,138,1)',backgroundColor:'rgba(107,184,138,.12)',fill:true,tension:.3,pointRadius:binFP.length<40?3:0,borderWidth:2,spanGaps:true}]},options:{...G,plugins:{legend:{display:false}},scales:{x:{...G.scales.x,title:axTitle('Training progress →'),ticks:{...G.scales.x.ticks,maxTicksLimit:8}},y:{...G.scales.y,title:axTitle('Avg turn (lower=faster)')}}}});}
+
+  {destroyChart('trLen');const ctx=document.getElementById('chart-trLen').getContext('2d');
+   chartInstances.trLen=new Chart(ctx,{type:'line',data:{labels:binLabels,datasets:[{label:'Game length',data:binLen,borderColor:'rgba(240,162,60,1)',backgroundColor:'rgba(240,162,60,.12)',fill:true,tension:.3,pointRadius:binLen.length<40?3:0,borderWidth:2,spanGaps:true}]},options:{...G,plugins:{legend:{display:false}},scales:{x:{...G.scales.x,title:axTitle('Training progress →'),ticks:{...G.scales.x.ticks,maxTicksLimit:8}},y:{...G.scales.y,min:0,title:axTitle('Avg turns')}}}});}
+}
+
+function noData(canvasId,msg){
+  const cv=document.getElementById(canvasId);const ctx=cv.getContext('2d');
+  const w=cv.clientWidth||cv.width,h=cv.clientHeight||220;cv.width=w;cv.height=h;
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='rgba(231,230,226,.38)';ctx.font="12px 'JetBrains Mono',monospace";ctx.textAlign='center';ctx.fillText(msg,w/2,h/2);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CHART HELPERS
+// ══════════════════════════════════════════════════════════════
+function baseChartCfg(){
+  const tick='rgba(231,230,226,.5)',grid='rgba(231,230,226,.06)';
+  return{responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{labels:{color:'rgba(231,230,226,.7)',font:{family:'JetBrains Mono,monospace',size:10,weight:'500'},boxWidth:11,usePointStyle:true,pointStyle:'rect'}},
+      tooltip:{
+        backgroundColor:'rgba(11,12,14,.94)',borderColor:'rgba(231,230,226,.19)',borderWidth:1,
+        titleColor:'#f0a23c',titleFont:{family:'JetBrains Mono,monospace',size:10,weight:'700'},
+        bodyColor:'#e7e6e2',bodyFont:{family:'JetBrains Mono,monospace',size:11},
+        padding:{top:8,bottom:8,left:11,right:11},cornerRadius:3,displayColors:true,
+        boxWidth:8,boxHeight:8,boxPadding:4,caretSize:5,caretPadding:6,usePointStyle:true
+      }
+    },
+    scales:{x:{grid:{color:grid,drawTicks:false},ticks:{color:tick,font:{family:'JetBrains Mono,monospace',size:9},padding:6},border:{color:'rgba(231,230,226,.14)'}},
+      y:{grid:{color:grid,drawTicks:false},ticks:{color:tick,font:{family:'JetBrains Mono,monospace',size:9},padding:6},border:{color:'rgba(231,230,226,.14)'}}}};
+}
+function axTitle(text){return{display:true,text,color:'rgba(231,230,226,.42)',font:{family:'JetBrains Mono,monospace',size:9}};}
+function destroyChart(id){if(chartInstances[id]){chartInstances[id].destroy();delete chartInstances[id];}}
+function destroyAllCharts(){Object.keys(chartInstances).forEach(destroyChart);}
+function exportChart(id){const c=chartInstances[id];if(!c){showError('Chart not available to export.');return;}const url=c.toBase64Image('image/png',1);const a=document.createElement('a');a.href=url;a.download=`dominion_${id}.png`;a.click();}
+function downloadText(text,filename,mime){const blob=new Blob([text],{type:mime||'text/plain'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+
+// ══════════════════════════════════════════════════════════════
+//  COMPARE TAB
+// ══════════════════════════════════════════════════════════════
+function populateCompareSelectors(){
+  const games=gamesSortedByEp();
+  const opts=games.map(([k,gd])=>`<option value="${esc(k)}">Ep ${gd.episodeId??'?'} · ${gd.turns.length-1}t · ${gameOutcome(gd).result.toUpperCase()}</option>`).join('');
+  const a=document.getElementById('cmp-a'),b=document.getElementById('cmp-b');
+  const keys=games.map(([k])=>k);
+  const prevA=a.value,prevB=b.value;
+  a.innerHTML=opts;b.innerHTML=opts;
+  cmpA=keys.includes(prevA)?prevA:keys[0];
+  cmpB=keys.includes(prevB)?prevB:keys[keys.length-1];
+  a.value=cmpA;b.value=cmpB;
+}
+function cmpSwap(){const a=document.getElementById('cmp-a'),b=document.getElementById('cmp-b');const t=a.value;a.value=b.value;b.value=t;refreshCompare();}
+function cmpEarlyLate(){const games=gamesSortedByEp();if(games.length<2)return;document.getElementById('cmp-a').value=games[0][0];document.getElementById('cmp-b').value=games[games.length-1][0];refreshCompare();}
+
+function cumulRLBuys(gd){
+  const rl=gd.players[0];const out=[];let acc=0;
+  for(let i=1;i<gd.turns.length;i++){
+    for(const ev of gd.turnMap[gd.turns[i]]||[]){if(ev.player_id!==rl)continue;for(const b of ev.buys||[])if(b!=='PASS'&&b!=='ILLEGAL')acc++;}
+    out.push(acc);
+  }
+  return out;
+}
+
+function refreshCompare(){
+  if(allGames.size<2){document.getElementById('cmp-content').style.display='none';document.getElementById('cmp-empty').style.display='block';return;}
+  document.getElementById('cmp-content').style.display='block';document.getElementById('cmp-empty').style.display='none';
+  if(!cmpA||!allGames.has(cmpA)||!cmpB||!allGames.has(cmpB))populateCompareSelectors();
+  cmpA=document.getElementById('cmp-a').value;cmpB=document.getElementById('cmp-b').value;
+  const A=allGames.get(cmpA),B=allGames.get(cmpB);if(!A||!B)return;
+
+  const card=(gd,cls,label)=>{
+    const oc=gameOutcome(gd);const dk=resolveDecks(gd);const rl=gd.players[0];
+    const rlInfo=dk.players[rl];const rlBuys=Object.values(gd.buysMatrix[rl]||{}).reduce((a,b)=>a+b,0);
+    const finalDeck=rlInfo?.deck||deckThroughTurn(gd,rl,gd.turns.length-1);
+    const ocCls=oc.result==='win'?'win-cell':oc.result==='loss'?'loss-cell':'tie-cell';
+    const ocBg=oc.result==='win'?'color:var(--good);border-color:rgba(107,184,138,.5)':oc.result==='loss'?'color:var(--bad);border-color:rgba(210,120,115,.5)':'color:var(--dim)';
+    return `<div class="cmp-card ${cls}">
+      <div class="cmp-card-title"><span class="${label==='A'?'cmp-ep-a':'cmp-ep-b'}">Episode ${gd.episodeId??'?'}</span>
+        <span class="cmp-result" style="${ocBg}">${oc.result.toUpperCase()} ${oc.sd>0?'+':''}${Number.isFinite(oc.sd)?oc.sd:'?'}</span></div>
+      <div class="cmp-stat"><span class="cmp-stat-l">RL victory points</span><span class="cmp-stat-v">${rlInfo?.vp??'—'} <span style="opacity:.5;font-size:.7em">(${dk.source})</span></span></div>
+      <div class="cmp-stat"><span class="cmp-stat-l">Game length</span><span class="cmp-stat-v">${gd.turns.length-1} turns</span></div>
+      <div class="cmp-stat"><span class="cmp-stat-l">1st Province turn</span><span class="cmp-stat-v">${gd.firstProvince?.[rl]??'never'}</span></div>
+      <div class="cmp-stat"><span class="cmp-stat-l">Total RL buys</span><span class="cmp-stat-v">${rlBuys}</span></div>
+      <div class="cmp-stat"><span class="cmp-stat-l">Final deck size</span><span class="cmp-stat-v">${deckSize(finalDeck)}</span></div>
+      <div class="cmp-stat"><span class="cmp-stat-l">Final economy ◉</span><span class="cmp-stat-v">${treasureValue(finalDeck)}</span></div>
+      <div class="cmp-stat"><span class="cmp-stat-l">Opening (T1 / T2)</span><span class="cmp-stat-v">${fmtOpen(gd.opening?.[rl])}</span></div>
+      <div class="cmp-stat"><span class="cmp-stat-l">How it ended</span><span class="cmp-stat-v">${gd.endReason}</span></div>
+    </div>`;
+  };
+  document.getElementById('cmp-summary').innerHTML=card(A,'col-a','A')+card(B,'col-b','B');
+
+  // cumulative buys overlay
+  const G=baseChartCfg();
+  const ca=cumulRLBuys(A),cb=cumulRLBuys(B);const maxLen=Math.max(ca.length,cb.length);
+  const labels=Array.from({length:maxLen},(_,i)=>`T${i+1}`);
+  {destroyChart('cmpPacing');const ctx=document.getElementById('chart-cmpPacing').getContext('2d');
+   chartInstances.cmpPacing=new Chart(ctx,{type:'line',data:{labels,datasets:[
+     {label:`Ep ${A.episodeId} (A)`,data:ca,borderColor:'rgba(240,162,60,1)',backgroundColor:'rgba(240,162,60,.1)',fill:false,tension:.25,pointRadius:0,borderWidth:2,spanGaps:true},
+     {label:`Ep ${B.episodeId} (B)`,data:cb,borderColor:'rgba(105,166,191,1)',backgroundColor:'rgba(105,166,191,.1)',fill:false,tension:.25,pointRadius:0,borderWidth:2,spanGaps:true}
+   ]},options:{...G,scales:{x:{...G.scales.x,title:axTitle('Turn'),ticks:{...G.scales.x.ticks,maxTicksLimit:12}},y:{...G.scales.y,min:0,title:axTitle('Cumulative RL buys')}}}});}
+
+  // deck diff (RL)
+  const dkA=resolveDecks(A),dkB=resolveDecks(B);const rlA=A.players[0],rlB=B.players[0];
+  const deA=dkA.players[rlA]?.deck||deckThroughTurn(A,rlA,A.turns.length-1);
+  const deB=dkB.players[rlB]?.deck||deckThroughTurn(B,rlB,B.turns.length-1);
+  document.getElementById('cmp-deck-src').textContent=(dkA.source==='real'&&dkB.source==='real')?'real final decks':'estimated (buys)';
+  const allCards=[...new Set([...Object.keys(deA),...Object.keys(deB)])].sort((x,y)=>{const xi=SUPPLY_ORDER.indexOf(x),yi=SUPPLY_ORDER.indexOf(y);if(xi!==-1&&yi!==-1)return xi-yi;if(xi!==-1)return-1;if(yi!==-1)return 1;return x.localeCompare(y);});
+  let html=`<div class="ddiff-row head"><span>Card</span><span class="ddiff-num">Ep ${A.episodeId}</span><span class="ddiff-num">Ep ${B.episodeId}</span><span class="ddiff-num">Δ (B−A)</span></div>`;
+  for(const c of allCards){
+    const va=deA[c]||0,vb=deB[c]||0,d=vb-va;if(va===0&&vb===0)continue;
+    const dCls=d>0?'delta-pos':d<0?'delta-neg':'delta-zero';
+    html+=`<div class="ddiff-row"><span class="ddiff-card">${typeDot(c)}${esc(c)}</span><span class="ddiff-num">${va||'·'}</span><span class="ddiff-num">${vb||'·'}</span><span class="ddiff-delta ${dCls}">${d>0?'+':''}${d||'0'}</span></div>`;
+  }
+  document.getElementById('cmp-deck-diff').innerHTML=html;
+}
+function shortCard(c){return String(c).length>9?String(c).slice(0,8)+'·':c;}
+function fmtOpen(o){if(!o)return'—';
+  const fmt=arr=>(arr&&arr.length)?arr.map(c=>`${typeDot(c)}${shortCard(c)}`).join(' '):'<span style="color:var(--faint)">pass</span>';
+  return `${fmt(o[1])} <span style="color:var(--faint)">/</span> ${fmt(o[2])}`;}
+
+// ══════════════════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════════════════
+function switchTab(name){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  const order=['replay','cardbuys','stats','training','compare'];
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',order[i]===name));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='stats')refreshStats();
+  if(name==='cardbuys')cbRefresh();
+  if(name==='training')refreshTraining();
+  if(name==='compare'){populateCompareSelectors();refreshCompare();}
+}
+
+// ══════════════════════════════════════════════════════════════
+//  FILE INPUTS / DROP
+// ══════════════════════════════════════════════════════════════
+document.getElementById('file-input').addEventListener('change',e=>{if(e.target.files.length)loadFiles([...e.target.files]);e.target.value='';});
+document.getElementById('add-file-input').addEventListener('change',e=>{if(e.target.files.length)loadFiles([...e.target.files]);e.target.value='';});
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files.length)loadFiles([...e.dataTransfer.files]);});
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{e.preventDefault();if(allGames.size&&e.dataTransfer.files.length)loadFiles([...e.dataTransfer.files]);});
+
+function showError(msg){const el=document.getElementById('error-toast');el.className='toast err';el.textContent='⚠  '+msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',6000);}
+function showInfo(msg){const el=document.getElementById('error-toast');el.className='toast info';el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',3200);}
+
+// ══════════════════════════════════════════════════════════════
+//  DEMO GAME
+// ══════════════════════════════════════════════════════════════
+function loadDemo(){
+  const rl=[['Silver'],['Silver'],['Gold'],['Witch'],['Gold'],['Province'],['Witch'],['Gold'],['Province'],['Province'],['Duchy'],['Province'],['Province'],['Duchy'],['Estate']];
+  const op=[['Silver'],['Silver'],['Gold'],['Silver'],['Gold'],['Gold'],['Province'],['Province'],['Province'],['Duchy'],['Province'],['Duchy'],['Estate'],['Estate'],['PASS']];
+  const hp={rl:[['Copper','Copper','Copper','Estate','Silver'],['Copper','Silver','Copper','Estate','Copper'],['Silver','Copper','Gold','Copper','Copper'],['Gold','Silver','Copper','Witch','Copper'],['Gold','Gold','Silver','Copper','Estate'],['Gold','Gold','Copper','Silver','Province'],['Witch','Gold','Silver','Copper','Copper'],['Gold','Gold','Gold','Silver','Copper'],['Province','Gold','Gold','Silver','Copper'],['Gold','Gold','Silver','Province','Estate']],
+    op:[['Copper','Copper','Estate','Copper','Silver'],['Silver','Copper','Copper','Estate','Copper'],['Gold','Copper','Silver','Copper','Copper'],['Silver','Silver','Copper','Gold','Copper'],['Gold','Silver','Copper','Copper','Estate'],['Gold','Gold','Silver','Copper','Copper'],['Province','Gold','Gold','Copper','Curse'],['Gold','Silver','Province','Curse','Copper'],['Gold','Gold','Silver','Province','Curse'],['Province','Gold','Silver','Curse','Estate']]};
+  const ev=[];
+  for(let t=1;t<=rl.length;t++){
+    ev.push({turn:t,player_id:'RL_Agent',hand:hp.rl[(t-1)%hp.rl.length],buys:rl[t-1]||['PASS'],episode:42});
+    ev.push({turn:t,player_id:'big_money',hand:hp.op[(t-1)%hp.op.length],buys:op[t-1]||['PASS'],episode:42});
+  }
+  const gd=buildGameData(ev,'sample-game.jsonl');
+  allGames.set('sample#42',gd);
+  finalDecksByEp.set(42,{episode:42,players:[
+    {player_id:'RL_Agent',total_cards:24,cards:{Copper:7,Estate:4,Silver:2,Gold:4,Witch:2,Province:5,Duchy:2}},
+    {player_id:'big_money',total_cards:25,cards:{Copper:7,Estate:6,Silver:3,Gold:4,Province:4,Duchy:2,Curse:4}}]});
+  // simple training trend so Training tab demonstrates
+  for(let e=1;e<=12;e++)metricsByEp.set(e,{episode:e,steps:18+e,reward:Math.round((e*0.1-0.3)*100)/100,score_diff:e<6?-2-((6-e)):3+e,epsilon:Math.max(.05,1-e*0.08)});
+  showUI();activateGame('sample#42');updatePills();cbRefresh();refreshStats();refreshTraining();populateCompareSelectors();runDiagnostics();switchTab('replay');
+}
+
+
+</script>
+</body>
+</html>
