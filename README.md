@@ -178,11 +178,22 @@ Gradually, $Q(S,A)$ converges onto the expectation in the Bellman optimality equ
 
 ## Q-Learning
 
-### Exploration and ϵ-Greedy Action Selection
+... some text here? ...
 
+### Exploration and $ϵ$-Greedy Action Selection
 
-Using an $\epislon$-greedy policy, the agent takes action $\argmax_{a}Q*(s,a)$
+The agent uses a model-free algorithm, it does not have an internal model of the environment's dynamics (the transition probabilities $P(s'|s,a)$ and reward function $R(s,a)$ for every given state-action pair).
+Instead of explicitly learning the entirety of the environment's dynamics, it must learn its target policy by estimating state-action values through empirical sampling (trial and error).
+The agent's ultimate goal is to find a target policy that, when deterministically followed, maximizes its total return.
+But since the agent lacks a model to look ahead to find the optimal action path, it must randomly sample different actions to discover which trajectories yield the best empirical results.
 
+This exploitation-exploration tradeoff during learning is possible because the agent's behavior policy (its strategy when interacting with the environment) is separate from its target policy (the strategy that the agent is actually trying to optimize).
+In Q-learning, one behavior policy that an agent can have is $ϵ$-Greedy Action Selection, where the agent chooses to either exploit or explore the environment.
+The agent has a 1-ϵ chance of exploiting the environment through action $a = \argmax_a Q(s,a)$ that yields the greatest expected future return and a $ϵ$ chance of uniformly picking any valid action at random.
+This splits the agent's efforts between exploitation (performing the action that is currently predicted to lead to the best outcome) and exploration (taking actions that seem to yield suboptimal results in an attempt to find an action path that leads to rewards greater than those produced by the currently predicted best action).
+The target policy uses the same Q-values that the behavior policy uses, but always acts in a greedy manner.
+
+Through many episodes, the agent updates its Q-values for state-action pairs by acting suboptimally to gather data (exploration through its epsilon-greedy behavior policy) and evaluating that data assuming optimal future play (derived from the current estimated Q-values).
 
 
 ### Tabular Q-Learning
