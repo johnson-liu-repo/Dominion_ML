@@ -198,7 +198,15 @@ Through many episodes, the agent updates its Q-values for state-action pairs by 
 
 ### Tabular Q-Learning
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+In tabular Q-learning, the Q-values for every possible state-action pair are stored in a lookup table.
+Each row $r_i$ in the table corresponds to a specific state of the environment and each column $c_j$ represents a different action.
+Each non-empty entry $Q_{ij}$ in the table holds the current Q-value (expected future return) for the state-action pair $(s_i, a_j)$.
+When the agent decides to exploit the environment from its current state $s$, it reads the Q-table and chooses the action $a$ that has the largest Q-value for that state's row.
+Otherwise, the agent explores, randomly sampling from among all valid actions within that state.
+Once an action is executed, the agent transitions to a new state and observes the environment.
+It receives its immediate reward, retrieves the current Q(s,a) value and the highest possible Q-value of the next state, computes the target value and new Q-value using the [temporal-difference formula](#temporal-difference-learning).
+Since Q-learning is a Temporal-Difference method, the Q-table is immediately updated with this new Q-value.
+The episode then continues on to the next step, continually updating the Q-table in this bootstrapped manner.
 
 ### Example of Tabular Q-Learning — A Simple Deckbuilder
 
