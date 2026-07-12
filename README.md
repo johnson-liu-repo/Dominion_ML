@@ -210,7 +210,52 @@ The episode then continues on to the next step, continually updating the Q-table
 
 ### Example of Tabular Q-Learning — A Simple Deckbuilder
 
+This is an example of tabular Q-learning in an overly simplified deck builder.
 
+The environment has two states (the value of the agent's hand): low (L) and high (H).
+
+For both states, the possible actions are buying a treasure card (B) and buying s score card (S).
+
+The rewards and transitions for each state-action pair is given in Table (1).
+
+|State (s)|Action (a)|Reward (r)|New State (s')|
+| :---: | :---: | :---: | :---: |
+|L|B|0|H|
+|L|S|1|L|
+|H|B|1|H|
+|H|S|3|T (terminal)|
+
+<table style="border-collapse: collapse; width: 100%; text-align: center;">
+  <!-- ROW 0 -->
+  <tr style="border-bottom: 1px solid #ccc;">
+    <!-- Text aligned to the bottom to match Row 1 -->
+    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
+    <!-- Cells 0,1 and 0,2 merged horizontally -->
+    <td colspan="2" style="padding: 12px;">Action (a)</td>
+  </tr>
+  
+  <!-- ROW 1 -->
+  <!-- This row has the THICK black bottom border -->
+  <tr style="border-bottom: 4px solid black;">
+    <!-- Cell 1,0 is omitted here because 0,0 stretches down into it -->
+    <td style="padding: 12px;">B</td>
+    <td style="padding: 12px;">S</td>
+  </tr>
+  
+  <!-- ROW 2 -->
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td style="border-right: 4px solid black; padding: 12px;">L</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">0</td>
+  </tr>
+
+  <!-- ROW 3 -->
+  <tr>
+    <td style="border-right: 4px solid black; padding: 12px;">H</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">0</td>
+  </tr>
+</table>
 
 
 
