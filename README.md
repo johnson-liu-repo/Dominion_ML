@@ -211,19 +211,91 @@ The episode then continues on to the next step, continually updating the Q-table
 ### Example of Tabular Q-Learning — A Simple Deckbuilder
 
 This is an example of tabular Q-learning in an overly simplified deck builder.
-
 The environment has two states (the value of the agent's hand): low (L) and high (H).
-
 For both states, the possible actions are buying a treasure card (B) and buying s score card (S).
-
 The rewards and transitions for each state-action pair is given in Table (1).
+
+<div align="center"><b>Table 1:</b> Reward/Transition Table for a Simple Deckbuilder</div>
+
+<div align="center">
 
 |State (s)|Action (a)|Reward (r)|New State (s')|
 | :---: | :---: | :---: | :---: |
-|L|B|0|H|
-|L|S|1|L|
-|H|B|1|H|
-|H|S|3|T (terminal)|
+|L <br> (low hand value)|B <br> (buy treasure card)|0|H|
+|L|S <br> (buy score card)|1|L|
+|H <br> (high hand value)|B|1|H|
+|H|S|3|T <br> (terminal)|
+</div>
+
+#### Agent Training
+The agent in this example follows the transitions shown below, always starting in state L and ending in state T.
+
+
+1. [Episode 1]()\
+    1.1 [Update 1](#ep1-update1): L --> H\
+    1.2 [Update 2](): L $\xrightarrow{B, r = 0}$ H
+2. [Episode 2]()\
+    2.1 [Update 1](): L --> H\
+    2.2 [Update 2](): H --> T
+3. [Episode 3]()\
+    3.1 [Update 1](): L --> L\
+    3.2 [Update 2](): L --> H\
+    3.3 [Update 3](): H --> T
+4. [Episode 4]()\
+    4.1 [Update 1](): L --> H\
+    4.2 [Update 2](): H --> H\
+    4.3 [Update 3](): H --> T
+
+
+
+
+<a id="ep1-update1"></a>
+##### Episode 1 — Update 1
+In the first update of Episode 1, the agent transitions from state L to state H through action B and receives reward r = 0
+
+
+<a id="ep1-update2"></a>
+##### Episode 1 — Update 2
+
+
+
+<a id="ep2-update1"></a>
+##### Episode 2 — Update 1
+
+
+
+<a id="ep2-update2"></a>
+##### Episode 2 — Update 2
+
+
+
+<a id="ep3-update1"></a>
+##### Episode 3 — Update 1
+
+
+
+<a id="ep3-update2"></a>
+##### Episode 3 — Update 2
+
+
+
+<a id="ep3-update3"></a>
+##### Episode 3 — Update 3
+
+
+
+<a id="ep4-update1"></a>
+##### Episode 2 — Update 1
+
+
+
+<a id="ep4-update2"></a>
+##### Episode 4 — Update 2
+
+
+---
+
+... Create an animation/gif for the Q-table ...
 
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <!-- ROW 0 -->
