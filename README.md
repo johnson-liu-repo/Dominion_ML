@@ -227,31 +227,75 @@ The rewards and transitions for each state-action pair is given in Table (1).
 |H|S|3|T <br> (terminal)|
 </div>
 
+<i>... Explain rationale for reward structure ...</i>
+
 #### Agent Training
-The agent in this example follows the transitions shown below, always starting in state L and ending in state T.
+
+The starting Q-table is initialized with 0 for all state-action pairs.
 
 
-1. [Episode 1]()\
+<table style="border-collapse: collapse; width: 100%; text-align: center;">
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
+    <td colspan="2" style="padding: 12px;">Action (a)</td>
+  </tr>
+  
+  <tr style="border-bottom: 4px solid black;">
+    <td style="padding: 12px;">B</td>
+    <td style="padding: 12px;">S</td>
+  </tr>
+  
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td style="border-right: 4px solid black; padding: 12px;">L</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">0</td>
+  </tr>
+
+  <tr>
+    <td style="border-right: 4px solid black; padding: 12px;">H</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">0</td>
+  </tr>
+</table>
+
+We choose the learning rate $\alpha = 0.5$ and the discount factor $\gamma = 0.9$.
+The agent in this example follows the transitions shown below, with each episode always starting in state L and ending in state T.
+Each update within the episodes are labeled as <b> starting state ---(action, reward)---> ending state</b>.
+
+
+1. Episode 1\
     1.1 [Update 1](#ep1-update1): L ---(B, r = 0)---> H\
-    1.2 [Update 2](): H ---(S, r = 3)---> T
-2. [Episode 2]()\
-    2.1 [Update 1](): L ---(B, r = 0)---> H\
-    2.2 [Update 2](): H ---(S, r = 3)---> T
-3. [Episode 3]()\
-    3.1 [Update 1](): L ---(S, r = 1)---> L\
-    3.2 [Update 2](): L ---(B, r = 0)---> H\
-    3.3 [Update 3](): H ---(B, r = 3)---> T
-4. [Episode 4]()\
-    4.1 [Update 1](): L ---(B, r = 0)---> H\
-    4.2 [Update 2](): H ---(B, r = 1)---> H\
-    4.3 [Update 3](): H ---(S, r = 3)---> T
-
-
+    1.2 [Update 2](#ep1-update2): H ---(S, r = 3)---> T
+2. Episode 2\
+    2.1 [Update 1](#ep2-update1): L ---(B, r = 0)---> H\
+    2.2 [Update 2](#ep2-update2): H ---(S, r = 3)---> T
+3. Episode 3\
+    3.1 [Update 1](#ep3-update1): L ---(S, r = 1)---> L\
+    3.2 [Update 2](#ep3-update2): L ---(B, r = 0)---> H\
+    3.3 [Update 3](#ep3-update3): H ---(B, r = 3)---> T
+4. Episode 4\
+    4.1 [Update 1](#ep4-update1): L ---(B, r = 0)---> H\
+    4.2 [Update 2](#ep4-update2): H ---(B, r = 1)---> H\
+    4.3 [Update 3](#ep4-update3): H ---(S, r = 3)---> T
 
 
 <a id="ep1-update1"></a>
 ##### Episode 1 — Update 1
-In the first update of Episode 1, the agent transitions from state L to state H through action B and receives reward r = 0
+In the first update of Episode 1, the agent transitions from state L to state H through action B and receives reward r = 0.
+The formula used to update Q(L,B) is
+
+$$
+Q_1(\text{L,B}) = (1-\alpha) Q_0(\text{L,B}) + \alpha \left[ r + \gamma \max_{a'}Q_0(\text{H}, a') \right] \ .
+$$
+
+Since there are only two possible actions when the agent is in state H, $\max_{a'}$ is just the maximum between the Q-values for the state-action pairs (H,B) and (H,S).
+Therefore,
+
+$$
+Q_1(\text{L,B}) = (1-\alpha) Q_0(\text{L,B}) + \alpha \left[ r + \gamma \max_{}\left(  Q_0(\text{H,B}), Q_0(\text{H,S})\right) \right] \ .
+$$
+
+
 
 
 <a id="ep1-update2"></a>
@@ -285,7 +329,7 @@ In the first update of Episode 1, the agent transitions from state L to state H 
 
 
 <a id="ep4-update1"></a>
-##### Episode 2 — Update 1
+##### Episode 4 — Update 1
 
 
 
@@ -293,42 +337,13 @@ In the first update of Episode 1, the agent transitions from state L to state H 
 ##### Episode 4 — Update 2
 
 
+
+<a id="ep4-update3"></a>
+##### Episode 4 — Update 3
+
 ---
 
-... Create an animation/gif for the Q-table ...
-
-<table style="border-collapse: collapse; width: 100%; text-align: center;">
-  <!-- ROW 0 -->
-  <tr style="border-bottom: 1px solid #ccc;">
-    <!-- Text aligned to the bottom to match Row 1 -->
-    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
-    <!-- Cells 0,1 and 0,2 merged horizontally -->
-    <td colspan="2" style="padding: 12px;">Action (a)</td>
-  </tr>
-  
-  <!-- ROW 1 -->
-  <!-- This row has the THICK black bottom border -->
-  <tr style="border-bottom: 4px solid black;">
-    <!-- Cell 1,0 is omitted here because 0,0 stretches down into it -->
-    <td style="padding: 12px;">B</td>
-    <td style="padding: 12px;">S</td>
-  </tr>
-  
-  <!-- ROW 2 -->
-  <tr style="border-bottom: 1px solid #ccc;">
-    <td style="border-right: 4px solid black; padding: 12px;">L</td>
-    <td style="padding: 12px;">0</td>
-    <td style="padding: 12px;">0</td>
-  </tr>
-
-  <!-- ROW 3 -->
-  <tr>
-    <td style="border-right: 4px solid black; padding: 12px;">H</td>
-    <td style="padding: 12px;">0</td>
-    <td style="padding: 12px;">0</td>
-  </tr>
-</table>
-
+<i>... Create an animation/gif for the Q-table ...</i>
 
 
 ### Strengths and Limitations of the Tabular Q-learning
@@ -360,6 +375,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 
 
 # Dominion ML — Reinforcement Learning for Dominion
+
+> ---> Outdated <---
 
 Dominion ML is a work-in-progress reinforcement-learning project for training agents to play the deck-building game **Dominion**. The repository layers a Gymnasium-style buy-phase environment, a Dueling/Double DQN training loop, diagnostics tooling, and replay visualization on top of a bundled copy of [Pyminion](https://github.com/evanofslack/pyminion).
 
