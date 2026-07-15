@@ -232,19 +232,19 @@ The agent in this example follows the transitions shown below, always starting i
 
 
 1. [Episode 1]()\
-    1.1 [Update 1](#ep1-update1): L --> H\
-    1.2 [Update 2](): L $\xrightarrow{B, r = 0}$ H
+    1.1 [Update 1](#ep1-update1): L ---(B, r = 0)---> H\
+    1.2 [Update 2](): H ---(S, r = 3)---> T
 2. [Episode 2]()\
-    2.1 [Update 1](): L --> H\
-    2.2 [Update 2](): H --> T
+    2.1 [Update 1](): L ---(B, r = 0)---> H\
+    2.2 [Update 2](): H ---(S, r = 3)---> T
 3. [Episode 3]()\
-    3.1 [Update 1](): L --> L\
-    3.2 [Update 2](): L --> H\
-    3.3 [Update 3](): H --> T
+    3.1 [Update 1](): L ---(S, r = 1)---> L\
+    3.2 [Update 2](): L ---(B, r = 0)---> H\
+    3.3 [Update 3](): H ---(B, r = 3)---> T
 4. [Episode 4]()\
-    4.1 [Update 1](): L --> H\
-    4.2 [Update 2](): H --> H\
-    4.3 [Update 3](): H --> T
+    4.1 [Update 1](): L ---(B, r = 0)---> H\
+    4.2 [Update 2](): H ---(B, r = 1)---> H\
+    4.3 [Update 3](): H ---(S, r = 3)---> T
 
 
 
