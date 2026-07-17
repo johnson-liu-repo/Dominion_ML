@@ -279,10 +279,12 @@ Each update within the episodes are labeled as <b> starting state ---(action, re
     4.3 [Update 3](#ep4-update3): H ---(S, r = 3)---> T
 
 
+---
+
 <a id="ep1-update1"></a>
 ##### Episode 1 — Update 1
-In the first update of Episode 1, the agent transitions from state L to state H through action B and receives reward r = 0.
-The formula used to update Q(L,B) is
+In the first update of Episode 1, the agent transitions from state L to state H through action B and receives reward $r = 0$.
+The formula used to update $Q(\text{L,B})$ is
 
 $$
 Q_1(\text{L,B}) = (1-\alpha) Q_0(\text{L,B}) + \alpha \left[ r + \gamma \max_{a'}Q_0(\text{H}, a') \right] \ .
@@ -295,13 +297,65 @@ $$
 Q_1(\text{L,B}) = (1-\alpha) Q_0(\text{L,B}) + \alpha \left[ r + \gamma \max_{}\left(  Q_0(\text{H,B}), Q_0(\text{H,S})\right) \right] \ .
 $$
 
+Looking at the initial Q-table, the relevant Q-values are $Q(\text{L,B}) = 0$, $Q(\text{H,B}) = 0$, and $Q(\text{H,S}) = 0$.
+The equation is then
 
+$$
+Q_1(\text{L,B}) = (1-0.5) (0) + 0.5 \left[ 0 + 0.9 \max_{}\left( 0, 0\right) \right] \ .
+$$
 
+This results in $Q_1(\text{L,B}) = 0$.
+The Q-table is immediately updated with this "new" value (although it is the same as the old value).
+
+---
 
 <a id="ep1-update2"></a>
 ##### Episode 1 — Update 2
 
+In the second update, the agent transitions from state H to the terminal state L through action S and receives reward $r=3$.
+The formula for this update is
 
+$$
+Q_1(\text{H,S}) = (1-\alpha) Q_0(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_0(\text{T}, a') \right] \ .
+$$
+
+Since T is the terminal state, $\max_{a'}Q(\text{T},a')$ returns 0.
+So we have
+
+$$
+Q_1(\text{H,S}) = (1-0.5) (0) + 0.5 \left[ 3 + 0.9 (0) \right] 
+ ,
+$$
+
+giving $Q(\text{H,S}) = 1.5$ as the updated Q-value for taking action S in state H.
+The Q-table is updated with this new Q-value:
+
+
+<table style="border-collapse: collapse; width: 100%; text-align: center;">
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
+    <td colspan="2" style="padding: 12px;">Action (a)</td>
+  </tr>
+  
+  <tr style="border-bottom: 4px solid black;">
+    <td style="padding: 12px;">B</td>
+    <td style="padding: 12px;">S</td>
+  </tr>
+  
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td style="border-right: 4px solid black; padding: 12px;">L</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">0</td>
+  </tr>
+
+  <tr>
+    <td style="border-right: 4px solid black; padding: 12px;">H</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">0 ---> 1.5</td>
+  </tr>
+</table>
+
+---
 
 <a id="ep2-update1"></a>
 ##### Episode 2 — Update 1
