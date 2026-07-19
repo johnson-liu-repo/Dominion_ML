@@ -233,7 +233,7 @@ The rewards and transitions for each state-action pair is given in Table (1).
 
 The starting Q-table is initialized with 0 for all state-action pairs.
 
-
+<div align="center"><b>Q-Table 0</b></div>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -272,7 +272,7 @@ Each update within the episodes are labeled as <b> starting state ---(action, re
 3. Episode 3\
     3.1 [Update 1](#ep3-update1): L ---(S, r = 1)---> L\
     3.2 [Update 2](#ep3-update2): L ---(B, r = 0)---> H\
-    3.3 [Update 3](#ep3-update3): H ---(B, r = 3)---> T
+    3.3 [Update 3](#ep3-update3): H ---(S, r = 3)---> T
 4. Episode 4\
     4.1 [Update 1](#ep4-update1): L ---(B, r = 0)---> H\
     4.2 [Update 2](#ep4-update2): H ---(B, r = 1)---> H\
@@ -330,7 +330,7 @@ $$
 giving $Q(\text{H,S}) = 1.5$ as the updated Q-value for taking action S in state H.
 The Q-table is updated with this new Q-value:
 
-
+<div align="center"><b>Q-Table 1</b></div>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -360,12 +360,80 @@ The Q-table is updated with this new Q-value:
 <a id="ep2-update1"></a>
 ##### Episode 2 — Update 1
 
+In Episode 2, the agent will make the same transitions as in Episode 1 (transitioning from state L to state H through action B with a reward of $r=0$), but the new Q-values will be computed using the new Q-table.
+The first update uses the same equation as [Episode 1 — Update 1](#ep1-update1):
 
+$$
+Q_2(\text{L,B}) = (1-\alpha) Q_1(\text{L,B}) + \alpha \left[ r + \gamma \max_{a'}Q_1(\text{H}, a') \right]
+$$
+
+$$
+Q_2(\text{L,B}) = (1-\alpha) Q_1(\text{L,B}) + \alpha \left[ r + \gamma \max_{}\left(  Q_1(\text{H,B}), Q_1(\text{H,S})\right) \right] \ .
+$$
+
+But now that the Q-table has been updated during Episode 1, the specific values that we use to substitute for the variables in this equation are different from those that we used in Episode 1, Update 1.
+Particularly, the difference is that $Q(\text{H,S})$ now equals 1.5 instead of 0:
+
+$$
+Q_2(\text{L,B}) = (1-0.5) (0) + 0.5 \left[ 0 + 0.9 \max_{}\left( 0, 1.5\right) \right]
+$$
+
+$$
+Q_2(\text{L,B}) = 0.675 \ .
+$$
+
+Through bootstrapping, the agent sees that the (current) estimated value of taking action B while in state L is 0.675 even though the immediate reword is 0 because the agent now knows that being in state H holds future value (due to the updates made during Episode 1).
+
+<div align="center"><b>Q-Table 2</b></div>
+<table style="border-collapse: collapse; width: 100%; text-align: center;">
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
+    <td colspan="2" style="padding: 12px;">Action (a)</td>
+  </tr>
+  
+  <tr style="border-bottom: 4px solid black;">
+    <td style="padding: 12px;">B</td>
+    <td style="padding: 12px;">S</td>
+  </tr>
+  
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td style="border-right: 4px solid black; padding: 12px;">L</td>
+    <td style="padding: 12px;">0 ---> 0.675</td>
+    <td style="padding: 12px;">0</td>
+  </tr>
+
+  <tr>
+    <td style="border-right: 4px solid black; padding: 12px;">H</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">1.5</td>
+  </tr>
+</table>
+
+---
 
 <a id="ep2-update2"></a>
 ##### Episode 2 — Update 2
 
+The second transition in Episode 2 is again the same as that in Episode 1 (from state H to T through action S with a reward of $r=3$).
+The update is
 
+$$
+Q_2(\text{H,S}) = (1-\alpha) Q_1(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_1(\text{T}, a') \right] \ .
+$$
+
+Again, since T is the terminal state, $\max_{a'}Q(\text{T},a')$ returns 0, and using the previously updated value for $Q(\text{H,S})$, we have
+
+$$
+Q_2(\text{H,S}) = (1-0.5) (1.5) + 0.5 \left[ 3 + 0.9 (0) \right]
+$$
+
+$$
+Q_2(\text{H,S}) = 2.25 \ .
+$$
+
+
+
+---
 
 <a id="ep3-update1"></a>
 ##### Episode 3 — Update 1
