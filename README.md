@@ -2,11 +2,49 @@
 
 *— Work in progress —*
 
-# Reinforcement Learning: Deep Q-Learning for Dominion
-
+# Deep Q-Learning for Dominion
 
 ### Contents
 
+1. [Reinforcement Learning](#reinforcement-learning)\
+  1.1 [Historical Background](#historical-background)\
+  1.2 [Sequential Decision Making](#sequential-decision-making)\
+  1.3 [Markov Decision Processes](#markov-decision-processes)\
+  1.4 [Policies, Returns, and Value Functions](#policies-returns-and-value-functions)\
+  1.5 [Bellman Equations](#bellman-equations)\
+  1.6 [Temporal-Difference Learning](#temporal-difference-learning)
+
+2. [Q-Learning](#q-learning)\
+  2.1 [The Q-Learning Update](#the-q-learning-update)\
+  2.2 [Behavior and Target Policies](#behavior-and-target-policies)\
+  2.3 [Exploration and Epsilon-Greedy Action Selection](#exploration-and-epsilon-greedy-action-selection)\
+  2.4 [Tabular Q-Learning](#tabular-q-learning)\
+  2.5 [Example: Q-Learning in a Simple Deckbuilder](#example-q-learning-in-a-simple-deckbuilder)\
+  2.6 [Strengths and Limitations of Tabular Q-Learning](#strengths-and-limitations-of-tabular-q-learning)
+
+3. [Deep Q-Learning](#deep-q-learning)\
+  3.1 [From Tables to Function Approximation](#from-tables-to-function-approximation)\
+  3.2 [Neural Networks](#neural-networks)\
+  3.3 [Approximating Action Values](#approximating-action-values)\
+  3.4 [The Deep Q-Network](#the-deep-q-network)\
+  3.5 [Experience Replay](#experience-replay)\
+  3.6 [Target Networks](#target-networks)\
+  3.7 [Double DQN](#double-dqn)\
+  3.8 [Dueling DQN](#dueling-dqn)\
+  3.9 [Legal-Action Masking](#legal-action-masking)
+
+4. [Deep Q-Learning for Dominion](#deep-q-learning-for-dominion)\
+  4.1 [Why Dominion Is a Reinforcement-Learning Problem](#why-dominion-is-a-reinforcement-learning-problem)\
+  4.2 [Dominion as a Markov Decision Process](#dominion-as-a-markov-decision-process)\
+  4.3 [State Representation](#state-representation)\
+  4.4 [Action Representation](#action-representation)\
+  4.5 [Reward Design](#reward-design)\
+  4.6 [Opponent Policies](#opponent-policies)\
+  4.7 [Curriculum Learning](#curriculum-learning)\
+  4.8 [Agent Architecture](#agent-architecture)\
+  4.9 [Training Procedure](#training-procedure)\
+  4.10 [Evaluation](#evaluation)\
+  4.11 [Current Limitations and Future Work](#current-limitations-and-future-work)
 
 
 ## Reinforcement Learning
@@ -131,7 +169,7 @@ $$
 V^\pi(s) = \sum_{a \in 𝒜} \left( \pi(a | s) \sum_{s' \in 𝒮} \left[ P(s,a,s') \left( r(s,a,s') + \gamma V^\pi(s') \right) \right] \right) \ .
 $$
 
-The $Q-value$ of a state-action pair is defined as the reward received for taking action $a$ in state $s$ plus the discounted expected value of being in the new state:
+The $Q$-value of a state-action pair is defined as the reward received for taking action $a$ in state $s$ plus the discounted expected value of being in the new state:
 
 $$
 Q(s, a) = r(s, a) + \gamma \sum_{s' \in 𝒮} P(s' | s, a) V^\pi (s') \ . \qquad \text{(2)} \%\%\ MAGIT_PARSER_PROTECT%%
@@ -233,7 +271,7 @@ The rewards and transitions for each state-action pair is given in Table (1).
 
 The starting Q-table is initialized with 0 for all state-action pairs.
 
-<div align="center"><b>Q-Table 0</b></div>
+<div align="center"><b>Q-Table 0</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -257,6 +295,7 @@ The starting Q-table is initialized with 0 for all state-action pairs.
     <td style="padding: 12px;">0</td>
   </tr>
 </table>
+</div>
 
 We choose the learning rate $\alpha = 0.5$ and the discount factor $\gamma = 0.9$.
 The agent in this example follows the transitions shown below, with each episode always starting in state L and ending in state T.
@@ -330,7 +369,7 @@ $$
 giving $Q(\text{H,S}) = 1.5$ as the updated Q-value for taking action S in state H.
 The Q-table is updated with this new Q-value:
 
-<div align="center"><b>Q-Table 1</b></div>
+<div align="center"><b>Q-Table 1.2</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -354,6 +393,7 @@ The Q-table is updated with this new Q-value:
     <td style="padding: 12px;">0 ---> 1.5</td>
   </tr>
 </table>
+</div>
 
 ---
 
@@ -384,7 +424,7 @@ $$
 
 Through bootstrapping, the agent sees that the (current) estimated value of taking action B while in state L is 0.675 even though the immediate reword is 0 because the agent now knows that being in state H holds future value (due to the updates made during Episode 1).
 
-<div align="center"><b>Q-Table 2</b></div>
+<div align="center"><b>Q-Table 2.1</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -408,6 +448,7 @@ Through bootstrapping, the agent sees that the (current) estimated value of taki
     <td style="padding: 12px;">1.5</td>
   </tr>
 </table>
+</div>
 
 ---
 
@@ -431,24 +472,152 @@ $$
 Q_2(\text{H,S}) = 2.25 \ .
 $$
 
+<div align="center"><b>Q-Table 2.2</b>
+<table style="border-collapse: collapse; width: 100%; text-align: center;">
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
+    <td colspan="2" style="padding: 12px;">Action (a)</td>
+  </tr>
+  
+  <tr style="border-bottom: 4px solid black;">
+    <td style="padding: 12px;">B</td>
+    <td style="padding: 12px;">S</td>
+  </tr>
+  
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td style="border-right: 4px solid black; padding: 12px;">L</td>
+    <td style="padding: 12px;">0.675</td>
+    <td style="padding: 12px;">0</td>
+  </tr>
 
+  <tr>
+    <td style="border-right: 4px solid black; padding: 12px;">H</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">1.5 ---> 2.25</td>
+  </tr>
+</table>
+</div>
 
 ---
 
 <a id="ep3-update1"></a>
 ##### Episode 3 — Update 1
 
+In Episode 3, the agent goes through a different transition path than in Episodes 1 and 2.
+It also takes the agent three transitions instead of two for it to reach the end of the episode (once it reaches the terminal state).
+Transitioning from state L to state L through action S with a reward of $r=1$, the $Q$-value update is
 
+$$
+Q_3(\text{L,S}) = (1-\alpha) Q_2(\text{L,S}) + \alpha \left[ r + \gamma \max_{a'}Q_2(\text{L}, a') \right]
+$$
+
+$$
+Q_3(\text{L,S}) = (1-\alpha) Q_2(\text{L,S}) + \alpha \left[ r + \gamma \max_{}(Q_2(\text{L,B}), Q_2(\text{L,S})) \right]
+$$
+
+$$
+Q_3(\text{L,S}) = (1-0.5)(0) + 0.5 \left[ 1 + 0.9(0.675) \right]
+$$
+
+$$
+Q_3(\text{L,S}) = 0.80375
+$$
+
+<div align="center"><b>Q-Table 3.1</b>
+<table style="border-collapse: collapse; width: 100%; text-align: center;">
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
+    <td colspan="2" style="padding: 12px;">Action (a)</td>
+  </tr>
+  
+  <tr style="border-bottom: 4px solid black;">
+    <td style="padding: 12px;">B</td>
+    <td style="padding: 12px;">S</td>
+  </tr>
+  
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td style="border-right: 4px solid black; padding: 12px;">L</td>
+    <td style="padding: 12px;">0.675</td>
+    <td style="padding: 12px;">0 ---> 0.80375</td>
+  </tr>
+
+  <tr>
+    <td style="border-right: 4px solid black; padding: 12px;">H</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">2.25</td>
+  </tr>
+</table>
+</div>
+
+---
 
 <a id="ep3-update2"></a>
 ##### Episode 3 — Update 2
 
+After its first transition in Episode 3, the agent transitions from state L to state H through action B receiving a reward of $r=0$:
 
+$$
+Q_3(\text{L,B}) = (1-\alpha) Q_2(\text{L,B}) + \alpha \left[ r + \gamma \max_{a'}Q_2(\text{H}, a') \right]
+$$
+
+$$
+Q_3(\text{L,B}) = (1-\alpha) Q_2(\text{L,B}) + \alpha \left[ r + \gamma \max_{}(Q_2(\text{H,B}), Q_2(\text{H,S})) \right]
+$$
+
+$$
+Q_3(\text{L,B}) = (1-0.5)(0.675) + 0.5 \left[ 0 + 0.9(2.25) \right]
+$$
+
+$$
+Q_3(\text{L,B}) = 1.35
+$$
+
+<div align="center"><b>Q-Table 3.1</b>
+<table style="border-collapse: collapse; width: 100%; text-align: center;">
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
+    <td colspan="2" style="padding: 12px;">Action (a)</td>
+  </tr>
+  
+  <tr style="border-bottom: 4px solid black;">
+    <td style="padding: 12px;">B</td>
+    <td style="padding: 12px;">S</td>
+  </tr>
+  
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td style="border-right: 4px solid black; padding: 12px;">L</td>
+    <td style="padding: 12px;">0.675 ---> 1.35</td>
+    <td style="padding: 12px;">0.80375</td>
+  </tr>
+
+  <tr>
+    <td style="border-right: 4px solid black; padding: 12px;">H</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">2.25</td>
+  </tr>
+</table>
+</div>
+
+---
 
 <a id="ep3-update3"></a>
 ##### Episode 3 — Update 3
 
+The final update in Episode 3 is computed using the state H to state L transition:
 
+$$
+Q_3(\text{H,S}) = (1-\alpha) Q_2(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_2(\text{T}, a') \right]
+$$
+
+$$
+Q_3(\text{H,S}) = (1-0.5)(2.25) + 0.5 \left[ 3 + 0.9(0) \right]
+$$
+
+$$
+Q_3(\text{H,S}) = 2.625
+$$
+
+---
 
 <a id="ep4-update1"></a>
 ##### Episode 4 — Update 1
