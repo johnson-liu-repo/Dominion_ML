@@ -572,7 +572,7 @@ $$
 Q_3(\text{L,B}) = 1.35
 $$
 
-<div align="center"><b>Q-Table 3.1</b>
+<div align="center"><b>Q-Table 3.2</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -617,20 +617,162 @@ $$
 Q_3(\text{H,S}) = 2.625
 $$
 
+<div align="center"><b>Q-Table 3.3</b>
+<table style="border-collapse: collapse; width: 100%; text-align: center;">
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
+    <td colspan="2" style="padding: 12px;">Action (a)</td>
+  </tr>
+  
+  <tr style="border-bottom: 4px solid black;">
+    <td style="padding: 12px;">B</td>
+    <td style="padding: 12px;">S</td>
+  </tr>
+  
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td style="border-right: 4px solid black; padding: 12px;">L</td>
+    <td style="padding: 12px;">1.35</td>
+    <td style="padding: 12px;">0.80375</td>
+  </tr>
+
+  <tr>
+    <td style="border-right: 4px solid black; padding: 12px;">H</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">2.25 ---> 2.625</td>
+  </tr>
+</table>
+</div>
+
 ---
 
 <a id="ep4-update1"></a>
 ##### Episode 4 — Update 1
 
+$$
+Q_4(\text{L,B}) = (1-\alpha) Q_3(\text{L,B}) + \alpha \left[ r + \gamma \max_{a'}Q_3(\text{H}, a') \right]
+$$
 
+$$
+Q_4(\text{L,B}) = (1-0.5)(1.35) + 0.5 \left[ 3 + 0.9(2.625) \right]
+$$
+
+$$
+Q_4(\text{L,B}) = 1.85625
+$$
+
+<div align="center"><b>Q-Table 4.1</b>
+<table style="border-collapse: collapse; width: 100%; text-align: center;">
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
+    <td colspan="2" style="padding: 12px;">Action (a)</td>
+  </tr>
+  
+  <tr style="border-bottom: 4px solid black;">
+    <td style="padding: 12px;">B</td>
+    <td style="padding: 12px;">S</td>
+  </tr>
+  
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td style="border-right: 4px solid black; padding: 12px;">L</td>
+    <td style="padding: 12px;">1.35 ---> 1.85625</td>
+    <td style="padding: 12px;">0.80375</td>
+  </tr>
+
+  <tr>
+    <td style="border-right: 4px solid black; padding: 12px;">H</td>
+    <td style="padding: 12px;">0</td>
+    <td style="padding: 12px;">2.625</td>
+  </tr>
+</table>
+</div>
+
+---
 
 <a id="ep4-update2"></a>
 ##### Episode 4 — Update 2
 
+$$
+Q_4(\text{H,B}) = (1-\alpha) Q_3(\text{H,B}) + \alpha \left[ r + \gamma \max_{a'}Q_3(\text{H}, a') \right]
+$$
 
+$$
+Q_4(\text{H,B}) = (1-0.5)(0) + 0.5 \left[ 1 + 0.9(2.625) \right]
+$$
+
+$$
+Q_4(\text{H,B}) = 1.68125
+$$
+
+<div align="center"><b>Q-Table 4.2</b>
+<table style="border-collapse: collapse; width: 100%; text-align: center;">
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
+    <td colspan="2" style="padding: 12px;">Action (a)</td>
+  </tr>
+  
+  <tr style="border-bottom: 4px solid black;">
+    <td style="padding: 12px;">B</td>
+    <td style="padding: 12px;">S</td>
+  </tr>
+  
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td style="border-right: 4px solid black; padding: 12px;">L</td>
+    <td style="padding: 12px;">1.85625</td>
+    <td style="padding: 12px;">0.80375</td>
+  </tr>
+
+  <tr>
+    <td style="border-right: 4px solid black; padding: 12px;">H</td>
+    <td style="padding: 12px;">0 ---> 1.68125</td>
+    <td style="padding: 12px;">2.625</td>
+  </tr>
+</table>
+</div>
+
+---
 
 <a id="ep4-update3"></a>
 ##### Episode 4 — Update 3
+
+$$
+Q_4(\text{H,S}) = (1-\alpha) Q_3(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_3(\text{H}, a') \right]
+$$
+
+$$
+Q_4(\text{H,S}) = (1-0.5)(2.625) + 0.5 \left[ 3 + 0.9(0) \right]
+$$
+
+$$
+Q_4(\text{H,S}) = 2.8125
+$$
+
+<div align="center"><b>Q-Table 4.3</b>
+<table style="border-collapse: collapse; width: 100%; text-align: center;">
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
+    <td colspan="2" style="padding: 12px;">Action (a)</td>
+  </tr>
+  
+  <tr style="border-bottom: 4px solid black;">
+    <td style="padding: 12px;">B</td>
+    <td style="padding: 12px;">S</td>
+  </tr>
+  
+  <tr style="border-bottom: 1px solid #ccc;">
+    <td style="border-right: 4px solid black; padding: 12px;">L</td>
+    <td style="padding: 12px;">1.85625</td>
+    <td style="padding: 12px;">0.80375</td>
+  </tr>
+
+  <tr>
+    <td style="border-right: 4px solid black; padding: 12px;">H</td>
+    <td style="padding: 12px;">1.68125</td>
+    <td style="padding: 12px;">2.625 ---> 2.8125</td>
+  </tr>
+</table>
+</div>
+
+
 
 ---
 
