@@ -302,24 +302,24 @@ The agent in this example follows the transitions shown below, with each episode
 Each update within the episodes are labeled as <b> starting state ---(action, reward)---> ending state</b>.
 
 
-1. Episode 1\
+1. **Episode 1**\
     1.1 [Update 1](#ep1-update1):\
     &emsp; L ---(B, r = 0)---> H\
     1.2 [Update 2](#ep1-update2):\
     &emsp; H ---(S, r = 3)---> T
-2. Episode 2\
+2. **Episode 2**\
     2.1 [Update 3](#ep2-update3):\
     &emsp; L ---(B, r = 0)---> H\
     2.2 [Update 4](#ep2-update4):\
     &emsp; H ---(S, r = 3)---> T
-3. Episode 3\
+3. **Episode 3**\
     3.1 [Update 5](#ep3-update5):\
     &emsp; L ---(S, r = 1)---> L\
     3.2 [Update 6](#ep3-update6):\
     &emsp; L ---(B, r = 0)---> H\
     3.3 [Update 7](#ep3-update7):\
     &emsp; H ---(S, r = 3)---> T
-4. Episode 4\
+4. **Episode 4**\
     4.1 [Update 8](#ep4-update8):\
     &emsp; L ---(B, r = 0)---> H\
     4.2 [Update 9](#ep4-update9):\
@@ -331,8 +331,8 @@ Each update within the episodes are labeled as <b> starting state ---(action, re
 ---
 
 <a id="ep1-update1"></a>
-##### Episode 1 — Update 1
-In the first update of Episode 1, the agent transitions from state L to state H through action B and receives reward $r = 0$.
+##### Episode 1 — Update 1 ($k=1$)
+In the first update, the agent transitions from state L to state H through action B and receives reward $r = 0$.
 The formula used to update $Q(\text{L,B})$ is
 
 $$
@@ -359,27 +359,27 @@ The Q-table is immediately updated with this "new" value (although it is the sam
 ---
 
 <a id="ep1-update2"></a>
-##### Episode 1 — Update 2
+##### Episode 1 — Update 2 ($k=2$)
 
-In the second update, the agent transitions from state H to the terminal state L through action S and receives reward $r=3$.
+For the second update, the agent transitions from state H to the terminal state L through action S and receives reward $r=3$.
 The formula for this update is
 
 $$
-Q_1(\text{H,S}) = (1-\alpha) Q_0(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_0(\text{T}, a') \right] \ .
+Q_2(\text{H,S}) = (1-\alpha) Q_1(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_1(\text{T}, a') \right] \ .
 $$
 
-Since T is the terminal state, $\max_{a'}Q(\text{T},a')$ returns 0.
+Since T is the terminal state, $\max_{a'}Q_1(\text{T},a')$ returns 0.
 So we have
 
 $$
-Q_1(\text{H,S}) = (1-0.5) (0) + 0.5 \left[ 3 + 0.9 (0) \right] 
+Q_2(\text{H,S}) = (1-0.5) (0) + 0.5 \left[ 3 + 0.9 (0) \right] 
  ,
 $$
 
-giving $Q(\text{H,S}) = 1.5$ as the updated Q-value for taking action S in state H.
+giving $Q_2(\text{H,S}) = 1.5$ as the updated Q-value for taking action S in state H.
 The Q-table is updated with this new Q-value:
 
-<div align="center"><b>Q-Table 1.2</b>
+<div align="center"><b>Q-Table After Update 2</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -407,34 +407,34 @@ The Q-table is updated with this new Q-value:
 
 ---
 
-<a id="ep2-update1"></a>
-##### Episode 2 — Update 1
+<a id="ep2-update3"></a>
+##### Episode 2 — Update 3 ($k=3$)
 
 In Episode 2, the agent will make the same transitions as in Episode 1 (transitioning from state L to state H through action B with a reward of $r=0$), but the new Q-values will be computed using the new Q-table.
 The first update uses the same equation as [Episode 1 — Update 1](#ep1-update1):
 
 $$
-Q_2(\text{L,B}) = (1-\alpha) Q_1(\text{L,B}) + \alpha \left[ r + \gamma \max_{a'}Q_1(\text{H}, a') \right]
+Q_3(\text{L,B}) = (1-\alpha) Q_2(\text{L,B}) + \alpha \left[ r + \gamma \max_{a'}Q_2(\text{H}, a') \right]
 $$
 
 $$
-Q_2(\text{L,B}) = (1-\alpha) Q_1(\text{L,B}) + \alpha \left[ r + \gamma \max_{}\left(  Q_1(\text{H,B}), Q_1(\text{H,S})\right) \right] \ .
+Q_3(\text{L,B}) = (1-\alpha) Q_2(\text{L,B}) + \alpha \left[ r + \gamma \max_{}\left(  Q_2(\text{H,B}), Q_2(\text{H,S})\right) \right] \ .
 $$
 
 But now that the Q-table has been updated during Episode 1, the specific values that we use to substitute for the variables in this equation are different from those that we used in Episode 1, Update 1.
 Particularly, the difference is that $Q(\text{H,S})$ now equals 1.5 instead of 0:
 
 $$
-Q_2(\text{L,B}) = (1-0.5) (0) + 0.5 \left[ 0 + 0.9 \max_{}\left( 0, 1.5\right) \right]
+Q_3(\text{L,B}) = (1-0.5) (0) + 0.5 \left[ 0 + 0.9 \max_{}\left( 0, 1.5\right) \right]
 $$
 
 $$
-Q_2(\text{L,B}) = 0.675 \ .
+Q_3(\text{L,B}) = 0.675 \ .
 $$
 
 Through bootstrapping, the agent sees that the (current) estimated value of taking action B while in state L is 0.675 even though the immediate reword is 0 because the agent now knows that being in state H holds future value (due to the updates made during Episode 1).
 
-<div align="center"><b>Q-Table 2.1</b>
+<div align="center"><b>Q-Table After Update 3</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -462,27 +462,27 @@ Through bootstrapping, the agent sees that the (current) estimated value of taki
 
 ---
 
-<a id="ep2-update2"></a>
-##### Episode 2 — Update 2
+<a id="ep2-update4"></a>
+##### Episode 2 — Update 4 ($k=4$)
 
 The second transition in Episode 2 is again the same as that in Episode 1 (from state H to T through action S with a reward of $r=3$).
 The update is
 
 $$
-Q_2(\text{H,S}) = (1-\alpha) Q_1(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_1(\text{T}, a') \right] \ .
+Q_4(\text{H,S}) = (1-\alpha) Q_3(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_3(\text{T}, a') \right] \ .
 $$
 
 Again, since T is the terminal state, $\max_{a'}Q(\text{T},a')$ returns 0, and using the previously updated value for $Q(\text{H,S})$, we have
 
 $$
-Q_2(\text{H,S}) = (1-0.5) (1.5) + 0.5 \left[ 3 + 0.9 (0) \right]
+Q_4(\text{H,S}) = (1-0.5) (1.5) + 0.5 \left[ 3 + 0.9 (0) \right]
 $$
 
 $$
-Q_2(\text{H,S}) = 2.25 \ .
+Q_4(\text{H,S}) = 2.25 \ .
 $$
 
-<div align="center"><b>Q-Table 2.2</b>
+<div align="center"><b>Q-Table After Update 4</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -510,30 +510,30 @@ $$
 
 ---
 
-<a id="ep3-update1"></a>
-##### Episode 3 — Update 1
+<a id="ep3-update5"></a>
+##### Episode 3 — Update 5 ($k=5$)
 
 In Episode 3, the agent goes through a different transition path than in Episodes 1 and 2.
-It also takes the agent three transitions instead of two for it to reach the end of the episode (once it reaches the terminal state).
+The agent also takes three transitions instead of two for it to reach the end of the episode (once it reaches the terminal state).
 Transitioning from state L to state L through action S with a reward of $r=1$, the $Q$-value update is
 
 $$
-Q_3(\text{L,S}) = (1-\alpha) Q_2(\text{L,S}) + \alpha \left[ r + \gamma \max_{a'}Q_2(\text{L}, a') \right]
+Q_5(\text{L,S}) = (1-\alpha) Q_4(\text{L,S}) + \alpha \left[ r + \gamma \max_{a'}Q_4(\text{L}, a') \right]
 $$
 
 $$
-Q_3(\text{L,S}) = (1-\alpha) Q_2(\text{L,S}) + \alpha \left[ r + \gamma \max_{}(Q_2(\text{L,B}), Q_2(\text{L,S})) \right]
+Q_5(\text{L,S}) = (1-\alpha) Q_4(\text{L,S}) + \alpha \left[ r + \gamma \max_{}(Q_4(\text{L,B}), Q_4(\text{L,S})) \right]
 $$
 
 $$
-Q_3(\text{L,S}) = (1-0.5)(0) + 0.5 \left[ 1 + 0.9(0.675) \right]
+Q_5(\text{L,S}) = (1-0.5)(0) + 0.5 \left[ 1 + 0.9(0.675) \right]
 $$
 
 $$
-Q_3(\text{L,S}) = 0.80375
+Q_5(\text{L,S}) = 0.80375
 $$
 
-<div align="center"><b>Q-Table 3.1</b>
+<div align="center"><b>Q-Table After Update 5</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -561,28 +561,28 @@ $$
 
 ---
 
-<a id="ep3-update2"></a>
-##### Episode 3 — Update 2
+<a id="ep3-update6"></a>
+##### Episode 3 — Update 6 ($k=6$)
 
 After its first transition in Episode 3, the agent transitions from state L to state H through action B receiving a reward of $r=0$:
 
 $$
-Q_3(\text{L,B}) = (1-\alpha) Q_2(\text{L,B}) + \alpha \left[ r + \gamma \max_{a'}Q_2(\text{H}, a') \right]
+Q_6(\text{L,B}) = (1-\alpha) Q_5(\text{L,B}) + \alpha \left[ r + \gamma \max_{a'}Q_5(\text{H}, a') \right]
 $$
 
 $$
-Q_3(\text{L,B}) = (1-\alpha) Q_2(\text{L,B}) + \alpha \left[ r + \gamma \max_{}(Q_2(\text{H,B}), Q_2(\text{H,S})) \right]
+Q_6(\text{L,B}) = (1-\alpha) Q_5(\text{L,B}) + \alpha \left[ r + \gamma \max_{}(Q_5(\text{H,B}), Q_5(\text{H,S})) \right]
 $$
 
 $$
-Q_3(\text{L,B}) = (1-0.5)(0.675) + 0.5 \left[ 0 + 0.9(2.25) \right]
+Q_6(\text{L,B}) = (1-0.5)(0.675) + 0.5 \left[ 0 + 0.9(2.25) \right]
 $$
 
 $$
-Q_3(\text{L,B}) = 1.35
+Q_6(\text{L,B}) = 1.35
 $$
 
-<div align="center"><b>Q-Table 3.2</b>
+<div align="center"><b>Q-Table After Update 6</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -610,24 +610,24 @@ $$
 
 ---
 
-<a id="ep3-update3"></a>
-##### Episode 3 — Update 3
+<a id="ep3-update7"></a>
+##### Episode 3 — Update 7 ($k=7$)
 
 The final update in Episode 3 is computed using the state H to state L transition:
 
 $$
-Q_3(\text{H,S}) = (1-\alpha) Q_2(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_2(\text{T}, a') \right]
+Q_7(\text{H,S}) = (1-\alpha) Q_6(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_6(\text{T}, a') \right]
 $$
 
 $$
-Q_3(\text{H,S}) = (1-0.5)(2.25) + 0.5 \left[ 3 + 0.9(0) \right]
+Q_7(\text{H,S}) = (1-0.5)(2.25) + 0.5 \left[ 3 + 0.9(0) \right]
 $$
 
 $$
-Q_3(\text{H,S}) = 2.625
+Q_7(\text{H,S}) = 2.625
 $$
 
-<div align="center"><b>Q-Table 3.3</b>
+<div align="center"><b>Q-Table After Update 7</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -653,24 +653,30 @@ $$
 </table>
 </div>
 
+Notice that the Q-value for (H,S) is trending towards 3, the reward for taking action S in state H.
+$Q(H,S) = r = 3$ is actually the target value for this state-action pair, and the Q-value is updated to be closer to this target value with each update.
+
 ---
 
-<a id="ep4-update1"></a>
-##### Episode 4 — Update 1
+<a id="ep4-update8"></a>
+##### Episode 4 — Update 8 ($k=8$)
+
+In the final episode, the agent first transitions from state L to H through action B with a reward of $r=0$, then remains in state H through action B with a reward of $r=1$, and finally transitions to the terminal state T through action S with a reward of $r=3$.
+The first update is computed as
 
 $$
-Q_4(\text{L,B}) = (1-\alpha) Q_3(\text{L,B}) + \alpha \left[ r + \gamma \max_{a'}Q_3(\text{H}, a') \right]
+Q_8(\text{L,B}) = (1-\alpha) Q_7(\text{L,B}) + \alpha \left[ r + \gamma \max_{a'}Q_7(\text{H}, a') \right]
 $$
 
 $$
-Q_4(\text{L,B}) = (1-0.5)(1.35) + 0.5 \left[ 3 + 0.9(2.625) \right]
+Q_8(\text{L,B}) = (1-0.5)(1.35) + 0.5 \left[ 0 + 0.9(2.625) \right]
 $$
 
 $$
-Q_4(\text{L,B}) = 1.85625
+Q_8(\text{L,B}) = 1.85625
 $$
 
-<div align="center"><b>Q-Table 4.1</b>
+<div align="center"><b>Q-Table After Update 8</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -698,22 +704,24 @@ $$
 
 ---
 
-<a id="ep4-update2"></a>
-##### Episode 4 — Update 2
+<a id="ep4-update9"></a>
+##### Episode 4 — Update 9 ($k=9$)
+
+The second update in Episode 4 is computed using the state H to state H transition:
 
 $$
-Q_4(\text{H,B}) = (1-\alpha) Q_3(\text{H,B}) + \alpha \left[ r + \gamma \max_{a'}Q_3(\text{H}, a') \right]
+Q_9(\text{H,B}) = (1-\alpha) Q_8(\text{H,B}) + \alpha \left[ r + \gamma \max_{a'}Q_8(\text{H}, a') \right]
 $$
 
 $$
-Q_4(\text{H,B}) = (1-0.5)(0) + 0.5 \left[ 1 + 0.9(2.625) \right]
+Q_9(\text{H,B}) = (1-0.5)(0) + 0.5 \left[ 1 + 0.9(2.625) \right]
 $$
 
 $$
-Q_4(\text{H,B}) = 1.68125
+Q_9(\text{H,B}) = 1.68125
 $$
 
-<div align="center"><b>Q-Table 4.2</b>
+<div align="center"><b>Q-Table After Update 9</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -741,22 +749,24 @@ $$
 
 ---
 
-<a id="ep4-update3"></a>
-##### Episode 4 — Update 3
+<a id="ep4-update10"></a>
+##### Episode 4 — Update 10 ($k=10$)
+
+And finally, the last update in Episode 4 is computed using the state H to state T transition:
 
 $$
-Q_4(\text{H,S}) = (1-\alpha) Q_3(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_3(\text{H}, a') \right]
+Q_{10}(\text{H,S}) = (1-\alpha) Q_9(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_9(\text{T}, a') \right]
 $$
 
 $$
-Q_4(\text{H,S}) = (1-0.5)(2.625) + 0.5 \left[ 3 + 0.9(0) \right]
+Q_{10}(\text{H,S}) = (1-0.5)(2.625) + 0.5 \left[ 3 + 0.9(0) \right]
 $$
 
 $$
-Q_4(\text{H,S}) = 2.8125
+Q_{10}(\text{H,S}) = 2.8125
 $$
 
-<div align="center"><b>Q-Table 4.3</b>
+<div align="center"><b>Q-Table After Update 10</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
     <td rowspan="2" style="border-right: 4px solid black; font-weight: bold; vertical-align: bottom; padding: 12px;">State (s)</td>
@@ -781,8 +791,6 @@ $$
   </tr>
 </table>
 </div>
-
-
 
 ---
 
