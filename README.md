@@ -303,19 +303,29 @@ Each update within the episodes are labeled as <b> starting state ---(action, re
 
 
 1. Episode 1\
-    1.1 [Update 1](#ep1-update1): L ---(B, r = 0)---> H\
-    1.2 [Update 2](#ep1-update2): H ---(S, r = 3)---> T
+    1.1 [Update 1](#ep1-update1):\
+    &emsp; L ---(B, r = 0)---> H\
+    1.2 [Update 2](#ep1-update2):\
+    &emsp; H ---(S, r = 3)---> T
 2. Episode 2\
-    2.1 [Update 1](#ep2-update1): L ---(B, r = 0)---> H\
-    2.2 [Update 2](#ep2-update2): H ---(S, r = 3)---> T
+    2.1 [Update 3](#ep2-update3):\
+    &emsp; L ---(B, r = 0)---> H\
+    2.2 [Update 4](#ep2-update4):\
+    &emsp; H ---(S, r = 3)---> T
 3. Episode 3\
-    3.1 [Update 1](#ep3-update1): L ---(S, r = 1)---> L\
-    3.2 [Update 2](#ep3-update2): L ---(B, r = 0)---> H\
-    3.3 [Update 3](#ep3-update3): H ---(S, r = 3)---> T
+    3.1 [Update 5](#ep3-update5):\
+    &emsp; L ---(S, r = 1)---> L\
+    3.2 [Update 6](#ep3-update6):\
+    &emsp; L ---(B, r = 0)---> H\
+    3.3 [Update 7](#ep3-update7):\
+    &emsp; H ---(S, r = 3)---> T
 4. Episode 4\
-    4.1 [Update 1](#ep4-update1): L ---(B, r = 0)---> H\
-    4.2 [Update 2](#ep4-update2): H ---(B, r = 1)---> H\
-    4.3 [Update 3](#ep4-update3): H ---(S, r = 3)---> T
+    4.1 [Update 8](#ep4-update8):\
+    &emsp; L ---(B, r = 0)---> H\
+    4.2 [Update 9](#ep4-update9):\
+    &emsp; H ---(B, r = 1)---> H\
+    4.3 [Update 10](#ep4-update10):\
+    &emsp; H ---(S, r = 3)---> T
 
 
 ---
