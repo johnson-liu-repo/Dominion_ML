@@ -17,10 +17,10 @@
 2. [Q-Learning](#q-learning)\
   2.1 [The Q-Learning Update](#the-q-learning-update)\
   2.2 [Behavior and Target Policies](#behavior-and-target-policies)\
-  2.3 [Exploration and Epsilon-Greedy Action Selection](#exploration-and-epsilon-greedy-action-selection)\
+  2.3 [Exploration and ϵ-Greedy Action Selection](#exploration-and-ϵ-greedy-action-selection)\
   2.4 [Tabular Q-Learning](#tabular-q-learning)\
-  2.5 [Example: Q-Learning in a Simple Deckbuilder](#example-q-learning-in-a-simple-deckbuilder)\
-  2.6 [Strengths and Limitations of Tabular Q-Learning](#strengths-and-limitations-of-tabular-q-learning)
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.4.1 [Example of Tabular Q-Learning in a Simple Deckbuilder](#example-of-tabular-q-learning-in-a-simple-deckbuilder)\
+  2.5 [Strengths and Limitations of Tabular Q-Learning](#strengths-and-limitations-of-tabular-q-learning)
 
 3. [Deep Q-Learning](#deep-q-learning)\
   3.1 [From Tables to Function Approximation](#from-tables-to-function-approximation)\
@@ -53,7 +53,7 @@ The agent learns from its experience what it should and shouldn't do within the 
 
 ### Historical Background
 
-blah blah blah
+> ... some writing here ...
 
 ### Sequential Decision Making
 
@@ -68,9 +68,9 @@ $$
 
 where $\gamma \in [0,1]$ is a discount factor for future returns.
 
-===================================
 
-===================================
+> ... more writing here ...
+
 
 ### Markov Decision Processes
 
@@ -216,9 +216,15 @@ Gradually, $Q(S,A)$ converges onto the expectation in the Bellman optimality equ
 
 ## Q-Learning
 
-... some text here? ...
+>... some text here? ...
 
-### Exploration and $ϵ$-Greedy Action Selection
+### The Q-Learning Update
+
+
+### Behavior and Target Policies
+
+
+### Exploration and ϵ-Greedy Action Selection
 
 The agent uses a model-free algorithm, it does not have an internal model of the environment's dynamics (the transition probabilities $P(s'|s,a)$ and reward function $R(s,a)$ for every given state-action pair).
 Instead of explicitly learning the entirety of the environment's dynamics, it must learn its target policy by estimating state-action values through empirical sampling (trial and error).
@@ -246,7 +252,9 @@ It receives its immediate reward, retrieves the current Q(s,a) value and the hig
 Since Q-learning is a Temporal-Difference method, the Q-table is immediately updated with this new Q-value.
 The episode then continues on to the next step, continually updating the Q-table in this bootstrapped manner.
 
-### Example of Tabular Q-Learning — A Simple Deckbuilder
+---
+
+### Example of Tabular Q-Learning in a Simple Deckbuilder
 
 This is an example of tabular Q-learning in an overly simplified deck builder.
 The environment has two states (the value of the agent's hand): low (L) and high (H).
@@ -265,7 +273,7 @@ The rewards and transitions for each state-action pair is given in Table (1).
 |H|S|3|T <br> (terminal)|
 </div>
 
-<i>... Explain rationale for reward structure ...</i>
+> *... Explain rationale for reward structure ...*
 
 #### Agent Training
 
@@ -794,7 +802,7 @@ $$
 
 ---
 
-<i>... Create an animation/gif for the Q-table ...</i>
+> *... Create an animation/gif for the Q-table ...*
 
 
 ### Strengths and Limitations of the Tabular Q-learning
