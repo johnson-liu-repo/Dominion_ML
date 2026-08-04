@@ -157,6 +157,7 @@ The expected immediate reward for being in the current state is computed as the 
 $$
 𝔼\left[ R_{t+1} │ S_t = s \right] = \sum_{a \in 𝒜} \pi(a | s) \sum_{s' \in 𝒮} P(s' | s, a) r(s, a, s') \ .
 $$
+
 The expected future return for being in state $s$ is found through summing over all actions and all states $s'$ and multiplying $\pi(a | s)$, $P(s' | s, a)$, and the state-value of the next state ($V^\pi (s')$):
 
 $$
@@ -169,16 +170,16 @@ $$
 V^\pi(s) = \sum_{a \in 𝒜} \left( \pi(a | s) \sum_{s' \in 𝒮} \left[ P(s,a,s') \left( r(s,a,s') + \gamma V^\pi(s') \right) \right] \right) \ .
 $$
 
-The $Q$-value of a state-action pair is defined as the reward received for taking action $a$ in state $s$ plus the discounted expected value of being in the new state:
+The Q-value of a state-action pair is defined as the reward received for taking action $a$ in state $s$ plus the discounted expected value of being in the new state:
 
 $$
 Q(s, a) = r(s, a) + \gamma \sum_{s' \in 𝒮} P(s' | s, a) V^\pi (s') \ . \qquad \text{(2)} \%\%\ MAGIT_PARSER_PROTECT%%
 $$
 
-If the agent follows an optimal policy $\pi^*$, then the value of being in some state is equal to the return that the agent gets from taking the optimal action within that state corresponding to the largest possible $Q$-value out of all of the agent's options:
+If the agent follows an optimal policy $\pi^*$, then the value of being in some state is equal to the return that the agent gets from taking the optimal action within that state corresponding to the largest possible Q-value out of all of the agent's options:
 
 $$
-V^\*(s) = \max_a Q^\*(s,a) \ .
+V^\*(s) = \max_{a} Q^\*(s,a) \ .
 $$
 
 The [state-action value equation](#bellman-equations) is then
@@ -190,15 +191,32 @@ $$
 Although the agent is taking its best possible action, there is some uncertainty in the state transition within the environment, expressed in the summation over $P(s' | s, a)$.
 Typically, the agent does not know the environment's probability distribution for next state transitions.
 Rather than summing over all possible actions allowed within the current state to compute the expected return, the agent uses the current value for $Q(s,a)$ and some policy, such as $\epsilon$-greedy, to decide how to act.
-The agent then observes the immediate reward for its action and the value of the new state to compute a target value to update the $Q$-value of the state-action pair that lead to the new state.
+The agent then observes the immediate reward for its action and the value of the new state to compute a target value to update the Q-value of the state-action pair that lead to the new state.
 
 ### Temporal-Difference Learning
 
-Because the agent does not know the probabilities of the state transitions when taking action $a$ in state $s$, $Q(s,a)$ cannot be directly computed.
-Instead, the model uses Monte Carlo sampling and bootstrapping to iteratively update the $Q$-values of state-action pairs.
-After initializing $Q$-values (usually to 0), the agent repeatedly samples the environment to make updates to the estimation of $Q(S,A)$.
+Because the agent does not know the probabilities of the state transitions from state s, V(s) cannot be directly computed.
+Instead, temporal-difference learning allows the agent to learn from sampled transitions and bootstrap from existing value estimates to iteratively update the state-values.
+After initializing the V-values (usually to 0), the agent repeatedly samples the environment to make updates to the estimation of $V(S_t)$.
 Starting from some state and acting through policy $\pi$, the agent will visit the possible next states with frequencies that match the actual next state probability distribution.
-Over many iterations, this sampling takes the place of the summation over probabilities in $Q(S,A)$ through averaging over many outcomes.
+Over many iterations, this sampling takes the place of the summation over transition probabilities through averaging over many outcomes.
+
+Given the current state and the agent's chosen successor state, the state-value function $V(s)$ for the current state is computed using the transition reward and state-value of the next state:
+
+$$
+V(S_t) \leftarrow V(S_t) + \alpha \left[ R_{t+1} + \gamma V(S_{t+1}) - V(S_t) \right] \ .
+$$
+
+This is the general temporal-difference update for the state-value function, where $\alpha$ is the learning rate and $R_{t+1} + \gamma V(S_{t+1})$ is the target for the update.
+
+## Q-Learning
+
+While temporal-difference prediction is used by the an agent to evaluate a fixed policy based on the actions that it has already chosen, Q-learning is an algorithm that allows the agent to search for the best actions in an optimal policy.
+Both temporal-difference prediction and Q-learning involves empirical sampling from the environment to update present state-values from future state-values, but Q-learning gives the agent a way to find actions that lead to the greatest future return through the use of the $\max$ operator to differentiate between different future states with different state-values.
+
+
+### The Q-Learning Update
+
 Adapting the formula for computing $Q(S,A)$ to use in temporal-difference updates, we have
 
 $$
@@ -211,15 +229,8 @@ $$
 Q(s,a) \leftarrow (1 - \alpha)Q(s,a) + \alpha\left[ r(s,a,s') + \gamma\max_{a'}Q(s',a') \right]
 $$
 
-where $Q(s,a)$ is the old estimated value of the state-action pair, $r(s,a,s') + \gamma\max_{a'}Q(s',a')$ is the target for the update, and $\alpha$ is the learning rate.
+where $Q(s,a)$ is the old estimated value of the state-action pair, $r(s,a,s') + \gamma\max_{a'}Q(s',a')$ is the target for the update.
 Gradually, $Q(S,A)$ converges onto the expectation in the Bellman optimality equation.
-
-## Q-Learning
-
->... some text here? ...
-
-### The Q-Learning Update
-
 
 ### Behavior and Target Policies
 
@@ -523,7 +534,7 @@ $$
 
 In Episode 3, the agent goes through a different transition path than in Episodes 1 and 2.
 The agent also takes three transitions instead of two for it to reach the end of the episode (once it reaches the terminal state).
-Transitioning from state L to state L through action S with a reward of $r=1$, the $Q$-value update is
+Transitioning from state L to state L through action S with a reward of $r=1$, the Q-value update is
 
 $$
 Q_5(\text{L,S}) = (1-\alpha) Q_4(\text{L,S}) + \alpha \left[ r + \gamma \max_{a'}Q_4(\text{L}, a') \right]
