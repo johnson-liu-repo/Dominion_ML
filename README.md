@@ -152,13 +152,13 @@ V^\pi(s) = 𝔼\left[ R_{t+1} │ S_t = s \right] + \gamma 𝔼\left[ G_{t+1} �
 $$
 
 This equation says that the value of the current state under policy $\pi$ is the sum of the expected immediate reward of transitioning from state $s$ to $s'$ and the discounted expected future return $G_{t+1}$ starting from the next time step.
-The expected immediate reward for being in the current state is computed as the summation over all possible actions and all possible successor states while multiplying together the probability that the agent will take action $a$ ($\pi(a|s)$) while in state $s$, the probability that the environment will transistion to state $s'$ ($P(s' | s, a)$), and the reward for transitioning to state $s'$ through action $a$ ($r(s, a, s')$):
+The expected immediate reward for being in the current state is computed as the summation over all possible actions and all possible successor states while multiplying together the probability that the agent will take action $a$ ( $\pi(a|s)$ ) while in state $s$, the probability that the environment will transistion to state $s'$ ( $P(s' | s, a)$ ), and the reward for transitioning to state $s'$ through action $a$ ( $r(s, a, s')$ ):
 
 $$
 𝔼\left[ R_{t+1} │ S_t = s \right] = \sum_{a \in 𝒜} \pi(a | s) \sum_{s' \in 𝒮} P(s' | s, a) r(s, a, s') \ .
 $$
 
-The expected future return for being in state $s$ is found through summing over all actions and all states $s'$ and multiplying $\pi(a | s)$, $P(s' | s, a)$, and the state-value of the next state ($V^\pi (s')$):
+The expected future return for being in state $s$ is found through summing over all actions and all states $s'$ and multiplying $\pi(a | s)$, $P(s' | s, a)$, and the state-value of the next state ( $V^\pi (s')$ ):
 
 $$
 𝔼\left[ G_{t+1} │ S_t = s \right] = \sum_{a \in 𝒜} \pi(a | s) \sum_{s' \in 𝒮} P(s' | s, a) V^\pi(s') \ .
@@ -189,9 +189,6 @@ Q^\*(s, a) = r(s, a) + \gamma \sum_{s' \in 𝒮} P(s' | s, a) \max_{a'} Q^\*(s',
 $$
 
 Although the agent is taking its best possible action, there is some uncertainty in the state transition within the environment, expressed in the summation over $P(s' | s, a)$.
-Typically, the agent does not know the environment's probability distribution for next state transitions.
-Rather than summing over all possible actions allowed within the current state to compute the expected return, the agent uses the current value for $Q(s,a)$ and some policy, such as $\epsilon$-greedy, to decide how to act.
-The agent then observes the immediate reward for its action and the value of the new state to compute a target value to update the Q-value of the state-action pair that lead to the new state.
 
 ### Temporal-Difference Learning
 
@@ -209,11 +206,23 @@ $$
 
 This is the general temporal-difference update for the state-value function, where $\alpha$ is the learning rate and $R_{t+1} + \gamma V(S_{t+1})$ is the target for the update.
 
+
 ## Q-Learning
 
-While temporal-difference prediction is used by the an agent to evaluate a fixed policy based on the actions that it has already chosen, Q-learning is an algorithm that allows the agent to search for the best actions in an optimal policy.
-Both temporal-difference prediction and Q-learning involves empirical sampling from the environment to update present state-values from future state-values, but Q-learning gives the agent a way to find actions that lead to the greatest future return through the use of the $\max$ operator to differentiate between different future states with different state-values.
+While temporal-difference prediction is used by an agent to evaluate a fixed policy based on the actions that it has already chosen, Q-learning is a control algorithm that allows the agent to search for the best actions to define an optimal policy.
+Q-learning adapts the empirical sampling and bootstrapping mechanisms from temporal-difference updates to compute the state-action value function $Q(s,a)$ instead of the state-value function $V(s)$.
+This gives the agent a way to find actions that lead to the greatest future return through the use of the $\max$ operator to differentiate between different future states with different state-values.
 
+Typically, the agent does not know the environment's probability distribution for next state transitions.
+Rather than summing over all possible actions allowed within the current state to compute the expected return, the agent uses the current value of $Q(s,a)$ and some policy, such as $\epsilon$-greedy, to decide how to act.
+The agent then observes the immediate reward for its action and the value of the new state to compute a target value, updating the Q-value of the state-action pair that led to the transition
+
+Once the stored Q-values for each state-action pair are optimized, the agent can form its behavior by using these values to choose an action in a given state (e.g. acting greedily by choosing the action with the largest Q-value).
+The formal greedy policy is defined as
+
+$$
+\pi(s) = \arg\max_{a \in \mathcal{A}(s)} Q(s,a) \ .
+$$
 
 ### The Q-Learning Update
 
