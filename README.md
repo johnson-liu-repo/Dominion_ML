@@ -48,12 +48,11 @@
 
 
 ## Reinforcement Learning
-Reinforcement learning is a subtype of machine learning where an agent learns to optimize its behavior in a given environment through learning by trial and error.
-The agent learns from its experience what it should and shouldn't do within the state that it currently occupies.
 
-### Historical Background
-
-> ... some writing here ...
+For simple games with small state spaces, optimal strategies can be found through game-theoretic models and exact dynamic programming.
+However, for games with an enormous number of states, deriving such strategies using these analytical and algorithmic optimization methods becomes computationally intractable.
+Reinforcement learning seeks to approximate complex strategies by framing the game as a Markov Decision Process, where an agent uses its iterative, experiential interaction with the environment to learn near-optimal policies without having to map out the entire state space.
+Instead, the agent learns by trial and error, guided by a scalar reward signal that it seeks to maximize over discrete time steps.
 
 ### Sequential Decision Making
 
