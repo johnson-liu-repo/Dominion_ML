@@ -89,7 +89,7 @@ $$
 MDPs have the property where the probability of an event happening in the present $(s, a)$ is independent of the process's history:
 
 $$
-P \big( S_{t_1} \mid S_t, A_t \big) = P \big( S_{t+1} \mid S_t, A_t, S_{t-1}, A_{t-1}, \ldots \big) \ .
+P \big( S_{t+1} \mid S_t, A_t \big) = P \big( S_{t+1} \mid S_t, A_t, S_{t-1}, A_{t-1}, \ldots \big) \ .
 $$
 
 ### Policies, Returns, and Value Functions
@@ -101,8 +101,10 @@ a = \pi(s) \in 𝒜
 $$
 
 where $\pi(s)$ is a policy mapping each state $s$ to an action $a$.
-Acting on a deterministic policy, the agent picks the action that gives it the greatest reward.
-A stochastic policy $\pi(a \mid s)$ maps states to distributions over actions.
+Acting on a deterministic policy, the agent picks a single, specific action for each state, regardless of the value of that action.
+A greedy policy is specifically one in which the agent picks the action that yields the highest expected return.
+A stochastic policy $\pi(𝒜 \mid 𝒮)$ maps states to probability distributions over actions.
+Given state $s$, the agent picks action $a$ with probability $\pi(a \mid s)$.
 
 The state-value function
 
@@ -131,36 +133,36 @@ The Bellman Expectation Equations are recursive equations used for policy evalua
 Starting with the [state-value equation](#policies-returns-and-value-functions) and substituting in the definition of $G_t$, we have
 
 $$
-V^\pi(s) = 𝔼\left[ \sum_{k=0}^{\infty} \gamma^k R_{t+k+1} │ S_t = s \right] \ .
+V^\pi(s) = 𝔼\left[ \sum_{k=0}^{\infty} \gamma^k R_{t+k+1} \;\middle|\; S_t = s \right] \ .
 $$
 
 Separating the first term from the rest of the summation, factoring out a $\gamma$ from the remaining sum, and reindexing, we have
 
 $$
-V^\pi(s) = 𝔼\left[ \gamma^0 R_{t+1} + \gamma \sum_{k=0}^{\infty} \gamma^k R_{t+k+2} │ S_t = s\right ] \ .
+V^\pi(s) = 𝔼\left[ \gamma^0 R_{t+1} + \gamma \sum_{k=0}^{\infty} \gamma^k R_{t+k+2} \;\middle|\; S_t = s\right ] \ .
 $$
 
 And applying linearity of expectation, this becomes
 
 $$
-V^\pi(s) = 𝔼\left[ \gamma^0 R_{t+1} │ S_t = s \right] + \gamma 𝔼\left[ \sum_{k=0}^{\infty} \gamma^k R_{t+k+2} │ S_t = s \right]
+V^\pi(s) = 𝔼\left[ \gamma^0 R_{t+1} \;\middle|\; S_t = s \right] + \gamma 𝔼\left[ \sum_{k=0}^{\infty} \gamma^k R_{t+k+2} \;\middle|\; S_t = s \right]
 $$
 
 $$
-V^\pi(s) = 𝔼\left[ R_{t+1} │ S_t = s \right] + \gamma 𝔼\left[ G_{t+1} │ S_t = s \right] \ .
+V^\pi(s) = 𝔼\left[ R_{t+1} \;\middle|\; S_t = s \right] + \gamma 𝔼\left[ G_{t+1} \;\middle|\; S_t = s \right] \ .
 $$
 
 This equation says that the value of the current state under policy $\pi$ is the sum of the expected immediate reward of transitioning from state $s$ to $s'$ and the discounted expected future return $G_{t+1}$ starting from the next time step.
 The expected immediate reward for being in the current state is computed as the summation over all possible actions and all possible successor states while multiplying together the probability that the agent will take action $a$ ( $\pi(a|s)$ ) while in state $s$, the probability that the environment will transistion to state $s'$ ( $P(s' | s, a)$ ), and the reward for transitioning to state $s'$ through action $a$ ( $r(s, a, s')$ ):
 
 $$
-𝔼\left[ R_{t+1} │ S_t = s \right] = \sum_{a \in 𝒜} \pi(a | s) \sum_{s' \in 𝒮} P(s' | s, a) r(s, a, s') \ .
+𝔼\left[ R_{t+1} \;\middle|\; S_t = s \right] = \sum_{a \in 𝒜} \pi(a | s) \sum_{s' \in 𝒮} P(s' | s, a) r(s, a, s') \ .
 $$
 
 The expected future return for being in state $s$ is found through summing over all actions and all states $s'$ and multiplying $\pi(a | s)$, $P(s' | s, a)$, and the state-value of the next state ( $V^\pi (s')$ ):
 
 $$
-𝔼\left[ G_{t+1} │ S_t = s \right] = \sum_{a \in 𝒜} \pi(a | s) \sum_{s' \in 𝒮} P(s' | s, a) V^\pi(s') \ .
+𝔼\left[ G_{t+1} \;\middle|\; S_t = s \right] = \sum_{a \in 𝒜} \pi(a | s) \sum_{s' \in 𝒮} P(s' | s, a) V^\pi(s') \ .
 $$
 
 Put together, we have
