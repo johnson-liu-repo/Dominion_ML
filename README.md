@@ -7,12 +7,11 @@
 ### Contents
 
 1. [Reinforcement Learning](#reinforcement-learning)\
-  1.1 [Historical Background](#historical-background)\
-  1.2 [Sequential Decision Making](#sequential-decision-making)\
-  1.3 [Markov Decision Processes](#markov-decision-processes)\
-  1.4 [Policies, Returns, and Value Functions](#policies-returns-and-value-functions)\
-  1.5 [Bellman Equations](#bellman-equations)\
-  1.6 [Temporal-Difference Learning](#temporal-difference-learning)
+  1.1 [Sequential Decision Making](#sequential-decision-making)\
+  1.2 [Markov Decision Processes](#markov-decision-processes)\
+  1.3 [Policies, Returns, and Value Functions](#policies-returns-and-value-functions)\
+  1.4 [Bellman Equations](#bellman-equations)\
+  1.5 [Temporal-Difference Learning](#temporal-difference-learning)
 
 2. [Q-Learning](#q-learning)\
   2.1 [The Q-Learning Update](#the-q-learning-update)\
@@ -47,14 +46,16 @@
   4.11 [Current Limitations and Future Work](#current-limitations-and-future-work)
 
 
-## Reinforcement Learning
+<a id="reinforcement-learning"></a>
+## 1. Reinforcement Learning
 
 For simple games with small state spaces, optimal strategies can be found through game-theoretic models and exact dynamic programming.
 However, for games with an enormous number of states, deriving such strategies using these analytical and algorithmic optimization methods becomes computationally intractable.
 Reinforcement learning seeks to approximate complex strategies by framing the game as a Markov Decision Process, where an agent uses its iterative, experiential interaction with the environment to learn near-optimal policies without having to map out the entire state space.
 Instead, the agent learns by trial and error, guided by a scalar reward signal that it seeks to maximize over discrete time steps.
 
-### Sequential Decision Making
+<a id="sequential-decision-making"></a>
+### 1.1 Sequential Decision Making
 
 Given states $S_t$ at time $t$, future states $S_{t+1}$, the rewards $R_t$ for state transitions, and the actions $A_t$ that map $S_t$ into $S_{t+1}$, the reinforcement agent seeks to maximize its return
 
@@ -71,7 +72,8 @@ where $\gamma \in [0,1]$ is a discount factor for future returns.
 > ... more writing here ...
 
 
-### Markov Decision Processes
+<a id="markov-decision-processes"></a>
+### 1.2 Markov Decision Processes
 
 A Markov decision process (MDP) is a 4-tuple defined as
 
@@ -92,7 +94,8 @@ $$
 P \big( S_{t+1} \mid S_t, A_t \big) = P \big( S_{t+1} \mid S_t, A_t, S_{t-1}, A_{t-1}, \ldots \big) \ .
 $$
 
-### Policies, Returns, and Value Functions
+<a id="policies-returns-and-value-functions"></a>
+### 1.3 Policies, Returns, and Value Functions
 
 Following a deterministic policy, the agent's behavior is defined by
 
@@ -128,7 +131,8 @@ $$
 \pi_\*(s) \in \mathop{\rm argmax}_{a} \ q_\*(s,a)
 $$
 
-### Bellman Equations
+<a id="bellman-equations"></a>
+### 1.4 Bellman Equations
 The Bellman Expectation Equations are recursive equations used for policy evaluation of fixed policies.
 Starting with the [state-value equation](#policies-returns-and-value-functions) and substituting in the definition of $G_t$, we have
 
@@ -168,7 +172,7 @@ $$
 Put together, we have
 
 $$
-V^\pi(s) = \sum_{a \in 𝒜} \left( \pi(a | s) \sum_{s' \in 𝒮} \left[ P(s,a,s') \left( r(s,a,s') + \gamma V^\pi(s') \right) \right] \right) \ .
+V^\pi(s) = \sum_{a \in 𝒜} \left( \pi(a | s) \sum_{s' \in 𝒮} \bigg( P(s' | s, a) \Big( r(s,a,s') + \gamma V^\pi(s') \Big) \bigg) \right) \ .
 $$
 
 The Q-value of a state-action pair is defined as the reward received for taking action $a$ in state $s$ plus the discounted expected value of being in the new state:
@@ -191,7 +195,8 @@ $$
 
 Although the agent is taking its best possible action, there is some uncertainty in the state transition within the environment, expressed in the summation over $P(s' | s, a)$.
 
-### Temporal-Difference Learning
+<a id="temporal-difference-learning"></a>
+### 1.5 Temporal-Difference Learning
 
 Because the agent does not know the probabilities of the state transitions from state s, V(s) cannot be directly computed.
 Instead, temporal-difference learning allows the agent to learn from sampled transitions and bootstrap from existing value estimates to iteratively update the state-values.
@@ -207,8 +212,10 @@ $$
 
 This is the general temporal-difference update for the state-value function, where $\alpha$ is the learning rate and $R_{t+1} + \gamma V(S_{t+1})$ is the target for the update.
 
+---
 
-## Q-Learning
+<a id="q-learning"></a>
+## 2. Q-Learning
 
 While temporal-difference prediction is used by an agent to evaluate a fixed policy based on the actions that it has already chosen, Q-learning is a control algorithm that allows the agent to search for the best actions to define an optimal policy.
 Q-learning adapts the empirical sampling and bootstrapping mechanisms from temporal-difference updates to compute the state-action value function $Q(s,a)$ instead of the state-value function $V(s)$.
@@ -225,27 +232,39 @@ $$
 \pi(s) = \arg\max_{a \in \mathcal{A}(s)} Q(s,a) \ .
 $$
 
-### The Q-Learning Update
+<a id="the-q-learning-update"></a>
+### 2.1 The Q-Learning Update
 
+To iteratively approximate the optimal action-value function, the Q-learning algorithm uses temporal-difference bootstrapping to update its estimates.
 Adapting the formula for computing $Q(S,A)$ to use in temporal-difference updates, we have
 
 $$
-Q(s,a) \leftarrow Q(s,a) + \alpha \left[ r(s,a,s') + \gamma\max_{a'}Q(s',a') - Q(s,a) \right]
+Q(S_t,A_t) \leftarrow Q(S_t,A_t) + \alpha \left[ R_{t+1} + \gamma\max_{a'}Q(S_{t+1},a') - Q(S_t,A_t) \right]
 $$
 
 or
 
 $$
-Q(s,a) \leftarrow (1 - \alpha)Q(s,a) + \alpha\left[ r(s,a,s') + \gamma\max_{a'}Q(s',a') \right]
+Q(S_t,A_t) \leftarrow (1 - \alpha)Q(S_t,A_t) + \alpha\left[ R_{t+1} + \gamma\max_{a'}Q(S_{t+1},a') \right] \ .
 $$
 
-where $Q(s,a)$ is the old estimated value of the state-action pair, $r(s,a,s') + \gamma\max_{a'}Q(s',a')$ is the target for the update.
-Gradually, $Q(S,A)$ converges onto the expectation in the Bellman optimality equation.
+$Q(S_t,A_t)$ is the current estimate for the state-action value for state $S_t$ and action $A_t$.
+The temporal-difference (TD) target $R_{t+1} + \gamma\max_{a'}Q(S_{t+1},a')$ represents the discounted local estimate of the total return.
+It is the sum of the immediate scalar reward $R_{t+1}$ for taking a specific action in the current state and the discounted maximum expected value available in the successor state $S_{t+1}$.
+The TD error is the difference between this lookahead target and the current estimate.
+The parameter $\alpha \in (0, 1]$ represents the learning rate, which scales the TD error before it is added to the current Q-value.
+After being scaled by the learning rate, the change in the Q-value is added to the current Q-value, with the result replacing the old value.
+Through the second equation, the update can be seen as a weighted average (or convex combination) of the historical estimate and the newly observed TD target.
 
-### Behavior and Target Policies
+Assuming that all state-action pairs are visited infinitely often and the learning rate satisfies the Robbins–Monro conditions, the estimated Q-values are guaranteed to converge onto the unique optimal action-value function $Q^∗(s,a)$, which satisfies the Bellman optimality equation.
 
 
-### Exploration and ϵ-Greedy Action Selection
+<a id="behavior-and-target-policies"></a>
+### 2.2 Behavior and Target Policies
+
+
+<a id="exploration-and-ϵ-greedy-action-selection"></a>
+### 2.3 Exploration and ϵ-Greedy Action Selection
 
 The agent uses a model-free algorithm, it does not have an internal model of the environment's dynamics (the transition probabilities $P(s'|s,a)$ and reward function $R(s,a)$ for every given state-action pair).
 Instead of explicitly learning the entirety of the environment's dynamics, it must learn its target policy by estimating state-action values through empirical sampling (trial and error).
@@ -261,7 +280,8 @@ The target policy uses the same Q-values that the behavior policy uses, but alwa
 Through many episodes, the agent updates its Q-values for state-action pairs by acting suboptimally to gather data (exploration through its epsilon-greedy behavior policy) and evaluating that data assuming optimal future play (derived from the current estimated Q-values).
 
 
-### Tabular Q-Learning
+<a id="tabular-q-learning"></a>
+### 2.4 Tabular Q-Learning
 
 In tabular Q-learning, the Q-values for every possible state-action pair are stored in a lookup table.
 Each row $r_i$ in the table corresponds to a specific state of the environment and each column $c_j$ represents a different action.
@@ -275,7 +295,8 @@ The episode then continues on to the next step, continually updating the Q-table
 
 ---
 
-### Example of Tabular Q-Learning in a Simple Deckbuilder
+<a id="example-of-tabular-q-learning-in-a-simple-deckbuilder"></a>
+### 2.4.1 Example of Tabular Q-Learning in a Simple Deckbuilder
 
 This is an example of tabular Q-learning in an overly simplified deck builder.
 The environment has two states (the value of the agent's hand): low (L) and high (H).
@@ -826,27 +847,124 @@ $$
 > *... Create an animation/gif for the Q-table ...*
 
 
-### Strengths and Limitations of the Tabular Q-learning
+<a id="strengths-and-limitations-of-tabular-q-learning"></a>
+### 2.5 Strengths and Limitations of Tabular Q-Learning
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+> ... more writing here ...
 
 ---
 
-## Deep Q-Learning
+<a id="deep-q-learning"></a>
+## 3. Deep Q-Learning
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+> ... more writing here ...
 
-### Neural Networks
+<a id="from-tables-to-function-approximation"></a>
+### 3.1 From Tables to Function Approximation
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+> ... more writing here ...
 
-### State Value and Action Value Approximation Using Neural Networks
+<a id="neural-networks"></a>
+### 3.2 Neural Networks
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+> ... more writing here ...
 
-## Deep Q-Learning for Dominion
+<a id="approximating-action-values"></a>
+### 3.3 Approximating Action Values
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+> ... more writing here ...
+
+<a id="the-deep-q-network"></a>
+### 3.4 The Deep Q-Network
+
+> ... more writing here ...
+
+<a id="experience-replay"></a>
+### 3.5 Experience Replay
+
+> ... more writing here ...
+
+<a id="target-networks"></a>
+### 3.6 Target Networks
+
+> ... more writing here ...
+
+<a id="double-dqn"></a>
+### 3.7 Double DQN
+
+> ... more writing here ...
+
+<a id="dueling-dqn"></a>
+### 3.8 Dueling DQN
+
+> ... more writing here ...
+
+<a id="legal-action-masking"></a>
+### 3.9 Legal-Action Masking
+
+> ... more writing here ...
+
+---
+
+<a id="deep-q-learning-for-dominion"></a>
+## 4. Deep Q-Learning for Dominion
+
+> ... more writing here ...
+
+<a id="why-dominion-is-a-reinforcement-learning-problem"></a>
+### 4.1 Why Dominion Is a Reinforcement-Learning Problem
+
+> ... more writing here ...
+
+<a id="dominion-as-a-markov-decision-process"></a>
+### 4.2 Dominion as a Markov Decision Process
+
+> ... more writing here ...
+
+<a id="state-representation"></a>
+### 4.3 State Representation
+
+> ... more writing here ...
+
+<a id="action-representation"></a>
+### 4.4 Action Representation
+
+> ... more writing here ...
+
+<a id="reward-design"></a>
+### 4.5 Reward Design
+
+> ... more writing here ...
+
+<a id="opponent-policies"></a>
+### 4.6 Opponent Policies
+
+> ... more writing here ...
+
+<a id="curriculum-learning"></a>
+### 4.7 Curriculum Learning
+
+> ... more writing here ...
+
+<a id="agent-architecture"></a>
+### 4.8 Agent Architecture
+
+> ... more writing here ...
+
+<a id="training-procedure"></a>
+### 4.9 Training Procedure
+
+> ... more writing here ...
+
+<a id="evaluation"></a>
+### 4.10 Evaluation
+
+> ... more writing here ...
+
+<a id="current-limitations-and-future-work"></a>
+### 4.11 Current Limitations and Future Work
+
+> ... more writing here ...
 
 
 
