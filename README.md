@@ -286,9 +286,38 @@ $$
 $$
 
 
-
 <a id="behavior-and-target-policies"></a>
 ### 2.2 Behavior and Target Policies
+
+Q-learning is an off-policy algorithm where the policy that the agent follows during training is separate from what it is trying to optimize.
+The behavior policy (e.g. ϵ-greedy) is the set of rules that the agent uses in order to interact with the environment, explores different actions, and collect data.
+Meanwhile, the target policy
+
+$$
+\pi(s) = \arg\max_{a \in \mathcal{A}(s)} Q(s,a)
+$$
+
+is the strategy that the agent is trying to optimize in order to improve its performance.
+By keeping these policies separate (putting the agent off-policy), the agent has the opportunity to explore different actions, including suboptimal ones, without ruining the optimization of its final "perfect" strategy.
+
+Once the agent has chosen an action in the current state, it updates $Q(S_t, A_t)$ using the highest Q-value from the next state as part of the target.
+This state-action value is $\max_{a'} Q(S_{t+1}, a')$ corresponding to the action that gives the highest expected return out of all possible actions available in that new state.
+Once $Q(S_t, A_t)$ is updated, rather than following the target policy and actually taking the action $a = \text{argmax}_{a'}Q(S_{t+1},a')$, the agent is free to follow its behavior policy to determine its next physical move.
+This is why the update mechanism in Q-learning is classified as off-policy.
+
+SARSA, an "on-policy" algorithm, stands for "State, Action, Reward, State, Action".
+Instead of decoupling the behavior and target policies like in Q-learning, SARSA uses the actual next action $A_{t+1}$ in the new state $S_{t+1}$ to update $Q(S_t, A_t)$.
+In particular, the update is
+
+$$
+Q(S_t, A_t) \leftarrow Q(S_t, A_t) + \alpha \left[ R_{t+1} + \gamma Q(S_{t+1}, A_{t+1}) - Q(S_t, A_t) \right] \ .
+$$
+
+SARSA is called "on-policy" because the behavior policy and the target policy are the same.
+The Q-value update uses the actual next action $A_{t+1}$ chosen by the active behavior policy.
+In practice, SARSA is more susceptible to allowing "poor" actions to negatively affect the recursive Q-value propagation because exploratory "noise" is funneled directly into the SARSA updates.
+On the other hand, because it uses the best estimated future return, Q-learning allows the agent to make "mistakes" while interacting with the environment through exploratory plays (which can possibly be suboptimal, yielding poor results) without negatively affecting the Q-value estimates in the optimal target policy.
+
 
 
 <a id="exploration-and-ϵ-greedy-action-selection"></a>
@@ -301,7 +330,7 @@ But since the agent lacks a model to look ahead to find the optimal action path,
 
 This exploitation-exploration tradeoff during learning is possible because the agent's behavior policy (its strategy when interacting with the environment) is separate from its target policy (the strategy that the agent is actually trying to optimize).
 In Q-learning, one behavior policy that an agent can have is $ϵ$-Greedy Action Selection, where the agent chooses to either exploit or explore the environment.
-The agent has a 1-ϵ chance of exploiting the environment through action $a = \argmax_a Q(s,a)$ that yields the greatest expected future return and a $ϵ$ chance of uniformly picking any valid action at random.
+The agent has a 1-ϵ chance of exploiting the environment through action $a = \text{argmax}_{a} Q(s,a)$ that yields the greatest expected future return and a $ϵ$ chance of uniformly picking any valid action at random.
 This splits the agent's efforts between exploitation (performing the action that is currently predicted to lead to the best outcome) and exploration (taking actions that seem to yield suboptimal results in an attempt to find an action path that leads to rewards greater than those produced by the currently predicted best action).
 The target policy uses the same Q-values that the behavior policy uses, but always acts in a greedy manner.
 
