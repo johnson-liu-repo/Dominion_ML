@@ -27,3 +27,4 @@ config/train_agent.json
 
 # Misc
 # writeup.md
+docs/images/q-learning-visualizer.png

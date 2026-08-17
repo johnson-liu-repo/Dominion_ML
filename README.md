@@ -4,6 +4,16 @@
 
 # Deep Q-Learning for Dominion
 
+<div align="center">
+
+[![Screenshot of the Q-Learning Grid World Visualizer, showing a trained agent's Q-values on a grid alongside a live Bellman update panel](docs/images/q-learning-visualizer.png)](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/)
+
+### ▶ [Open the interactive Q-Learning Visualizer](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/)
+
+*Runs entirely in your browser. Train a tabular Q-learner or a Deep Q-Network on a grid world,<br>step through individual Bellman updates, and watch value propagate back from the goal.*
+
+</div>
+
 ### Contents
 
 1. [Reinforcement Learning](#reinforcement-learning)\
@@ -258,6 +268,24 @@ Through the second equation, the update can be seen as a weighted average (or co
 
 Assuming that all state-action pairs are visited infinitely often and the learning rate satisfies the Robbins–Monro conditions, the estimated Q-values are guaranteed to converge onto the unique optimal action-value function $Q^∗(s,a)$, which satisfies the Bellman optimality equation.
 
+The Robbins-Monro conditions require that the learning rate (step size) $\alpha$ satisfies the following two conditions:
+1. The sum of the learning rates diverges.\
+\
+This condition ensures that learning rates are initially large enough to allow the agent to escape arbitrary initial conditions and explore the state space without getting stuck in localized regions.
+
+$$
+\lim_{N \to \infty} \sum_{t=0}^{N} \alpha_t = \infty
+$$
+
+2. The sum of the squares of the learning rates converges.\
+\
+This condition makes sure that the learning rates are eventually small enough to allow the agent to converge to a stable solution without oscillating around the optimal value.
+
+$$
+\lim_{N \to \infty} \sum_{t=0}^{N} \alpha_t^2 < \infty
+$$
+
+
 
 <a id="behavior-and-target-policies"></a>
 ### 2.2 Behavior and Target Policies
@@ -292,6 +320,8 @@ Once an action is executed, the agent transitions to a new state and observes th
 It receives its immediate reward, retrieves the current Q(s,a) value and the highest possible Q-value of the next state, computes the target value and new Q-value using the [temporal-difference formula](#temporal-difference-learning).
 Since Q-learning is a Temporal-Difference method, the Q-table is immediately updated with this new Q-value.
 The episode then continues on to the next step, continually updating the Q-table in this bootstrapped manner.
+
+> **▶ See it run:** the [interactive visualizer](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/) implements exactly this loop on a grid world. Select **Tabular Q**, switch to **Technical** mode, and the *Model* panel shows the literal Q-table filling in one row per visited state, while the *Status* panel breaks down each update into its target, TD error, and resulting Q-value.
 
 ---
 
@@ -859,6 +889,8 @@ $$
 
 > ... more writing here ...
 
+> **▶ See it run:** the [interactive visualizer](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/) runs a real DQN — replay buffer, target network, Adam, optional Double DQN — on the same grid world, so the two approaches can be compared directly. **Technical** mode exposes the network activations, the replay buffer, per-layer gradient norms, and the loss curve; **Compare A/B** trains two agents side by side under different hyperparameters.
+
 <a id="from-tables-to-function-approximation"></a>
 ### 3.1 From Tables to Function Approximation
 
@@ -999,7 +1031,12 @@ The current codebase is an experimental buy-phase RL stack rather than a finishe
 ├── config/
 │   └── train_agent_example.txt        # Documented JSON config examples
 ├── data/training/training_010/        # Checked-in sample diagnostics from an earlier run
-├── docs/                              # Research notes, reports, and images
+├── docs/                              # Research notes, reports, images; served by GitHub Pages
+│   ├── index.html                     # Pages landing page
+│   ├── images/                        # README figures
+│   └── q-learning-visualizer/
+│       ├── index.html                 # CDN loader (React, Recharts, Tailwind, Babel)
+│       └── app.jsx                    # Interactive Q-learning/DQN visualizer
 ├── pyminion_master/                   # Vendored Pyminion engine and tests
 ├── replay_viewer/
 │   └── dominion_replay_viewer.html    # Browser-based JSONL replay viewer
@@ -1170,6 +1207,21 @@ For short runs, treat diagnostics as sanity checks rather than evidence of stabl
 ## Replay viewer
 
 `replay_viewer/dominion_replay_viewer.html` is a standalone browser viewer for turn JSONL logs written by training runs. Open it in a browser and load a generated `episode_XXXXXX_turns.jsonl` file from a run's `episodes/` tree.
+
+## Q-learning visualizer (GitHub Pages)
+
+`docs/q-learning-visualizer/` is a teaching companion to the write-up above: an interactive grid world where a tabular Q-learner or a Deep Q-Network learns from scratch. It is published at **[johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/)**.
+
+It is deliberately build-free. `index.html` pulls React, Recharts, Tailwind, and Babel from pinned CDN versions and compiles `app.jsx` in the browser, so deploying is just committing the two files — there is no `npm install`, no bundler, and no CI step. The cost is a few seconds of in-browser compilation on first load, covered by a splash screen.
+
+Because the browser fetches `app.jsx` over the network, opening `index.html` directly from disk (`file://`) will not work. Serve the folder instead:
+
+```bash
+python -m http.server 8000 --directory docs
+# then open http://localhost:8000/q-learning-visualizer/
+```
+
+To regenerate the README screenshot after UI changes, capture the page at 1600×880 with the agent trained (click **+5k steps** a few times) and save it over `docs/images/q-learning-visualizer.png`.
 
 ## Implementation notes
 
