@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q-Learning Grid World Visualizer · Dominion ML</title>
+<meta name="description" content="An interactive visualizer for tabular Q-learning and Deep Q-Networks on a grid world, companion to the Deep Q-Learning for Dominion write-up.">
+
+<!-- Open Graph: gives the link a preview card when shared. -->
+<meta property="og:title" content="Q-Learning Grid World Visualizer">
+<meta property="og:description" content="Watch a tabular Q-learner and a DQN learn to solve a grid world, step by step.">
+<meta property="og:type" content="website">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>&#129504;</text></svg>">
+
+<!--
+  Standalone, no-build page.
+
+  Everything is fetched from pinned CDN versions at load time, so this file and
+  app.jsx are the whole deployment — there is no npm install and no bundler.
+  The trade-off is that app.jsx (~4.4k lines of JSX) is compiled in the browser
+  by Babel Standalone on every load, which costs a second or two before the
+  first paint. The #boot splash below covers that gap.
+
+  Local preview: Babel fetches app.jsx over the network, which browsers block on
+  file:// URLs. Serve the folder instead —
+      python -m http.server 8000 --directory docs
+  then open http://localhost:8000/q-learning-visualizer/
+-->
+
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+    "react-dom": "https://esm.sh/react-dom@18.3.1?external=react",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?external=react",
+    "recharts": "https://esm.sh/recharts@2.15.0?external=react,react-dom",
+    "lucide-react": "https://esm.sh/lucide-react@0.469.0?external=react"
+  }
+}
+</script>
+
+<style>
+  html, body { background: #020617; color: #f1f5f9; }
+  #boot {
+    position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px; z-index: 50;
+    font-family: ui-sans-serif, system-ui, sans-serif; text-align: center; padding: 24px;
+  }
+  #boot .spinner {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 3px solid #1e293b; border-top-color: #3b82f6;
+    animation: spin 0.85s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { #boot .spinner { animation-duration: 3s; } }
+  #boot .msg { font-size: 14px; color: #94a3b8; }
+  #boot .sub { font-size: 12px; color: #475569; max-width: 46ch; line-height: 1.6; }
+  #boot pre {
+    font-size: 11px; color: #fca5a5; background: #0f172a; border: 1px solid #1e293b;
+    border-radius: 8px; padding: 12px; max-width: 90vw; overflow: auto; text-align: left;
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<div id="boot">
+  <div class="spinner"></div>
+  <div class="msg">Compiling the visualizer…</div>
+  <div class="sub">
+    The page builds itself in your browser on first load, which takes a moment.
+    It needs a network connection to fetch React, Recharts and Tailwind.
+  </div>
+</div>
+
+<noscript>
+  <div style="padding:32px;font-family:ui-sans-serif,system-ui,sans-serif;max-width:60ch;margin:0 auto;">
+    <h1 style="font-size:20px;margin-bottom:12px;">JavaScript required</h1>
+    <p style="color:#94a3b8;line-height:1.6;">
+      This is an interactive reinforcement-learning visualizer, so it needs JavaScript enabled.
+      The accompanying write-up is readable without it, in the repository README.
+    </p>
+  </div>
+</noscript>
+
+<script>
+// Surface load failures instead of leaving a blank page. The most common causes
+// are a blocked CDN or an offline machine, so say that plainly.
+(function () {
+  var reported = false;
+  function fail(detail) {
+    if (reported) return;
+    reported = true;
+    var boot = document.getElementById('boot');
+    if (!boot) return;
+    boot.innerHTML =
+      '<div class="msg" style="color:#f87171">The visualizer failed to load.</div>' +
+      '<div class="sub">This page pulls React, Recharts, Tailwind and Babel from public CDNs ' +
+      'at load time. Check your network connection, or whether an extension is blocking ' +
+      'esm.sh / unpkg.com / cdn.tailwindcss.com.</div>' +
+      '<pre>' + String(detail).replace(/[<&]/g, function (c) { return c === '<' ? '&lt;' : '&amp;'; }) + '</pre>';
+  }
+  window.addEventListener('error', function (e) {
+    if (e.message) fail(e.message);
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    fail((e.reason && (e.reason.stack || e.reason.message)) || e.reason);
+  });
+  // If nothing has mounted after 30s, something is wrong even without an error event.
+  setTimeout(function () {
+    if (!document.getElementById('root').firstChild) fail('Timed out waiting for the app to mount.');
+  }, 30000);
+})();
+</script>
+
+<!-- Babel Standalone compiles app.jsx in the browser. data-type="module" keeps the
+     ES import statements intact so the import map above resolves them. -->
+<script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+<script type="text/babel" data-type="module" data-presets="react" src="./app.jsx"></script>
+
+</body>
+</html>

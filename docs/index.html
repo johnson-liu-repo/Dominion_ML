@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dominion ML · Interactive Demos</title>
+<meta name="description" content="Interactive companions to the Deep Q-Learning for Dominion write-up.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>&#129504;</text></svg>">
+<style>
+  :root {
+    --bg: #020617; --panel: #0f172a; --line: #1e293b;
+    --text: #e2e8f0; --dim: #94a3b8; --faint: #64748b; --accent: #60a5fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.6; padding: 48px 24px;
+  }
+  main { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .lede { color: var(--dim); font-size: 15px; margin-bottom: 40px; }
+  .card {
+    display: block; text-decoration: none; color: inherit;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px 22px; margin-bottom: 14px; transition: border-color .15s, transform .15s;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .card h2 .arrow { color: var(--accent); margin-left: 6px; }
+  .card p { color: var(--dim); font-size: 14px; }
+  footer { margin-top: 40px; color: var(--faint); font-size: 13px; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Dominion ML</h1>
+  <p class="lede">
+    Interactive companions to the <em>Deep Q-Learning for Dominion</em> write-up.
+  </p>
+
+  <a class="card" href="./q-learning-visualizer/">
+    <h2>Q-Learning Grid World Visualizer <span class="arrow">&rarr;</span></h2>
+    <p>
+      Watch tabular Q-learning and a Deep Q-Network learn to solve a grid world from
+      scratch. Step through individual Bellman updates, inspect the replay buffer and
+      network internals, compare two agents side by side, or design your own grid.
+    </p>
+  </a>
+
+  <footer>
+    Source and the full write-up:
+    <a href="https://github.com/johnson-liu-repo/Dominion_ML">github.com/johnson-liu-repo/Dominion_ML</a>
+  </footer>
+</main>
+</body>
+</html>
