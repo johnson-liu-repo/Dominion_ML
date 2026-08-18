@@ -289,16 +289,11 @@ $$
 <a id="behavior-and-target-policies"></a>
 ### 2.2 Behavior and Target Policies
 
-Q-learning is an off-policy algorithm where the policy that the agent follows during training is separate from what it is trying to optimize.
-The behavior policy (e.g. ϵ-greedy) is the set of rules that the agent uses in order to interact with the environment, explores different actions, and collect data.
-Meanwhile, the target policy
+Q-learning is classified as an off-policy algorithm because the strategy the agent follows to collect data is completely decoupled from the strategy it is trying to optimize. This separation is what enables the fundamental exploration-exploitation trade-off during training. The agent's exploratory behavior policy (such as ϵ-greedy action selection) is used to interact with the environment and gather diverse transition data, even through suboptimal actions. Meanwhile, the target policy—the strategy the agent is actively optimizing to maximize long-term cumulative return—is a purely greedy policy derived from the learned Q-values:
 
 $$
 \pi(s) = \arg\max_{a \in \mathcal{A}(s)} Q(s,a)
 $$
-
-is the strategy that the agent is trying to optimize in order to improve its performance.
-By keeping these policies separate (putting the agent off-policy), the agent has the opportunity to explore different actions, including suboptimal ones, without ruining the optimization of its final "perfect" strategy.
 
 Once the agent has chosen an action in the current state, it updates $Q(S_t, A_t)$ using the highest Q-value from the next state as part of the target.
 This state-action value is $\max_{a'} Q(S_{t+1}, a')$ corresponding to the action that gives the highest expected return out of all possible actions available in that new state.
@@ -319,22 +314,13 @@ In practice, SARSA is more susceptible to allowing "poor" actions to negatively 
 On the other hand, because it uses the best estimated future return, Q-learning allows the agent to make "mistakes" while interacting with the environment through exploratory plays (which can possibly be suboptimal, yielding poor results) without negatively affecting the Q-value estimates in the optimal target policy.
 
 
-
 <a id="exploration-and-ϵ-greedy-action-selection"></a>
 ### 2.3 Exploration and ϵ-Greedy Action Selection
 
-The agent uses a model-free algorithm, it does not have an internal model of the environment's dynamics (the transition probabilities $P(s'|s,a)$ and reward function $R(s,a)$ for every given state-action pair).
+The agent uses a model-free algorithm, meaning it does not have an internal model of the environment's dynamics (the transition probabilities $P(s'|s,a)$ and reward function $R(s,a)$ for every given state-action pair).
 Instead of explicitly learning the entirety of the environment's dynamics, it must learn its target policy by estimating state-action values through empirical sampling (trial and error).
 The agent's ultimate goal is to find a target policy that, when deterministically followed, maximizes its total return.
 But since the agent lacks a model to look ahead to find the optimal action path, it must randomly sample different actions to discover which trajectories yield the best empirical results.
-
-This exploitation-exploration tradeoff during learning is possible because the agent's behavior policy (its strategy when interacting with the environment) is separate from its target policy (the strategy that the agent is actually trying to optimize).
-In Q-learning, one behavior policy that an agent can have is $ϵ$-Greedy Action Selection, where the agent chooses to either exploit or explore the environment.
-The agent has a 1-ϵ chance of exploiting the environment through action $a = \text{argmax}_{a} Q(s,a)$ that yields the greatest expected future return and a $ϵ$ chance of uniformly picking any valid action at random.
-This splits the agent's efforts between exploitation (performing the action that is currently predicted to lead to the best outcome) and exploration (taking actions that seem to yield suboptimal results in an attempt to find an action path that leads to rewards greater than those produced by the currently predicted best action).
-The target policy uses the same Q-values that the behavior policy uses, but always acts in a greedy manner.
-
-Through many episodes, the agent updates its Q-values for state-action pairs by acting suboptimally to gather data (exploration through its epsilon-greedy behavior policy) and evaluating that data assuming optimal future play (derived from the current estimated Q-values).
 
 
 <a id="tabular-q-learning"></a>
@@ -350,6 +336,58 @@ It receives its immediate reward, retrieves the current Q(s,a) value and the hig
 Since Q-learning is a Temporal-Difference method, the Q-table is immediately updated with this new Q-value.
 The episode then continues on to the next step, continually updating the Q-table in this bootstrapped manner.
 
+#### The Tabular Q-Learning Algorithm
+
+The description above can be tightened into a concrete learning procedure.
+Table (1) lists the parts of that procedure and what each one is responsible for.
+
+<div align="center"><b>Table 1:</b> Anatomy of the Tabular Q-Learning Loop</div>
+
+<div align="center">
+
+|Part|What it does|
+| :---: | :--- |
+|**Initialization**|Initialize $Q(s,a)$, usually to $0$, for all valid state-action pairs.|
+|**Episode loop**|Reset the environment and obtain the initial state $s$.|
+|**Action selection**|Choose $a$ from $s$ using the behavior policy, typically [$ϵ$-greedy](#exploration-and-ϵ-greedy-action-selection) with respect to $Q$.|
+|**Environment transition**|Execute $a$, then observe the reward $r$, the next state $s'$, and whether the episode terminated.|
+|**Q-learning target**|For nonterminal $s'$, compute $r + \gamma \max_{a'} Q(s',a')$. For a terminal transition, the target is just $r$.|
+|**Update**|Apply $Q(s,a) \leftarrow Q(s,a) + \alpha \left[ \text{target} - Q(s,a) \right]$.|
+|**Advance state**|Set $s \leftarrow s'$ and continue until termination.|
+|**Repeat**|Train over many episodes, optionally decaying $ϵ$ and/or $\alpha$.|
+</div>
+
+Written out as pseudocode, the loop is:
+
+```text
+Initialize Q(s, a) = 0 for all valid state-action pairs
+
+for each episode:
+    initialize state s
+
+    while s is not terminal:
+        choose action a using epsilon-greedy policy from Q(s, ·)
+        take action a
+        observe reward r and next state s'
+
+        if s' is terminal:
+            target = r
+        else:
+            target = r + gamma * max Q(s', a') over valid actions a'
+
+        Q(s, a) = Q(s, a) + alpha * (target - Q(s, a))
+
+        s = s'
+```
+
+Two lines in the inner loop carry the [behavior/target policy](#behavior-and-target-policies) split described earlier.
+The line that chooses the action is the **behavior policy**, and it is allowed to explore through $ϵ$-greedy selection.
+The line that computes the target is the **target policy**, and it is greedy because the target uses $\max_{a'} Q(s',a')$ rather than the Q-value of whatever action the agent actually takes next.
+The agent therefore learns the value of optimal future play while still behaving suboptimally in order to gather data, which is exactly what makes Q-learning **off-policy**.
+
+The terminal case matters in practice.
+A terminal $s'$ has no future to bootstrap from, so folding in $\gamma \max_{a'} Q(s',a')$ there would attribute value to a continuation that never happens and would prevent the Q-values from ever settling.
+
 > **▶ See it run:** the [interactive visualizer](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/) implements exactly this loop on a grid world. Select **Tabular Q**, switch to **Technical** mode, and the *Model* panel shows the literal Q-table filling in one row per visited state, while the *Status* panel breaks down each update into its target, TD error, and resulting Q-value.
 
 ---
@@ -360,9 +398,9 @@ The episode then continues on to the next step, continually updating the Q-table
 This is an example of tabular Q-learning in an overly simplified deck builder.
 The environment has two states (the value of the agent's hand): low (L) and high (H).
 For both states, the possible actions are buying a treasure card (B) and buying s score card (S).
-The rewards and transitions for each state-action pair is given in Table (1).
+The rewards and transitions for each state-action pair is given in Table (2).
 
-<div align="center"><b>Table 1:</b> Reward/Transition Table for a Simple Deckbuilder</div>
+<div align="center"><b>Table 2:</b> Reward/Transition Table for a Simple Deckbuilder</div>
 
 <div align="center">
 
@@ -816,18 +854,29 @@ $$
 <a id="ep4-update9"></a>
 ##### Episode 4 — Update 9 ($k=9$)
 
-The second update in Episode 4 is computed using the state H to state H transition:
+The second update in Episode 4 is computed using the state H to state H transition, and it is the first update in which the agent takes action B while in state H.
+It is therefore also the first time that the entry $Q(\text{H,B})$ moves off of its initial value of 0.
+Every previous update left that entry untouched simply because the agent had never sampled that particular state-action pair, which is characteristic of tabular Q-learning: an entry in the table only changes when the agent actually visits it.
+
+This transition also returns the agent to state H rather than sending it to a new state, so the state whose Q-values are used to build the target is the same state that the agent just acted from:
 
 $$
 Q_9(\text{H,B}) = (1-\alpha) Q_8(\text{H,B}) + \alpha \left[ r + \gamma \max_{a'}Q_8(\text{H}, a') \right]
 $$
 
 $$
+Q_9(\text{H,B}) = (1-\alpha) Q_8(\text{H,B}) + \alpha \left[ r + \gamma \max_{}\left( Q_8(\text{H,B}), Q_8(\text{H,S}) \right) \right] \ .
+$$
+
+Here $\max_{}\left( Q_8(\text{H,B}), Q_8(\text{H,S}) \right) = \max_{}(0, 2.625) = 2.625$, so the target is built out of the value of action S even though the agent chose action B.
+This is the [off-policy](#behavior-and-target-policies) update at work: the behavior policy selected B, but the target that the agent learns towards assumes greedy play from state H onward.
+
+$$
 Q_9(\text{H,B}) = (1-0.5)(0) + 0.5 \left[ 1 + 0.9(2.625) \right]
 $$
 
 $$
-Q_9(\text{H,B}) = 1.68125
+Q_9(\text{H,B}) = 1.68125 \ .
 $$
 
 <div align="center"><b>Q-Table After Update 9</b>
@@ -856,23 +905,29 @@ $$
 </table>
 </div>
 
+Even after this update, $Q(\text{H,B}) = 1.68125$ sits below $Q(\text{H,S}) = 2.625$, so S remains the greedy action in state H.
+The single reward of $r=1$ that the agent collected along the way was not enough to overturn the value that (H,S) has accumulated over the previous three episodes.
+
 ---
 
 <a id="ep4-update10"></a>
 ##### Episode 4 — Update 10 ($k=10$)
 
-And finally, the last update in Episode 4 is computed using the state H to state T transition:
+And finally, the last update in Episode 4 is computed using the state H to state T transition.
+This is the same terminal transition that ended each of the previous episodes, so the update takes the same form that it did in [Update 2](#ep1-update2), [Update 4](#ep2-update4), and [Update 7](#ep3-update7):
 
 $$
-Q_{10}(\text{H,S}) = (1-\alpha) Q_9(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_9(\text{T}, a') \right]
+Q_{10}(\text{H,S}) = (1-\alpha) Q_9(\text{H,S}) + \alpha \left[ r + \gamma \max_{a'}Q_9(\text{T}, a') \right] \ .
 $$
+
+Since T is the terminal state, $\max_{a'}Q_9(\text{T},a')$ returns 0 and the discounted future term drops out entirely, leaving the immediate reward $r=3$ as the entire target:
 
 $$
 Q_{10}(\text{H,S}) = (1-0.5)(2.625) + 0.5 \left[ 3 + 0.9(0) \right]
 $$
 
 $$
-Q_{10}(\text{H,S}) = 2.8125
+Q_{10}(\text{H,S}) = 2.8125 \ .
 $$
 
 <div align="center"><b>Q-Table After Update 10</b>
@@ -900,6 +955,14 @@ $$
   </tr>
 </table>
 </div>
+
+This is the fourth time that the agent has taken the (H,S) transition, and the Q-value for that pair has moved through 0, 1.5, 2.25, 2.625, and now 2.8125.
+Because the target for this transition is always 3 and the learning rate is fixed at $\alpha = 0.5$, each visit closes half of the remaining distance to that target, shrinking the gap from 3 to 1.5 to 0.75 to 0.375 to 0.1875.
+The Q-value approaches 3 without ever quite reaching it, which is what the [temporal-difference update](#temporal-difference-learning) does when a state-action pair is sampled repeatedly with a fixed learning rate.
+
+Reading the final Q-table greedily gives the target policy that the agent has learned over these four episodes: in state L it prefers action B (1.85625 over 0.80375), and in state H it prefers action S (2.8125 over 1.68125).
+That is the path L ---(B)---> H ---(S)---> T, which is to say that the agent has learned to build up its hand with a treasure card and then cash it in for a score card.
+These are still early estimates rather than converged values, however, since (H,B) has been visited only once and the agent has not yet had much opportunity to learn about it.
 
 ---
 
