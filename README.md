@@ -321,6 +321,22 @@ The agent uses a model-free algorithm, meaning it does not have an internal mode
 Instead of explicitly learning the entirety of the environment's dynamics, it must learn its target policy by estimating state-action values through empirical sampling (trial and error).
 The agent's ultimate goal is to find a target policy that, when deterministically followed, maximizes its total return.
 But since the agent lacks a model to look ahead to find the optimal action path, it must randomly sample different actions to discover which trajectories yield the best empirical results.
+The agent's action $A_t$ at time $t$ is defined as
+
+$$
+A_t =
+\begin{cases}
+	a \in \mathcal{A}(S_t), & \text{ϵ} \\
+	\arg\max_{a \in \mathcal{A}(S_t)} Q(S_t,a), & 1-\text{ϵ}
+\end{cases}
+$$
+
+where the agent chooses uniformly from all possible valid actions given the current state $S_t$ with probability ϵ and greedily chooses the action that gives the highest state-action value with probability 1-ϵ.
+
+Near the very start of the agent's training, when states are highly symmetric, or if many states otherwise share the same maximum state-action values, the agent may encounter cases in which it must decide between multiple actions.
+With the agent's epsilon-greedy policy, when it decides to act greedily, there may be multiple actions that share the maximum Q-value.
+The agent must choose uniformly from tied actions in order to adequately explore different strategies and avoid becoming biased towards some that may be suboptimal.
+
 
 
 <a id="tabular-q-learning"></a>
