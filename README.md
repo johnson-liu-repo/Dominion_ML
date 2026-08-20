@@ -326,17 +326,24 @@ The agent's action $A_t$ at time $t$ is defined as
 $$
 A_t =
 \begin{cases}
-	a \in \mathcal{A}(S_t), & \text{ϵ} \\
-	\arg\max_{a \in \mathcal{A}(S_t)} Q(S_t,a), & 1-\text{ϵ}
+	a \in \mathcal{A}(S_t), & \epsilon \\
+	\arg\max_{a \in \mathcal{A}(S_t)} Q(S_t,a), & 1-\epsilon
 \end{cases}
 $$
 
 where the agent chooses uniformly from all possible valid actions given the current state $S_t$ with probability ϵ and greedily chooses the action that gives the highest state-action value with probability 1-ϵ.
 
+During training, the training model implements epsilon (ϵ) decay.
+At the beginning, all of the Q-values are uniform or randomized, making exploitation ineffective in helping the agent learn optimal actions.
+Enough exploration is needed in order for the agent to begin finding "good" actions for different situations.
+As the training progresses, some actions become more optimal than others and ϵ decreases so that the agent can start taking advantage of actions with high Q-values.
+
 Near the very start of the agent's training, when states are highly symmetric, or if many states otherwise share the same maximum state-action values, the agent may encounter cases in which it must decide between multiple actions.
 With the agent's epsilon-greedy policy, when it decides to act greedily, there may be multiple actions that share the maximum Q-value.
 The agent must choose uniformly from tied actions in order to adequately explore different strategies and avoid becoming biased towards some that may be suboptimal.
 
+The agent's actions during both exploration and exploitation are restricted to only the actions that are valid within the current state so that the agent does not have to learn about impossible moves.
+This legal-action masking saves computational power since the agent does not have to spend time trying to execute impossible state transitions that it will never be able to select once training is complete.
 
 
 <a id="tabular-q-learning"></a>
