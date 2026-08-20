@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dominion — Deckbuilding Game</title>
+<style>
+:root{
+  --ink:#12151d; --ink-2:#1a1f2a; --ink-3:#232a37; --rule:#3a4353;
+  --vellum:#efe7d5; --vellum-2:#e2d8c2; --vellum-edge:#c9bea4;
+  --text-dim:#8d97a8; --text:#d8dee9;
+  --gold:#d4a537; --seal:#9c3341;
+  --line:#3b3428;
+  --serif:'Iowan Old Style','Palatino Linotype',Palatino,'Book Antiqua',Georgia,'Times New Roman',serif;
+  --sans:'Avenir Next Condensed','Roboto Condensed','Helvetica Neue',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -8%, rgba(90,110,150,.20) 0%, transparent 62%),
+    radial-gradient(ellipse 70% 50% at 50% 108%, rgba(212,165,55,.07) 0%, transparent 60%),
+    linear-gradient(180deg,#12151d 0%,#0c0f15 100%);
+  background-attachment:fixed;
+  color:var(--text); font-family:var(--sans); font-size:14px;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.lbl{font-family:var(--sans);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dim);font-weight:600}
+.spacer{flex:1}
+#app{min-height:100vh;display:flex;flex-direction:column}
+
+/* ================= card anatomy ================= */
+.card{
+  position:relative;width:100%;height:100%;border-radius:4px;
+  background:linear-gradient(165deg,var(--vellum) 0%,var(--vellum-2) 100%);
+  border:1px solid rgba(0,0,0,.55);color:#26221b;
+  display:flex;flex-direction:column;padding:4px 4px 3px;overflow:hidden;
+  box-shadow:0 2px 5px rgba(0,0,0,.45);
+  transition:transform .13s ease,box-shadow .13s ease,filter .13s;text-align:left;
+}
+.card::before{content:'';position:absolute;inset:2px;border:1px solid rgba(0,0,0,.13);border-radius:2px;pointer-events:none;z-index:3}
+.cname{font-family:var(--serif);font-size:9.6px;line-height:1.15;font-weight:600;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 11px 1px 1px;position:relative;z-index:1}
+/* illustration window */
+.cart{position:relative;height:40px;flex-shrink:0;border:1px solid rgba(0,0,0,.30);border-radius:2px;
+  overflow:hidden;background:linear-gradient(180deg,#e7dcc0,#d3c5a2);margin-bottom:2px}
+.cart::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(45deg,rgba(59,52,40,.055) 0 1px,transparent 1px 4px)}
+.artsvg{width:100%;height:100%;display:block}
+.artsvg *{fill:none;stroke:var(--line);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.artsvg .a-fill{fill:rgba(59,52,40,.15)}
+.artsvg .a-solid{fill:var(--line);stroke:none}
+.artsvg .a-pale{fill:rgba(255,255,255,.32)}
+/* resource pips */
+.pips{display:flex;gap:4px;align-items:center;margin:1px 0;min-height:10px;position:relative;z-index:1;color:#4e4636}
+.pip{display:flex;align-items:center;gap:1px;font-family:var(--serif);font-size:8.5px;font-weight:600;line-height:1}
+.pip svg{width:8px;height:8px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linejoin:round;flex-shrink:0}
+.pip.p-coin svg circle{fill:rgba(184,115,51,.5)}
+.pip.p-card svg rect{fill:rgba(255,255,255,.5)}
+.ctext{font-size:7.4px;line-height:1.25;color:#4d463b;flex:1;overflow:hidden;position:relative;z-index:1;font-family:var(--sans)}
+.ctext.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ctype{font-family:var(--serif);font-size:7.6px;letter-spacing:.06em;text-transform:uppercase;color:#6a6154;
+  border-top:1px solid rgba(0,0,0,.16);padding:2px 0 0 14px;margin-top:2px;position:relative;z-index:1;
+  white-space:nowrap;overflow:hidden}
+.ccost{position:absolute;left:3px;bottom:2px;width:14px;height:14px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:9.5px;font-weight:600;
+  background:radial-gradient(circle at 34% 28%,#f6dd94,var(--gold));color:#3a2c07;
+  border:1px solid rgba(0,0,0,.42);box-shadow:inset 0 -1px 2px rgba(0,0,0,.25);z-index:4}
+.ccount{position:absolute;right:2px;top:2px;font-family:var(--serif);font-size:9px;color:#5d5546;z-index:4;
+  background:rgba(255,255,255,.62);border-radius:2px;padding:0 2px;line-height:1.3}
+/* type tints */
+.t-treasure{background:linear-gradient(165deg,#f2dfa8,#e3c87e)}
+.t-treasure .cart{background:linear-gradient(180deg,#f7e9bd,#e8cf90)}
+.t-victory{background:linear-gradient(165deg,#cfe0cd,#b3ccb0)}
+.t-victory .cart{background:linear-gradient(180deg,#d9e8d6,#bcd4b8)}
+.t-curse{background:linear-gradient(165deg,#d8cbe6,#bfaed3)}
+.t-curse .cart{background:linear-gradient(180deg,#e1d6ed,#c8b7db)}
+.t-reaction{background:linear-gradient(165deg,#d6e3f0,#b9cee2)}
+.t-reaction .cart{background:linear-gradient(180deg,#dfeaf6,#c3d7e9)}
+.t-attack .ctype{color:var(--seal)}
+.t-attack .cart{border-color:rgba(156,51,65,.5)}
+
+/* ================= supply ================= */
+.pile{position:relative;width:80px;height:118px}
+.stackly{position:absolute;left:0;top:0;width:100%;height:100%;border-radius:4px;
+  background:var(--vellum-edge);border:1px solid rgba(0,0,0,.55)}
+.pile.buyable .card{cursor:pointer;box-shadow:0 0 0 1px var(--gold),0 2px 5px rgba(0,0,0,.45)}
+.pile.buyable:hover .card{transform:translateY(-4px) scale(1.03);box-shadow:0 8px 18px rgba(0,0,0,.55)}
+.pile.dim .card{filter:grayscale(.55) brightness(.62)}
+.pile.target .card{box-shadow:0 0 0 2px var(--gold),0 0 15px rgba(212,165,55,.5);cursor:pointer;animation:beckon 1.6s ease-in-out infinite}
+.pile.target:hover .card{transform:translateY(-4px) scale(1.03)}
+.pile.gone .card{opacity:.24;filter:grayscale(1)}
+.pile.gone .stackly{display:none}
+@keyframes beckon{0%,100%{box-shadow:0 0 0 2px var(--gold),0 0 8px rgba(212,165,55,.35)}
+                  50%{box-shadow:0 0 0 2px var(--gold),0 0 20px rgba(212,165,55,.75)}}
+.pile.fx-buy::after{content:'';position:absolute;inset:0;border-radius:4px;pointer-events:none;z-index:9;
+  animation:buyflash .75s ease-out forwards}
+@keyframes buyflash{0%{box-shadow:0 0 0 0 rgba(212,165,55,.95)}100%{box-shadow:0 0 0 18px rgba(212,165,55,0)}}
+
+/* ================= card sizes ================= */
+.hcard{width:112px;height:182px;padding:5px 5px 4px}
+.hcard .cname{font-size:12.6px;padding-right:15px}
+.hcard .cart{height:52px}
+.hcard .cart .artsvg *{stroke-width:1.35}
+.hcard .pips{gap:6px;min-height:13px}
+.hcard .pip{font-size:11px;gap:2px}
+.hcard .pip svg{width:11px;height:11px;stroke-width:1.25}
+.hcard .ctext{font-size:8.7px;line-height:1.26}
+.hcard .ctype{font-size:8.6px;padding-left:17px;padding-top:3px}
+.hcard .ccost{width:17px;height:17px;font-size:11px;left:4px;bottom:3px}
+.bigcard{width:150px;height:232px;padding:6px 6px 5px}
+.bigcard .cname{font-size:15px;padding-right:18px}
+.bigcard .cart{height:74px}
+.bigcard .cart .artsvg *{stroke-width:1.15}
+.bigcard .pips{gap:7px;min-height:15px}
+.bigcard .pip{font-size:12.5px;gap:2px}
+.bigcard .pip svg{width:12px;height:12px;stroke-width:1.15}
+.bigcard .ctext{font-size:10.2px;line-height:1.36}
+.bigcard .ctype{font-size:9.4px;padding-left:20px}
+.bigcard .ccost{width:20px;height:20px;font-size:13px;left:5px;bottom:4px}
+.pcard{width:60px;height:74px;padding:3px}
+.pcard .cname{font-size:8.2px;padding-right:1px}
+.pcard .cart{height:44px;margin-bottom:0}
+.pcard .cart .artsvg *{stroke-width:1.9}
+.pcard .pips,.pcard .ctext,.pcard .ctype,.pcard .ccost,.pcard .ccount{display:none}
+
+/* ================= top bar ================= */
+.topbar{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--rule);
+  background:rgba(11,14,20,.82);backdrop-filter:blur(6px);position:sticky;top:0;z-index:40;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-size:17px;color:var(--vellum);white-space:nowrap}
+.brand em{font-style:normal;color:var(--gold)}
+.turnmark{font-family:var(--serif);font-size:13px;color:var(--text-dim);white-space:nowrap}
+.turnmark b{color:var(--vellum);font-weight:400}
+.counters{display:flex;gap:7px}
+.ctr{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:52px;
+  padding:4px 8px 5px;border:1px solid var(--rule);border-radius:3px;background:var(--ink-2)}
+.ctr b{font-family:var(--serif);font-size:19px;font-weight:400;line-height:1;color:var(--vellum)}
+.ctr.hot{border-color:var(--gold);background:linear-gradient(180deg,rgba(212,165,55,.10),transparent)}
+.ctr.hot b{color:var(--gold)}
+.ctr.zero b{color:#5d6572}
+.ctr span{margin-top:3px}
+.ctr.fx-pulse{animation:ctrpulse .42s cubic-bezier(.3,1.4,.5,1)}
+@keyframes ctrpulse{0%{transform:scale(1)}42%{transform:scale(1.22)}100%{transform:scale(1)}}
+.tbtn{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;padding:7px 12px;
+  border:1px solid var(--rule);border-radius:3px;color:var(--text-dim);transition:.15s}
+.tbtn:hover{border-color:var(--vellum-edge);color:var(--vellum)}
+
+/* ================= table ================= */
+.table{display:flex;gap:14px;padding:14px 16px 0;align-items:flex-start;flex:1}
+.board{flex:1;min-width:0}
+.zonehead{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.zonehead .line{flex:1;height:1px;background:var(--rule)}
+.supplygroups{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+.pilegrid{display:grid;gap:8px}
+.grid-basic{grid-template-columns:repeat(4,80px)}
+.grid-kingdom{grid-template-columns:repeat(5,80px)}
+
+/* ================= rail ================= */
+.rail{width:224px;flex-shrink:0;display:flex;flex-direction:column;gap:11px}
+.panel{border:1px solid var(--rule);border-radius:3px;background:var(--ink-2)}
+.panel .ph{padding:7px 10px;border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;gap:6px}
+.panel .pb{padding:9px 10px}
+.preview{display:flex;justify-content:center;padding:10px}
+.pvhint{font-family:var(--serif);font-style:italic;font-size:12px;color:#5f6878;padding:14px 10px;line-height:1.5}
+.oppgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center}
+.oppgrid div b{display:block;font-family:var(--serif);font-size:17px;color:var(--vellum);font-weight:400;line-height:1.1}
+.vpline{display:flex;justify-content:space-between;align-items:baseline;padding:6px 10px;border-top:1px solid var(--rule)}
+.vpline b{font-family:var(--serif);font-size:16px;color:var(--gold);font-weight:400}
+.log{height:148px;overflow-y:auto;padding:8px 10px;font-size:11.5px;line-height:1.55;color:#9aa4b4;
+  scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
+.log div{padding:1px 0}
+.log .lg-turn{color:var(--gold);font-family:var(--serif);font-style:italic;font-size:12px;margin-top:7px;
+  border-top:1px solid var(--rule);padding-top:6px}
+.log .lg-me{color:var(--text)}
+.log .lg-att{color:#d98b95}
+.log .lg-buy{color:var(--vellum)}
+
+/* ================= lower zones ================= */
+.lower{padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.playrow{display:flex;align-items:center;gap:14px;min-height:84px;
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:5px 0}
+.cardrow{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.empty-note{font-family:var(--serif);font-style:italic;font-size:12.5px;color:#5b6371}
+.handrow{display:flex;gap:7px;flex-wrap:wrap;align-items:flex-end;min-height:184px}
+.hand-wrap{display:flex;gap:16px;align-items:flex-end}
+.hcard.play{cursor:pointer}
+.hcard.play:hover{transform:translateY(-10px);box-shadow:0 12px 24px rgba(0,0,0,.6)}
+.hcard.sel{transform:translateY(-12px);box-shadow:0 0 0 2px var(--gold),0 12px 24px rgba(0,0,0,.6)}
+.hcard.pickable{cursor:pointer;box-shadow:0 0 0 1px var(--gold),0 2px 5px rgba(0,0,0,.45)}
+.hcard.nope{filter:grayscale(.62) brightness(.62)}
+.stacks{display:flex;gap:8px;align-items:flex-end;padding-bottom:3px}
+.zstack{position:relative;width:52px;height:74px;border-radius:4px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;transition:.15s;
+  border:1px dashed var(--rule);background:rgba(255,255,255,.02)}
+.zstack.filled{border:1px solid rgba(0,0,0,.5);
+  background:linear-gradient(160deg,#3a4353,#252c39);box-shadow:2px 2px 0 -1px #1d2431,4px 4px 0 -2px #171d27,0 4px 10px rgba(0,0,0,.4)}
+.zstack.filled::before{content:'';position:absolute;inset:4px;border:1px solid rgba(212,165,55,.22);border-radius:2px}
+.zstack b{font-family:var(--serif);font-size:18px;color:var(--vellum);font-weight:400;line-height:1;position:relative}
+.zstack .lbl{font-size:8px;position:relative}
+.zstack.clickable{cursor:pointer}
+.zstack.clickable:hover{border-color:var(--gold);transform:translateY(-2px)}
+
+/* ================= controls / prompt ================= */
+.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.act{font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:600;padding:9px 17px;
+  border:1px solid var(--rule);border-radius:3px;color:var(--text-dim);transition:.15s}
+.act:hover:not(:disabled){border-color:var(--vellum-edge);color:var(--vellum)}
+.act.primary{border-color:var(--gold);color:var(--gold);background:linear-gradient(180deg,rgba(212,165,55,.12),rgba(212,165,55,.02))}
+.act.primary:hover{background:var(--gold);color:var(--ink)}
+.act:disabled{opacity:.32;cursor:default}
+.hint{font-family:var(--serif);font-style:italic;font-size:12.5px;color:#6d7686}
+.prompt{border:1px solid var(--gold);border-left-width:3px;border-radius:3px;
+  background:linear-gradient(90deg,rgba(212,165,55,.13),rgba(212,165,55,.03));
+  padding:10px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;animation:slidein .22s ease}
+@keyframes slidein{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.prompt .ptitle{font-family:var(--serif);font-size:15px;color:var(--vellum)}
+.prompt .pcount{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.who{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--seal);font-weight:700}
+
+/* ================= animations ================= */
+@keyframes dealin{from{opacity:0;transform:translateY(26px) rotate(-4deg)}to{opacity:1;transform:none}}
+.fx-deal{animation:dealin .38s cubic-bezier(.2,.85,.3,1) both}
+@keyframes playin{from{opacity:0;transform:translateY(-30px) scale(1.3)}to{opacity:1;transform:none}}
+.fx-play{animation:playin .34s cubic-bezier(.2,.9,.3,1)}
+@keyframes hitshake{0%,100%{transform:none}18%{transform:translateX(-6px)}36%{transform:translateX(6px)}
+  54%{transform:translateX(-4px)}72%{transform:translateX(4px)}}
+.fx-hit{animation:hitshake .5s ease}
+
+/* ================= modal ================= */
+.scrim{position:fixed;inset:0;background:rgba(6,8,12,.84);z-index:80;display:flex;align-items:center;
+  justify-content:center;padding:24px;animation:fade .2s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{background:var(--ink-2);border:1px solid var(--rule);border-radius:4px;max-width:840px;width:100%;
+  max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.7)}
+.modal .mh{padding:16px 20px 12px;border-bottom:1px solid var(--rule)}
+.modal .mh h2{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--vellum)}
+.modal .mh p{font-size:12.5px;color:var(--text-dim);margin-top:4px;line-height:1.5}
+.modal .mb{padding:16px 20px}
+.modal .mf{padding:12px 20px 16px;display:flex;gap:9px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.score{width:100%;border-collapse:collapse;font-size:13px}
+.score th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--text-dim)}
+.score td{padding:7px 8px;border-bottom:1px solid rgba(58,67,83,.5);vertical-align:top}
+.score td.n{text-align:right;font-family:var(--serif);font-size:15px}
+.score tr.win td{color:var(--gold)}
+.rules h3{font-family:var(--serif);font-size:16px;font-weight:400;color:var(--gold);margin:16px 0 5px}
+.rules h3:first-child{margin-top:0}
+.rules p,.rules li{font-size:13px;line-height:1.62;color:#aeb7c5}
+.rules ul{padding-left:18px;margin:4px 0}
+.rules b{color:var(--vellum);font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+.legend .lg{display:flex;align-items:center;gap:6px;font-size:12px;color:#aeb7c5}
+.legend .sw{width:22px;height:14px;border-radius:2px;border:1px solid rgba(0,0,0,.5)}
+
+/* ================= start screen ================= */
+.start{max-width:900px;margin:0 auto;padding:40px 24px 40px;text-align:center}
+.crest{font-family:var(--serif);font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--gold);opacity:.85}
+.start h1{font-family:var(--serif);font-size:clamp(38px,7vw,62px);font-weight:400;letter-spacing:-.015em;margin:8px 0 4px;color:var(--vellum)}
+.start .sub{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--text-dim);margin-bottom:8px}
+.fan{display:flex;justify-content:center;align-items:flex-end;height:252px;margin:6px 0 4px;perspective:900px}
+.fan>div{margin:0 -16px;transform-origin:50% 100%;animation:fanin .6s cubic-bezier(.2,.9,.3,1) both}
+.fan>div:nth-child(1){transform:rotate(-13deg) translateY(16px);animation-delay:.05s}
+.fan>div:nth-child(2){transform:rotate(-4.5deg) translateY(2px);animation-delay:.13s}
+.fan>div:nth-child(3){transform:rotate(4.5deg) translateY(2px);animation-delay:.21s}
+.fan>div:nth-child(4){transform:rotate(13deg) translateY(16px);animation-delay:.29s}
+.fan>div .card{box-shadow:0 10px 26px rgba(0,0,0,.6)}
+@keyframes fanin{from{opacity:0;transform:translateY(50px) rotate(0)}}
+.hr-orn{display:flex;align-items:center;gap:12px;margin:20px 0 18px;color:var(--rule)}
+.hr-orn::before,.hr-orn::after{content:'';flex:1;height:1px;background:var(--rule)}
+.hr-orn span{font-size:10px;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase}
+.setlist{display:grid;grid-template-columns:repeat(auto-fit,minmax(216px,1fr));gap:10px;text-align:left}
+.setopt{border:1px solid var(--rule);border-radius:3px;padding:13px 15px;background:var(--ink-2);
+  transition:border-color .16s,background .16s;display:block;width:100%;text-align:left}
+.setopt:hover{border-color:var(--gold);background:var(--ink-3)}
+.setopt.on{border-color:var(--gold);background:var(--ink-3);box-shadow:inset 3px 0 0 var(--gold)}
+.setopt b{display:block;font-family:var(--serif);font-size:17px;font-weight:400;color:var(--vellum);margin-bottom:3px}
+.setopt small{color:var(--text-dim);font-size:11.5px;line-height:1.45;display:block}
+.bigbtn{margin-top:24px;font-family:var(--serif);font-size:17px;letter-spacing:.06em;padding:12px 40px;
+  border:1px solid var(--gold);color:var(--gold);border-radius:3px;
+  background:linear-gradient(180deg,rgba(212,165,55,.10),rgba(212,165,55,.02));transition:background .18s,color .18s}
+.bigbtn:hover{background:var(--gold);color:var(--ink)}
+.startnote{margin-top:20px;font-size:11.5px;color:#5f6878;line-height:1.6}
+
+@media (max-width:1080px){
+  .table{flex-direction:column}
+  .rail{width:100%;flex-direction:row;flex-wrap:wrap}
+  .rail .panel{flex:1;min-width:216px}
+  .log{height:120px}
+}
+@media (max-width:560px){
+  .grid-basic,.grid-kingdom{grid-template-columns:repeat(4,72px)}
+  .pile{width:72px;height:108px}
+  .cart{height:34px}
+  .hcard{width:96px;height:168px}
+  .hcard .cart{height:44px}
+  .fan{height:200px}
+  .topbar{gap:9px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   CARD DEFINITIONS
+   Effects are async so they can pause for player choices.
+   ============================================================ */
+const T = {ACT:'Action', TRE:'Treasure', VIC:'Victory', CUR:'Curse', ATK:'Attack', REA:'Reaction'};
+
+const CARDS = {
+  Copper:{cost:0,types:[T.TRE],coins:1,text:'+$1'},
+  Silver:{cost:3,types:[T.TRE],coins:2,text:'+$2'},
+  Gold:{cost:6,types:[T.TRE],coins:3,text:'+$3'},
+  Estate:{cost:2,types:[T.VIC],vp:1,text:'1 victory point'},
+  Duchy:{cost:5,types:[T.VIC],vp:3,text:'3 victory points'},
+  Province:{cost:8,types:[T.VIC],vp:6,text:'6 victory points'},
+  Curse:{cost:0,types:[T.CUR],vp:-1,text:'−1 victory point'},
+
+  Cellar:{cost:2,types:[T.ACT],plusActions:1,
+    text:'+1 Action. Discard any number of cards, then draw that many.',
+    async fx(p){
+      p.actions++;
+      const idx = await chooseHand(p,{min:0,max:99,title:'Discard any number of cards.',confirm:'Discard',
+        ai:h=>h.map((c,i)=>i).filter(i=>keepScore(h[i])<8)});
+      if(!idx.length) return;
+      discardIdx(p,idx);
+      log(`${p.name} discards ${idx.length} and draws ${idx.length}.`);
+      draw(p,idx.length);
+    }},
+
+  Chapel:{cost:2,types:[T.ACT],
+    text:'Trash up to 4 cards from your hand.',
+    async fx(p){
+      const idx = await chooseHand(p,{min:0,max:4,title:'Trash up to 4 cards.',confirm:'Trash',
+        ai:h=>aiTrashPicks(p,h,4)});
+      if(idx.length) trashIdx(p,idx);
+    }},
+
+  Moat:{cost:2,types:[T.ACT,T.REA],
+    text:'+2 Cards. When another player plays an Attack, you may reveal this from your hand to be unaffected by it.',
+    async fx(p){ draw(p,2); }},
+
+  Harbinger:{cost:3,types:[T.ACT],plusActions:1,
+    text:'+1 Card, +1 Action. Look through your discard pile; you may put a card from it onto your deck.',
+    async fx(p){
+      draw(p,1); p.actions++;
+      if(!p.discard.length) return;
+      const pick = await chooseList(p,p.discard,{min:0,max:1,title:'Put a card from your discard pile onto your deck.',
+        confirm:'Put on deck',ai:l=>{const b=bestIdx(l,gainValue); return gainValue(l[b])>25?[b]:[];}});
+      if(pick.length){ const c=p.discard.splice(pick[0],1)[0]; p.deck.push(c); log(`${p.name} puts ${c} onto their deck.`); }
+    }},
+
+  Merchant:{cost:3,types:[T.ACT],plusActions:1,
+    text:'+1 Card, +1 Action. The first time you play a Silver this turn, +$1.',
+    async fx(p){ draw(p,1); p.actions++; p.merchants++; }},
+
+  Vassal:{cost:3,types:[T.ACT],
+    text:'+$2. Discard the top card of your deck. If it is an Action card, you may play it.',
+    async fx(p){
+      p.coins+=2;
+      const c = peel(p); if(!c) return;
+      p.discard.push(c); log(`${p.name} discards ${c} from the top of their deck.`);
+      if(!isType(c,T.ACT)) return;
+      const yes = await askYesNo(p,`Play ${c} from your discard?`,true);
+      if(!yes) return;
+      p.discard.pop(); p.play.push(c); log(`${p.name} plays ${c}.`); render();
+      await resolveCard(p,c);
+    }},
+
+  Village:{cost:3,types:[T.ACT],plusActions:2,
+    text:'+1 Card, +2 Actions.',
+    async fx(p){ draw(p,1); p.actions+=2; }},
+
+  Workshop:{cost:3,types:[T.ACT],
+    text:'Gain a card costing up to $4.',
+    async fx(p){ await gainChoice(p,{max:4,title:'Gain a card costing up to $4.'}); }},
+
+  Bureaucrat:{cost:4,types:[T.ACT,T.ATK],
+    text:'Gain a Silver onto your deck. Each other player reveals a Victory card from their hand and puts it onto their deck (or reveals a hand with no Victory cards).',
+    async fx(p){
+      if(S.supply.Silver>0){ S.supply.Silver--; p.deck.push('Silver'); log(`${p.name} gains a Silver onto their deck.`); }
+      await attack(p, async o=>{
+        if(!o.hand.some(c=>isType(c,T.VIC))){ log(`${o.name} reveals a hand with no Victory cards.`,'att'); return; }
+        const idx = await chooseHand(o,{min:1,max:1,title:'Put a Victory card onto your deck.',confirm:'Put on deck',
+          filter:c=>isType(c,T.VIC), ai:(h,el)=>[el.reduce((a,b)=>CARDS[h[a]].cost<=CARDS[h[b]].cost?a:b)]});
+        const c=o.hand.splice(idx[0],1)[0]; o.deck.push(c);
+        log(`${o.name} puts ${c} onto their deck.`,'att');
+      });
+    }},
+
+  Gardens:{cost:4,types:[T.VIC],vpFn:n=>Math.floor(n/10),
+    text:'Worth 1 victory point per 10 cards you have (rounded down).'},
+
+  Militia:{cost:4,types:[T.ACT,T.ATK],
+    text:'+$2. Each other player discards down to 3 cards in hand.',
+    async fx(p){
+      p.coins+=2;
+      await attack(p, async o=>{
+        const n=o.hand.length-3; if(n<=0) return;
+        const idx = await chooseHand(o,{min:n,max:n,title:`Discard down to 3 cards — choose ${n} to discard.`,
+          confirm:'Discard', ai:h=>worstIdx(h,h.map((c,i)=>i),n)});
+        discardIdx(o,idx);
+        log(`${o.name} discards ${n} card${n>1?'s':''}.`,'att');
+      });
+    }},
+
+  Moneylender:{cost:4,types:[T.ACT],
+    text:'You may trash a Copper from your hand for +$3.',
+    async fx(p){
+      if(!p.hand.includes('Copper')) return;
+      const yes = await askYesNo(p,'Trash a Copper for +$3?',true);
+      if(!yes) return;
+      trashIdx(p,[p.hand.indexOf('Copper')]); p.coins+=3;
+    }},
+
+  Poacher:{cost:4,types:[T.ACT],plusActions:1,
+    text:'+1 Card, +1 Action, +$1. Discard a card per empty Supply pile.',
+    async fx(p){
+      draw(p,1); p.actions++; p.coins++;
+      const n=Math.min(emptyPiles(),p.hand.length); if(n<=0) return;
+      const idx = await chooseHand(p,{min:n,max:n,title:`Discard ${n} card${n>1?'s':''} (one per empty Supply pile).`,
+        confirm:'Discard', ai:h=>worstIdx(h,h.map((c,i)=>i),n)});
+      discardIdx(p,idx);
+    }},
+
+  Remodel:{cost:4,types:[T.ACT],
+    text:'Trash a card from your hand. Gain a card costing up to $2 more than it.',
+    async fx(p){
+      if(!p.hand.length) return;
+      const idx = await chooseHand(p,{min:1,max:1,title:'Trash a card from your hand.',confirm:'Trash',
+        ai:h=>[bestIdx(h,c=>-keepScore(c))]});
+      const c=p.hand[idx[0]]; trashIdx(p,idx);
+      await gainChoice(p,{max:CARDS[c].cost+2,title:`Gain a card costing up to $${CARDS[c].cost+2}.`});
+    }},
+
+  Smithy:{cost:4,types:[T.ACT],text:'+3 Cards.',async fx(p){ draw(p,3); }},
+
+  'Throne Room':{cost:4,types:[T.ACT],
+    text:'You may play an Action card from your hand twice.',
+    async fx(p){
+      if(!p.hand.some(c=>isType(c,T.ACT))) return;
+      const idx = await chooseHand(p,{min:0,max:1,title:'Play an Action card from your hand twice.',confirm:'Play twice',
+        filter:c=>isType(c,T.ACT), ai:(h,el)=>[el.reduce((a,b)=>actionScore(h[a])>=actionScore(h[b])?a:b)]});
+      if(!idx.length) return;
+      const c=p.hand.splice(idx[0],1)[0]; p.play.push(c);
+      log(`${p.name} plays ${c} twice.`); render();
+      await resolveCard(p,c); await resolveCard(p,c);
+    }},
+
+  Bandit:{cost:5,types:[T.ACT,T.ATK],
+    text:'Gain a Gold. Each other player reveals the top 2 cards of their deck, trashes a revealed Treasure other than Copper, and discards the rest.',
+    async fx(p){
+      gainCard(p,'Gold');
+      await attack(p, async o=>{
+        const rev=[]; for(let i=0;i<2;i++){ const c=peel(o); if(c) rev.push(c); }
+        if(!rev.length) return;
+        log(`${o.name} reveals ${rev.join(' and ')}.`,'att');
+        const cands = rev.map((c,i)=>i).filter(i=>isType(rev[i],T.TRE)&&rev[i]!=='Copper');
+        let ti=-1;
+        if(cands.length===1) ti=cands[0];
+        else if(cands.length>1){
+          const pick = await chooseList(o,cands.map(i=>rev[i]),{min:1,max:1,
+            title:'Choose a Treasure to trash.',confirm:'Trash',
+            ai:l=>[bestIdx(l,c=>-CARDS[c].cost)]});
+          ti=cands[pick[0]];
+        }
+        rev.forEach((c,i)=>{ if(i===ti){ S.trash.push(c); log(`${o.name} trashes ${c}.`,'att'); } else o.discard.push(c); });
+      });
+    }},
+
+  'Council Room':{cost:5,types:[T.ACT],
+    text:'+4 Cards, +1 Buy. Each other player draws a card.',
+    async fx(p){ draw(p,4); p.buys++; others(p).forEach(o=>draw(o,1)); }},
+
+  Festival:{cost:5,types:[T.ACT],plusActions:2,
+    text:'+2 Actions, +1 Buy, +$2.',
+    async fx(p){ p.actions+=2; p.buys++; p.coins+=2; }},
+
+  Laboratory:{cost:5,types:[T.ACT],plusActions:1,
+    text:'+2 Cards, +1 Action.',
+    async fx(p){ draw(p,2); p.actions++; }},
+
+  Library:{cost:5,types:[T.ACT],
+    text:'Draw until you have 7 cards in hand, skipping any Action cards you choose to set aside. Discard the set aside cards.',
+    async fx(p){
+      const aside=[];
+      while(p.hand.length<7){
+        const c=peel(p); if(!c) break;
+        if(isType(c,T.ACT)){
+          const skip = await askYesNo(p,`Set aside ${c} instead of drawing it?`, p.actions===0);
+          if(skip){ aside.push(c); continue; }
+        }
+        p.hand.push(c);
+      }
+      if(aside.length){ p.discard.push(...aside); log(`${p.name} sets aside and discards ${aside.join(', ')}.`); }
+    }},
+
+  Market:{cost:5,types:[T.ACT],plusActions:1,
+    text:'+1 Card, +1 Action, +1 Buy, +$1.',
+    async fx(p){ draw(p,1); p.actions++; p.buys++; p.coins++; }},
+
+  Mine:{cost:5,types:[T.ACT],
+    text:'You may trash a Treasure from your hand. Gain a Treasure to your hand costing up to $3 more than it.',
+    async fx(p){
+      if(!p.hand.some(c=>isType(c,T.TRE))) return;
+      const idx = await chooseHand(p,{min:0,max:1,title:'You may trash a Treasure.',confirm:'Trash',
+        filter:c=>isType(c,T.TRE), ai:(h,el)=>{
+          const up=el.filter(i=>Object.keys(S.supply).some(k=>S.supply[k]>0&&isType(k,T.TRE)&&CARDS[k].cost>CARDS[h[i]].cost&&CARDS[k].cost<=CARDS[h[i]].cost+3));
+          if(!up.length) return [];
+          return [up.reduce((a,b)=>CARDS[h[a]].cost>=CARDS[h[b]].cost?a:b)];
+        }});
+      if(!idx.length) return;
+      const c=p.hand[idx[0]]; trashIdx(p,idx);
+      await gainChoice(p,{max:CARDS[c].cost+3,filter:k=>isType(k,T.TRE),toHand:true,
+        title:`Gain a Treasure to your hand costing up to $${CARDS[c].cost+3}.`});
+    }},
+
+  Sentry:{cost:5,types:[T.ACT],plusActions:1,
+    text:'+1 Card, +1 Action. Look at the top 2 cards of your deck. Trash and/or discard any number of them. Put the rest back on top in any order.',
+    async fx(p){
+      draw(p,1); p.actions++;
+      const top=[]; for(let i=0;i<2;i++){ const c=peel(p); if(c) top.push(c); }
+      if(!top.length) return;
+      const tI = await chooseList(p,top,{min:0,max:top.length,title:'Top of your deck — choose any to TRASH.',
+        confirm:'Trash selected', ai:l=>aiTrashPicks(p,l,2)});
+      const kept = top.filter((_,i)=>!tI.includes(i));
+      if(tI.length){ tI.forEach(i=>S.trash.push(top[i])); log(`${p.name} trashes ${tI.map(i=>top[i]).join(', ')}.`); }
+      if(!kept.length) return;
+      const dI = await chooseList(p,kept,{min:0,max:kept.length,title:'Choose any to DISCARD.',
+        confirm:'Discard selected', ai:l=>l.map((c,i)=>i).filter(i=>keepScore(l[i])<8)});
+      const back = kept.filter((_,i)=>!dI.includes(i));
+      if(dI.length){ dI.forEach(i=>p.discard.push(kept[i])); log(`${p.name} discards ${dI.map(i=>kept[i]).join(', ')}.`); }
+      if(back.length===2){
+        const o = await chooseList(p,back,{min:1,max:1,title:'Which card goes on TOP of your deck?',confirm:'Confirm',
+          ai:l=>[bestIdx(l,gainValue)]});
+        p.deck.push(back[1-o[0]]); p.deck.push(back[o[0]]);
+      } else if(back.length===1) p.deck.push(back[0]);
+    }},
+
+  Witch:{cost:5,types:[T.ACT,T.ATK],
+    text:'+2 Cards. Each other player gains a Curse.',
+    async fx(p){
+      draw(p,2);
+      await attack(p, async o=>{
+        if(S.supply.Curse>0){ S.supply.Curse--; o.discard.push('Curse'); log(`${o.name} gains a Curse.`,'att'); }
+      });
+    }},
+
+  Artisan:{cost:6,types:[T.ACT],
+    text:'Gain a card to your hand costing up to $5. Put a card from your hand onto your deck.',
+    async fx(p){
+      await gainChoice(p,{max:5,toHand:true,title:'Gain a card to your hand costing up to $5.'});
+      if(!p.hand.length) return;
+      const idx = await chooseHand(p,{min:1,max:1,title:'Put a card from your hand onto your deck.',confirm:'Put on deck',
+        ai:h=>[bestIdx(h,gainValue)]});
+      const c=p.hand.splice(idx[0],1)[0]; p.deck.push(c);
+      log(`${p.name} puts a card onto their deck.`);
+    }},
+};
+
+const KINGDOM_ALL = ['Cellar','Chapel','Moat','Harbinger','Merchant','Vassal','Village','Workshop','Bureaucrat',
+  'Gardens','Militia','Moneylender','Poacher','Remodel','Smithy','Throne Room','Bandit','Council Room','Festival',
+  'Laboratory','Library','Market','Mine','Sentry','Witch','Artisan'];
+
+const SETS = {
+  first:{name:'First Game',blurb:'The classic teaching ten. Gentle, no attacks beyond a single Militia.',
+    cards:['Cellar','Market','Merchant','Militia','Mine','Moat','Remodel','Smithy','Village','Workshop']},
+  engine:{name:'Engine Room',blurb:'Villages and draw everywhere. Chain a dozen Actions in one turn.',
+    cards:['Cellar','Festival','Harbinger','Laboratory','Library','Market','Poacher','Sentry','Throne Room','Village']},
+  cutthroat:{name:'Cutthroat',blurb:'Curses, discard attacks and deck-top meddling. Bring a Moat.',
+    cards:['Bandit','Bureaucrat','Chapel','Council Room','Laboratory','Militia','Moat','Moneylender','Village','Witch']},
+  refinery:{name:'Refinery',blurb:'Thin your deck and trade up. Every card you own can become a better one.',
+    cards:['Artisan','Cellar','Chapel','Gardens','Mine','Moneylender','Remodel','Sentry','Vassal','Workshop']},
+  random:{name:'Random Kingdom',blurb:'Ten cards drawn at random from all twenty-six.',cards:null},
+};
+
+/* ============================================================
+   ARTWORK — original engraved-style motifs, one per card.
+   viewBox 0 0 64 44. Stroke weight scales with the card size.
+   ============================================================ */
+const ART={
+Copper:`<circle cx="32" cy="22" r="10.5" class="a-fill"/><circle cx="32" cy="22" r="6.5"/>`,
+Silver:`<circle cx="24" cy="26" r="9.5" class="a-fill"/><circle cx="40" cy="19" r="9.5" class="a-fill"/><circle cx="40" cy="19" r="5.5"/>`,
+Gold:`<circle cx="20" cy="29" r="8.5" class="a-fill"/><circle cx="44" cy="29" r="8.5" class="a-fill"/><circle cx="32" cy="16" r="8.5" class="a-fill"/><circle cx="32" cy="16" r="4.5"/>`,
+Estate:`<path d="M17 37V24l15-10 15 10v13z" class="a-fill"/><path d="M13 25L32 12l19 13"/><path d="M28 37v-9h8v9"/><path d="M40 18v-4h4v7"/>`,
+Duchy:`<path d="M10 37V23l10-7 10 7v14z" class="a-fill"/><path d="M34 37V26l10-7 10 7v11z" class="a-fill"/><path d="M7 24l13-9 13 9"/><path d="M31 27l13-9 13 9"/><path d="M16 37v-7h6v7"/><path d="M41 37v-6h5v6"/>`,
+Province:`<path d="M14 37V22h36v15z" class="a-fill"/><path d="M14 22v-5h5v5M25 22v-5h5v5M36 22v-5h5v5M46 22v-5h4v5"/><path d="M28 37v-10a4 4 0 018 0v10"/><path d="M32 12V4"/><path d="M32 5h9l-3 3 3 3h-9" class="a-fill"/>`,
+Curse:`<path d="M21 22a11 11 0 0122 0v5c0 3-2 5-4 6v4H25v-4c-2-1-4-3-4-6z" class="a-fill"/><circle cx="27" cy="23" r="3.4" class="a-solid"/><circle cx="37" cy="23" r="3.4" class="a-solid"/><path d="M32 28v4M28 37v-4M36 37v-4"/>`,
+Cellar:`<path d="M8 40V24a24 24 0 0148 0v16"/><rect x="15" y="21" width="16" height="19" rx="5" class="a-fill"/><path d="M15 27h16M15 34h16"/><rect x="35" y="25" width="15" height="15" rx="4" class="a-fill"/><path d="M35 30h15M35 35h15"/><path d="M4 40h56"/>`,
+Chapel:`<path d="M19 39V23l13-9 13 9v16z" class="a-fill"/><path d="M15 24L32 12l17 12"/><path d="M29 39v-9a3 3 0 016 0v9"/><path d="M32 12V4M28 8h8"/>`,
+Moat:`<path d="M10 21h44v9H10z" class="a-fill"/><path d="M10 21v-4h5v4M20 21v-4h5v4M30 21v-4h5v4M40 21v-4h5v4M49 21v-4h5v4"/><path d="M6 34c4-3 8 3 12 0s8 3 12 0 8 3 12 0 8 3 12 0"/><path d="M6 40c4-3 8 3 12 0s8 3 12 0 8 3 12 0 8 3 12 0"/>`,
+Harbinger:`<path d="M18 34c-2-8 4-16 13-16 6 0 10 3 12 7l9 2-9 3c-1 6-6 10-12 10-7 0-11-3-13-6z" class="a-fill"/><circle cx="40" cy="23" r="1.5" class="a-solid"/><path d="M24 29c4-4 10-4 14 0"/><path d="M4 40h56"/><path d="M29 40v-4M36 40v-4"/>`,
+Merchant:`<path d="M32 8v28M22 36h20"/><path d="M14 15h36"/><path d="M8 15l6 10 6-10" class="a-fill"/><path d="M44 15l6 10 6-10" class="a-fill"/><circle cx="32" cy="12" r="2.5" class="a-solid"/>`,
+Vassal:`<path d="M20 8v32"/><path d="M20 10h24l-6 7 6 7H20z" class="a-fill"/><path d="M14 40h14"/><circle cx="31" cy="17" r="3"/>`,
+Village:`<path d="M6 38V27l8-6 8 6v11z" class="a-fill"/><path d="M23 38V22l11-8 11 8v16z" class="a-fill"/><path d="M46 38V29l6-5 6 5v9z" class="a-fill"/><path d="M31 38v-8h6v8"/><path d="M20 12v5"/><path d="M4 40h56"/>`,
+Workshop:`<path d="M6 28l38-11v11z" class="a-fill"/><path d="M8 28l2 3 2-3 2 3 2-3 2 3 2-3 2 3 2-3 2 3 2-3 2 3 2-3 2 3 2-3 2 3 2-3 2 3"/><path d="M44 17h7a6 6 0 010 12h-7" class="a-fill"/><path d="M4 35h56v6H4z" class="a-fill"/>`,
+Bureaucrat:`<path d="M14 13h36v22H14z" class="a-fill"/><path d="M14 13a4 4 0 000 8h36M14 35a4 4 0 010-8"/><path d="M22 19h20M22 25h16M22 30h12"/><circle cx="46" cy="33" r="4.5" class="a-solid"/>`,
+Gardens:`<circle cx="18" cy="21" r="8.5" class="a-fill"/><path d="M18 30v9"/><circle cx="45" cy="18" r="10" class="a-fill"/><path d="M45 28v11"/><path d="M26 39c0-4 3-6 6-6s6 2 6 6z" class="a-fill"/><path d="M4 39h56"/>`,
+Militia:`<path d="M32 10l13 4v11c0 8-6 13-13 15-7-2-13-7-13-15V14z" class="a-fill"/><path d="M10 6l11 32M54 6L43 38"/><path d="M32 17v12M26 22h12"/>`,
+Moneylender:`<path d="M19 21c0-7 26-7 26 0l4 13c1 6-34 6-33 0z" class="a-fill"/><path d="M24 21c3-5 13-5 16 0"/><path d="M15 22h34"/><circle cx="32" cy="30" r="4.5"/>`,
+Poacher:`<ellipse cx="27" cy="31" rx="12" ry="8" class="a-fill"/><circle cx="41" cy="25" r="6" class="a-fill"/><path d="M40 20c-1-8 1-11 3-11s3 4 1 10"/><path d="M45 20c1-7 3-10 5-9s1 5-1 9"/><circle cx="43" cy="24" r="1.3" class="a-solid"/><circle cx="15" cy="28" r="3.5"/><path d="M4 40h56"/>`,
+Remodel:`<path d="M19 38V25l13-9 13 9v13z" class="a-fill"/><path d="M15 26L32 14l17 12"/><path d="M12 38V20h4v18M52 38V20h-4v18"/><path d="M12 24h40M12 31h40"/>`,
+Smithy:`<path d="M15 25h34l-5 6H21z" class="a-fill"/><path d="M27 31h10v7H27z" class="a-fill"/><path d="M19 38h26"/><path d="M42 17l4-6M49 20l7-5M45 12l1-7"/>`,
+'Throne Room':`<path d="M20 40V15a5 5 0 015-5h14a5 5 0 015 5v25" class="a-fill"/><path d="M20 27h24"/><path d="M17 40v-9h6M47 40v-9h-6"/><path d="M25 10l2-6 5 5 5-5 2 6"/>`,
+Bandit:`<circle cx="32" cy="25" r="11" class="a-fill"/><path d="M21 22h22v5H21z" class="a-solid"/><path d="M13 16h38"/><path d="M19 16c3-8 23-8 26 0" class="a-fill"/><path d="M27 34c3 2 7 2 10 0"/>`,
+'Council Room':`<ellipse cx="32" cy="27" rx="20" ry="9.5" class="a-fill"/><path d="M12 27v3a20 9.5 0 0040 0v-3"/><rect x="6" y="15" width="8" height="8" rx="2" class="a-fill"/><rect x="28" y="10" width="8" height="8" rx="2" class="a-fill"/><rect x="50" y="15" width="8" height="8" rx="2" class="a-fill"/>`,
+Festival:`<path d="M4 10c14 10 42 10 56 0"/><path d="M12 13l5 9 5-10M27 17l5 9 5-9M42 15l5 9 5-10"/><path d="M32 40c-5-4-3-10 0-13 3 3 6 9 0 13z" class="a-fill"/>`,
+Laboratory:`<path d="M26 8h12M28 8v11L18 34a4 4 0 003 6h22a4 4 0 003-6L36 19V8" class="a-fill"/><path d="M22 28h20"/><circle cx="28" cy="33" r="2.2"/><circle cx="36" cy="35" r="1.6"/><circle cx="33" cy="30" r="1.2"/>`,
+Library:`<rect x="13" y="13" width="8" height="26" rx="1" class="a-fill"/><rect x="23" y="17" width="8" height="22" rx="1" class="a-fill"/><rect x="33" y="11" width="8" height="28" rx="1" class="a-fill"/><path d="M43 20l8 17-8 2z" class="a-fill"/><path d="M9 41h46"/><path d="M15 18h4M25 22h4M35 16h4"/>`,
+Market:`<path d="M9 21h46l-5-9H14z" class="a-fill"/><path d="M9 21c3 4 6 4 9 0s6 4 9 0 6 4 9 0 6 4 9 0 6 4 10 0"/><path d="M14 21v18M50 21v18"/><path d="M14 30h36"/><circle cx="26" cy="35" r="3" class="a-fill"/><circle cx="38" cy="35" r="3" class="a-fill"/>`,
+Mine:`<path d="M13 40L33 20"/><path d="M19 16c8-6 19-5 25 3-9-3-16-1-20 4-2 2-4 0-5-7z" class="a-fill"/><path d="M39 25l4-6h9l4 6-8 12z" class="a-fill"/><path d="M39 25h17M43 19l4 6 5-6"/>`,
+Sentry:`<path d="M23 40V19h18v21z" class="a-fill"/><path d="M19 19h26l-7-7H26z" class="a-fill"/><path d="M28 12V7h8v5"/><rect x="27" y="24" width="10" height="10" rx="1" class="a-pale"/><path d="M32 24v10M27 29h10"/><path d="M8 40h48"/>`,
+Witch:`<path d="M14 23h36l-3 12a9 9 0 01-9 6H26a9 9 0 01-9-6z" class="a-fill"/><path d="M10 23h44"/><path d="M23 17c0-5 4-4 4-9M32 15c0-5 4-4 4-9M40 18c0-5 4-4 4-9"/><circle cx="26" cy="29" r="2" class="a-pale"/><circle cx="35" cy="31" r="1.6" class="a-pale"/>`,
+Artisan:`<path d="M25 9h14l-4 7c7 4 9 9 9 14 0 6-6 10-12 10s-12-4-12-10c0-5 2-10 9-14z" class="a-fill"/><path d="M21 26h22"/><path d="M12 40h40"/><path d="M23 34c4 3 14 3 18 0"/>`,
+};
+const artSVG = c => `<svg viewBox="0 0 64 44" class="artsvg" aria-hidden="true">${ART[c]||''}</svg>`;
+
+/* Resource pips, parsed from the leading "+N" clauses of each card's text. */
+const PIP_ICON={
+  card:'<svg viewBox="0 0 12 12"><rect x="2" y="1.2" width="8" height="9.6" rx="1.5"/></svg>',
+  act:'<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="3.6"/><path d="M6 .8v1.6M6 9.6v1.6M.8 6h1.6M9.6 6h1.6M2.3 2.3l1.1 1.1M8.6 8.6l1.1 1.1M9.7 2.3L8.6 3.4M3.4 8.6l-1.1 1.1"/></svg>',
+  buy:'<svg viewBox="0 0 12 12"><path d="M2 4.2h8l-.8 6.6H2.8z"/><path d="M4.2 4.2a1.8 1.8 0 013.6 0"/></svg>',
+  coin:'<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.6"/></svg>',
+};
+function bodyText(name){
+  const t=CARDS[name].text;
+  const lead=/^(?:(?:\+\d+ (?:Cards?|Actions?|Buys?)|\+\$\d+)(?:, )?)+\.?\s*/.exec(t);
+  return lead ? t.slice(lead[0].length).trim() : t;
+}
+function pipsOf(name){
+  const lead=/^(?:(?:\+\d+ (?:Cards?|Actions?|Buys?)|\+\$\d+)(?:, )?)+/.exec(CARDS[name].text);
+  if(!lead) return [];
+  const t=lead[0], out=[]; let m;
+  if(m=/\+(\d+) Cards?/.exec(t)) out.push(['card',m[1]]);
+  if(m=/\+(\d+) Actions?/.exec(t)) out.push(['act',m[1]]);
+  if(m=/\+(\d+) Buys?/.exec(t)) out.push(['buy',m[1]]);
+  if(m=/\+\$(\d+)/.exec(t)) out.push(['coin','$'+m[1]]);
+  return out;
+}
+
+/* ============================================================
+   STATE + PRIMITIVES
+   ============================================================ */
+let S = null;
+let GEN = 0;              // increments per game; stale loops check this and bail out
+const SPEED = 620;
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const isType = (c,t) => CARDS[c].types.includes(t);
+const others = p => S.players.filter(x=>x!==p);
+const human = () => S.players[0];
+const emptyPiles = () => Object.keys(S.supply).filter(k=>S.supply[k]===0).length;
+const allCards = p => [...p.deck,...p.hand,...p.discard,...p.play];
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function log(msg,cls){ S.log.push({msg,cls:cls||''}); if(S.log.length>300) S.log.shift(); }
+
+function refill(p){
+  if(!p.discard.length) return false;
+  p.deck = shuffle(p.discard.slice()); p.discard=[];
+  log(`${p.name} shuffles their discard pile.`);
+  return true;
+}
+function peel(p){ if(!p.deck.length && !refill(p)) return null; return p.deck.pop(); }
+function draw(p,n){ let got=0; for(let i=0;i<n;i++){ const c=peel(p); if(!c) break; p.hand.push(c); got++; } return got; }
+
+function discardIdx(p,idx){ [...idx].sort((a,b)=>b-a).forEach(i=>p.discard.push(p.hand.splice(i,1)[0])); }
+function trashIdx(p,idx){
+  const names=[...idx].sort((a,b)=>b-a).map(i=>p.hand.splice(i,1)[0]);
+  names.forEach(c=>S.trash.push(c));
+  log(`${p.name} trashes ${names.slice().reverse().join(', ')}.`);
+}
+function gainCard(p,name,dest){
+  if(!(name in S.supply) || S.supply[name]<=0) return false;
+  S.supply[name]--;
+  if(dest==='hand') p.hand.push(name); else if(dest==='deck') p.deck.push(name); else p.discard.push(name);
+  S.fx.buy=name;
+  log(`${p.name} gains ${name}${dest==='hand'?' to hand':dest==='deck'?' onto their deck':''}.`);
+  return true;
+}
+function buyCard(p,name){
+  const cost=CARDS[name].cost;
+  if(p.buys<1 || p.coins<cost || S.supply[name]<=0) return;
+  p.coins-=cost; p.buys--; S.supply[name]--; p.discard.push(name);
+  S.fx.buy=name;
+  log(`${p.name} buys ${name}.`,'buy');
+}
+function playTreasure(p,i){
+  const c=p.hand.splice(i,1)[0]; p.play.push(c);
+  S.fx.play=true; S.fx.coin=true;
+  p.coins += CARDS[c].coins||0;
+  if(c==='Silver' && !p.silverPlayed){ p.silverPlayed=true; if(p.merchants) p.coins+=p.merchants; }
+}
+async function resolveCard(p,name){ const d=CARDS[name]; if(d.fx) await d.fx(p); render(); }
+
+async function attack(p, effect){
+  for(const o of others(p)){
+    if(o.hand.includes('Moat')){
+      const reveal = await askYesNo(o,'Reveal Moat to block the attack?',true);
+      if(reveal){ log(`${o.name} reveals Moat and is unaffected.`,'att'); continue; }
+    }
+    if(o.isHuman) S.fx.hit=true;
+    await effect(o);
+    render();
+  }
+}
+
+/* ============================================================
+   CHOICE PROMPTS — resolve via UI for humans, heuristics for the AI
+   ============================================================ */
+function chooseHand(p,o){
+  const eligible = p.hand.map((c,i)=>i).filter(i=>!o.filter||o.filter(p.hand[i]));
+  const max = Math.min(o.max,eligible.length), min = Math.min(o.min,eligible.length);
+  if(max===0) return Promise.resolve([]);
+  if(!p.isHuman){
+    let picks = (o.ai? o.ai(p.hand,eligible):[]).filter(i=>eligible.includes(i));
+    if(picks.length>max) picks=picks.slice(0,max);
+    while(picks.length<min){ const c=eligible.find(i=>!picks.includes(i)); if(c===undefined) break; picks.push(c); }
+    return Promise.resolve(picks);
+  }
+  return new Promise(res=>{
+    S.prompt={kind:'hand',title:o.title,eligible,min,max,sel:new Set(),confirm:o.confirm||'Confirm',resolve:res};
+    render();
+  });
+}
+function chooseList(p,list,o){
+  const max=Math.min(o.max,list.length), min=Math.min(o.min,list.length);
+  if(!list.length) return Promise.resolve([]);
+  if(!p.isHuman){
+    let picks=(o.ai?o.ai(list):[]).filter(i=>i>=0&&i<list.length);
+    if(picks.length>max) picks=picks.slice(0,max);
+    while(picks.length<min){ const c=list.map((_,i)=>i).find(i=>!picks.includes(i)); if(c===undefined) break; picks.push(c); }
+    return Promise.resolve(picks);
+  }
+  return new Promise(res=>{
+    S.prompt={kind:'list',title:o.title,list:list.slice(),min,max,sel:new Set(),confirm:o.confirm||'Confirm',resolve:res};
+    render();
+  });
+}
+function askYesNo(p,title,aiAnswer){
+  if(!p.isHuman) return Promise.resolve(!!aiAnswer);
+  return new Promise(res=>{ S.prompt={kind:'yesno',title,resolve:res}; render(); });
+}
+function gainChoice(p,o){
+  const opts = Object.keys(S.supply).filter(k=>S.supply[k]>0 && CARDS[k].cost<=o.max && (!o.filter||o.filter(k)));
+  if(!opts.length){ log(`${p.name} has nothing to gain.`); return Promise.resolve(null); }
+  if(!p.isHuman){
+    const pick = opts.reduce((a,b)=>gainValue(a,p)>=gainValue(b,p)?a:b);
+    gainCard(p,pick,o.toHand?'hand':'discard');
+    return Promise.resolve(pick);
+  }
+  return new Promise(res=>{
+    S.prompt={kind:'supply',title:o.title,opts,resolve:name=>{ gainCard(p,name,o.toHand?'hand':'discard'); res(name); }};
+    render();
+  });
+}
+
+/* ============================================================
+   AI HEURISTICS
+   ============================================================ */
+const KEEP={Curse:-10,Estate:0,Duchy:1,Province:2,Gardens:1,Copper:12,Silver:32,Gold:48};
+function keepScore(c){
+  if(c in KEEP) return KEEP[c];
+  const d=CARDS[c];
+  if(d.types.includes(T.ACT)) return 20+(d.plusActions?9:0)+d.cost;
+  return 10;
+}
+function actionScore(c){ const d=CARDS[c]; return (d.plusActions?60:0)+d.cost*3+((AI_PREFS[c]||{}).s||0)/10; }
+function bestIdx(list,fn){ let b=0; for(let i=1;i<list.length;i++) if(fn(list[i])>fn(list[b])) b=i; return b; }
+function worstIdx(hand,eligible,n){
+  return eligible.slice().sort((a,b)=>keepScore(hand[a])-keepScore(hand[b])).slice(0,n);
+}
+function aiTrashPicks(p,list,max){
+  const owned=allCards(p);
+  let coppers=owned.filter(c=>c==='Copper').length;
+  const money=owned.filter(c=>c==='Silver'||c==='Gold').length;
+  const picks=[];
+  const order=list.map((c,i)=>i).sort((a,b)=>trashPref(list[b])-trashPref(list[a]));
+  for(const i of order){
+    if(picks.length>=max) break;
+    const c=list[i];
+    if(c==='Curse'){ picks.push(i); continue; }
+    if(c==='Estate' && owned.length>8 && S.supply.Province>4){ picks.push(i); continue; }
+    if(c==='Copper' && coppers>3 && money>=2){ picks.push(i); coppers--; continue; }
+  }
+  return picks;
+}
+function trashPref(c){ return c==='Curse'?100:c==='Estate'?80:c==='Copper'?60:0; }
+
+const AI_PREFS={
+  Witch:{s:96,cap:1}, Laboratory:{s:84,cap:4}, Bandit:{s:78,cap:1}, Library:{s:76,cap:2},
+  Sentry:{s:74,cap:2}, Artisan:{s:72,cap:1}, Market:{s:70,cap:3}, Smithy:{s:68,cap:2},
+  Festival:{s:66,cap:2}, 'Council Room':{s:64,cap:2}, Poacher:{s:64,cap:2}, Militia:{s:62,cap:1},
+  Moneylender:{s:58,cap:1}, Chapel:{s:56,cap:1}, Village:{s:52,cap:4}, Mine:{s:50,cap:1},
+  Bureaucrat:{s:48,cap:1}, Merchant:{s:46,cap:2}, Vassal:{s:44,cap:2}, Remodel:{s:44,cap:1},
+  Cellar:{s:40,cap:1}, Workshop:{s:40,cap:1}, Harbinger:{s:38,cap:1}, 'Throne Room':{s:34,cap:1},
+  Moat:{s:30,cap:1}, Gardens:{s:20,cap:8},
+};
+function gainValue(c,p){
+  if(c==='Province') return 150; if(c==='Gold') return 85; if(c==='Duchy') return 12;
+  if(c==='Silver') return 55; if(c==='Estate') return 3; if(c==='Copper') return 1; if(c==='Curse') return -99;
+  return (AI_PREFS[c]||{s:20}).s;
+}
+function actionSlack(p){
+  let slack=1;
+  for(const c of allCards(p)) if(isType(c,T.ACT)) slack += (CARDS[c].plusActions||0)-1;
+  return slack;
+}
+function aiBuy(p){
+  const c=p.coins, own={}, all=allCards(p);
+  all.forEach(x=>own[x]=(own[x]||0)+1);
+  const prov=S.supply.Province, slack=actionSlack(p);
+
+  if(c>=8 && prov>0) return 'Province';
+  if(prov<=4 && c>=5 && S.supply.Duchy>0) return 'Duchy';
+  if(prov<=2 && c>=2 && S.supply.Estate>0) return 'Estate';
+
+  let best=null,bestScore=0;
+  for(const name of Object.keys(S.supply)){
+    if(S.supply[name]<=0) continue;
+    const pref=AI_PREFS[name]; if(!pref) continue;
+    if(CARDS[name].cost>c) continue;
+    if((own[name]||0)>=pref.cap) continue;
+    let s=pref.s;
+    const terminal = isType(name,T.ACT) && !(CARDS[name].plusActions>0);
+    if(terminal && slack<=0) continue;
+    if(name==='Chapel' && p.turns>4) continue;
+    if(name==='Village') s += (slack<=1?32:0);
+    if(name==='Gardens') s = all.length>=16?62:4;
+    if(name==='Moat') s += (S.supply.Witch===undefined?0:14);
+    if(s>bestScore){ bestScore=s; best=name; }
+  }
+  const treasure = c>=6 ? 85 : c>=3 ? 55 : 0;
+  if(best && bestScore>treasure) return best;
+  if(c>=6 && S.supply.Gold>0) return 'Gold';
+  if(c>=3 && S.supply.Silver>0) return 'Silver';
+  if(prov<=3 && c>=2 && S.supply.Estate>0) return 'Estate';
+  return null;
+}
+function aiPickAction(p){
+  const hand=p.hand.map((c,i)=>({c,i})).filter(x=>isType(x.c,T.ACT));
+  if(!hand.length) return null;
+  const nonTerm=hand.filter(x=>(CARDS[x.c].plusActions||0)>=1);
+  const pool = nonTerm.length?nonTerm:hand;
+  return pool.reduce((a,b)=>actionScore(a.c)>=actionScore(b.c)?a:b);
+}
+
+/* ============================================================
+   GAME SETUP + TURN FLOW
+   ============================================================ */
+function newGame(setKey){
+  let kingdom;
+  if(setKey==='random') kingdom = shuffle(KINGDOM_ALL.slice()).slice(0,10);
+  else kingdom = SETS[setKey].cards.slice();
+  kingdom.sort((a,b)=>CARDS[a].cost-CARDS[b].cost || a.localeCompare(b));
+
+  const mk=(name,isHuman)=>({
+    name,isHuman,deck:[],hand:[],discard:[],play:[],
+    actions:0,buys:0,coins:0,merchants:0,silverPlayed:false,turns:0
+  });
+  S={
+    players:[mk('You',true),mk('Adversary',false)],
+    supply:{}, order:{basic:['Copper','Silver','Gold','Estate','Duchy','Province','Curse'],kingdom},
+    trash:[], current:0, phase:'action', log:[], prompt:null, busy:false,
+    fx:{deal:true}, preview:null, gen:++GEN,
+    over:false, started:true, modal:null, endTurn:null, setName:setKey==='random'?'Random Kingdom':SETS[setKey].name
+  };
+  S.supply={Copper:60-7*S.players.length,Silver:40,Gold:30,Estate:8,Duchy:8,Province:8,Curse:10};
+  kingdom.forEach(k=>{ S.supply[k]=isType(k,T.VIC)?8:10; });
+
+  S.players.forEach(p=>{
+    p.deck=shuffle([...Array(7).fill('Copper'),...Array(3).fill('Estate')]);
+    draw(p,5);
+  });
+  log(`Kingdom: ${S.setName}.`);
+  render();
+  runGame();
+}
+
+async function runGame(){
+  const myGen=S.gen;
+  const stale=()=>S.gen!==myGen;   // true once "New game" has replaced this game
+  while(!S.over){
+    if(stale()) return;
+    const p=S.players[S.current];
+    p.turns++; p.actions=1; p.buys=1; p.coins=0; p.merchants=0; p.silverPlayed=false;
+    S.phase='action';
+    log(`${p.name} — turn ${p.turns}`,'turn');
+    render();
+    if(p.isHuman) await humanTurn(p); else await aiTurn(p,myGen);
+    if(stale()) return;
+    // clean-up
+    p.discard.push(...p.play,...p.hand); p.play=[]; p.hand=[];
+    draw(p,5);
+    if(p.isHuman) S.fx.deal=true;
+    if(S.supply.Province===0 || emptyPiles()>=3){ S.over=true; break; }
+    S.current=(S.current+1)%S.players.length;
+    render();
+  }
+  S.modal={kind:'end'};
+  render();
+}
+function humanTurn(p){
+  return new Promise(res=>{ S.endTurn=res; autoAdvance(); render(); });
+}
+function autoAdvance(){
+  const p=S.players[S.current];
+  if(S.phase==='action' && (p.actions<=0 || !p.hand.some(c=>isType(c,T.ACT)))) S.phase='buy';
+}
+async function aiTurn(p,myGen){
+  const stale=()=>S.gen!==myGen;
+  render(); await sleep(SPEED); if(stale()) return;
+  while(p.actions>0){
+    const pick=aiPickAction(p); if(!pick) break;
+    await playActionFromHand(p,pick.i);
+    await sleep(SPEED); if(stale()) return;
+  }
+  S.phase='buy'; render(); await sleep(SPEED*.5); if(stale()) return;
+  let played=false;
+  while(true){ const i=p.hand.findIndex(c=>isType(c,T.TRE)); if(i<0) break; playTreasure(p,i); played=true; }
+  if(played){ render(); await sleep(SPEED*.7); if(stale()) return; }
+  while(p.buys>0){
+    const b=aiBuy(p); if(!b) break;
+    const spent=p.buys;
+    buyCard(p,b);
+    if(p.buys===spent) break;        // buy was rejected; stop rather than retry forever
+    render(); await sleep(SPEED*.8); if(stale()) return;
+  }
+  await sleep(SPEED*.5);
+}
+async function playActionFromHand(p,i){
+  const c=p.hand.splice(i,1)[0];
+  p.play.push(c); p.actions--; S.fx.play=true;
+  log(`${p.name} plays ${c}.`, p.isHuman?'me':'');
+  render();
+  await resolveCard(p,c);
+}
+
+/* ============================================================
+   SCORING
+   ============================================================ */
+function scoreOf(p){
+  const all=allCards(p); let vp=0;
+  for(const c of all){ const d=CARDS[c]; if(d.vp) vp+=d.vp; if(d.vpFn) vp+=d.vpFn(all.length); }
+  return vp;
+}
+function breakdown(p){
+  const all=allCards(p), counts={};
+  all.forEach(c=>{ const d=CARDS[c]; if(d.vp||d.vpFn) counts[c]=(counts[c]||0)+1; });
+  return Object.entries(counts).map(([c,n])=>{
+    const d=CARDS[c]; const each = d.vpFn? d.vpFn(all.length) : d.vp;
+    return {card:c,n,pts:each*n};
+  }).sort((a,b)=>b.pts-a.pts);
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const $ = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+function typeClass(c){
+  const d=CARDS[c]; let s='';
+  if(d.types.includes(T.TRE)) s+=' t-treasure';
+  else if(d.types.includes(T.CUR)) s+=' t-curse';
+  else if(d.types.includes(T.VIC)) s+=' t-victory';
+  else if(d.types.includes(T.REA)) s+=' t-reaction';
+  if(d.types.includes(T.ATK)) s+=' t-attack';
+  return s;
+}
+function cardHTML(c,{size='',count=null,full=false}={}){
+  const d=CARDS[c], pp=pipsOf(c);
+  return `<div class="card${typeClass(c)} ${size}" data-card="${esc(c)}" title="${esc(c)} — $${d.cost}. ${esc(d.text)}">
+    <div class="cname">${esc(c)}</div>
+    <div class="cart">${artSVG(c)}</div>
+    ${pp.length?`<div class="pips">${pp.map(([k,v])=>
+      `<span class="pip p-${k}">${PIP_ICON[k]}<i style="font-style:normal">${esc(v)}</i></span>`).join('')}</div>`:''}
+    ${bodyText(c)?`<div class="ctext${full?'':' clamp'}">${esc(bodyText(c))}</div>`:'<div class="ctext"></div>'}
+    <div class="ctype">${d.types.join(' · ')}</div>
+    <div class="ccost">${d.cost}</div>
+    ${count!==null?`<div class="ccount">${count}</div>`:''}
+  </div>`;
+}
+function pileHTML(c){
+  const n=S.supply[c], p=S.players[0];
+  const targeting = S.prompt && S.prompt.kind==='supply';
+  const canBuy = !S.prompt && !S.busy && !S.over && S.players[S.current].isHuman && S.phase==='buy'
+                 && p.buys>0 && p.coins>=CARDS[c].cost && n>0;
+  let cls='pile';
+  if(n===0) cls+=' gone';
+  else if(targeting) cls += S.prompt.opts.includes(c)?' target':' dim';
+  else if(canBuy) cls+=' buyable';
+  const layers = n===0?0:Math.min(4,Math.ceil(n/3));
+  let ly='';
+  for(let i=layers;i>0;i--) ly+=`<div class="stackly" style="transform:translate(${i*1.7}px,${i*1.7}px)"></div>`;
+  return `<div class="${cls}" data-supply="${esc(c)}">${ly}${cardHTML(c,{count:n})}</div>`;
+}
+function previewHTML(){
+  const c=S.preview;
+  if(!c) return `<div class="pvhint">Point at any card to see it up close.</div>`;
+  return `<div class="preview">${cardHTML(c,{size:'bigcard',full:true})}</div>`;
+}
+
+function render(){
+  if(!S || !S.started){ renderStart(); return; }
+  const p=human(), cur=S.players[S.current], onTurn=cur.isHuman, pr=S.prompt;
+
+  $.innerHTML = `
+  <div class="topbar">
+    <div class="brand">Domin<em>ion</em></div>
+    <div class="turnmark">${esc(S.setName)} · <b>${esc(cur.name)}</b>, turn ${cur.turns} · ${S.phase==='action'?'Action phase':'Buy phase'}</div>
+    <div class="spacer"></div>
+    <span class="lbl">${onTurn?'You have':'Adversary has'}</span>
+    <div class="counters">
+      <div class="ctr ${cur.actions>0?'hot':'zero'}"><b>${cur.actions}</b><span class="lbl">Actions</span></div>
+      <div class="ctr ${cur.buys>0?'hot':'zero'}"><b>${cur.buys}</b><span class="lbl">Buys</span></div>
+      <div class="ctr ${cur.coins>0?'hot':'zero'}" id="ctr-coin"><b>$${cur.coins}</b><span class="lbl">Coins</span></div>
+    </div>
+    <button class="tbtn" data-act="rules">Rules</button>
+    <button class="tbtn" data-act="restart">New game</button>
+  </div>
+
+  <div class="table">
+    <div class="board">
+      <div class="zonehead"><span class="lbl">The Supply</span><span class="line"></span>
+        <span class="lbl">${emptyPiles()} of 3 piles empty · ${S.supply.Province} Provinces left</span></div>
+      <div class="supplygroups">
+        <div class="pilegrid grid-basic">${S.order.basic.map(pileHTML).join('')}</div>
+        <div class="pilegrid grid-kingdom">${S.order.kingdom.map(pileHTML).join('')}</div>
+      </div>
+    </div>
+    <div class="rail">
+      <div class="panel"><div class="ph"><span class="lbl">Card viewer</span></div>
+        <div id="preview">${previewHTML()}</div></div>
+      <div class="panel">
+        <div class="ph"><span class="lbl">Adversary</span><span class="lbl">${onTurn?'waiting':'playing'}</span></div>
+        <div class="pb oppgrid">
+          <div><b>${S.players[1].hand.length}</b><span class="lbl">Hand</span></div>
+          <div><b>${S.players[1].deck.length}</b><span class="lbl">Deck</span></div>
+          <div><b>${S.players[1].discard.length}</b><span class="lbl">Discard</span></div>
+        </div>
+        <div class="vpline"><span class="lbl">Victory points</span><b>${scoreOf(S.players[1])}</b></div>
+        ${S.players[1].play.length?`<div class="pb"><div class="cardrow">${S.players[1].play.map(c=>cardHTML(c,{size:'pcard'})).join('')}</div></div>`:''}
+      </div>
+      <div class="panel">
+        <div class="ph"><span class="lbl">Chronicle</span></div>
+        <div class="log" id="log">${S.log.map(l=>`<div class="lg-${l.cls}">${esc(l.msg)}</div>`).join('')}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lower">
+    <div class="playrow">
+      <span class="lbl" style="writing-mode:vertical-rl;transform:rotate(180deg)">In&nbsp;play</span>
+      <div class="cardrow">${p.play.length?p.play.map(c=>cardHTML(c,{size:'pcard'})).join(''):'<span class="empty-note">Nothing played yet this turn.</span>'}</div>
+    </div>
+
+    ${pr?promptHTML(pr):''}
+
+    <div class="hand-wrap">
+      <div class="stacks">
+        <div class="zstack ${p.deck.length?'filled':''}"><b>${p.deck.length}</b><span class="lbl">Deck</span></div>
+        <div class="zstack ${p.discard.length?'filled clickable':''}" data-act="viewdiscard"><b>${p.discard.length}</b><span class="lbl">Discard</span></div>
+        <div class="zstack ${S.trash.length?'filled clickable':''}" data-act="trash"><b>${S.trash.length}</b><span class="lbl">Trash</span></div>
+      </div>
+      <div class="handrow">
+        ${p.hand.length?p.hand.map((c,i)=>handCardHTML(c,i,pr,onTurn)).join(''):'<span class="empty-note">Your hand is empty.</span>'}
+      </div>
+    </div>
+
+    ${pr?'':controlsHTML(onTurn,p)}
+  </div>
+  ${S.modal?modalHTML():''}
+  `;
+  const lg=document.getElementById('log'); if(lg) lg.scrollTop=lg.scrollHeight;
+  applyFx();
+}
+
+/* One-shot animations. Flags are cleared as soon as they are applied, so a
+   re-render mid-turn never replays an animation that already ran. */
+function applyFx(){
+  if(!S.fx || typeof document.querySelectorAll!=='function') return;
+  const f=S.fx;
+  if(f.deal){ f.deal=false;
+    document.querySelectorAll('.handrow [data-hand]').forEach((el,i)=>{
+      el.classList.add('fx-deal'); el.style.animationDelay=(i*48)+'ms'; }); }
+  if(f.play){ f.play=false;
+    const els=document.querySelectorAll('.playrow .card');
+    if(els.length) els[els.length-1].classList.add('fx-play'); }
+  if(f.buy){ const name=f.buy; f.buy=null;
+    document.querySelectorAll('[data-supply]').forEach(el=>{
+      if(el.getAttribute('data-supply')===name) el.classList.add('fx-buy'); }); }
+  if(f.hit){ f.hit=false;
+    const h=document.querySelector('.handrow'); if(h) h.classList.add('fx-hit'); }
+  if(f.coin){ f.coin=false;
+    const c=document.getElementById('ctr-coin'); if(c) c.classList.add('fx-pulse'); }
+}
+
+function handCardHTML(c,i,pr,onTurn){
+  let cls='hcard';
+  if(pr && pr.kind==='hand'){
+    if(pr.eligible.includes(i)) cls += pr.sel.has(i)?' sel pickable':' pickable';
+    else cls+=' nope';
+  } else if(!pr && onTurn && !S.busy && !S.over){
+    if(S.phase==='action' && isType(c,T.ACT) && human().actions>0) cls+=' play';
+    else if(S.phase==='buy' && isType(c,T.TRE)) cls+=' play';
+  }
+  return `<div data-hand="${i}">${cardHTML(c,{size:cls,full:true})}</div>`;
+}
+
+function promptHTML(pr){
+  const who = S.players[S.current].isHuman?'':'<span class="who">Attack</span>';
+  if(pr.kind==='yesno'){
+    return `<div class="prompt">${who}<span class="ptitle">${esc(pr.title)}</span><div class="spacer"></div>
+      <button class="act primary" data-act="yes">Yes</button>
+      <button class="act" data-act="no">No</button></div>`;
+  }
+  if(pr.kind==='supply'){
+    return `<div class="prompt">${who}<span class="ptitle">${esc(pr.title)}</span>
+      <span class="pcount">Click a glowing pile</span></div>`;
+  }
+  const n=pr.sel.size, ok = n>=pr.min && n<=pr.max;
+  const range = pr.min===pr.max?`choose ${pr.min}`:`${pr.min}–${pr.max===99?'any':pr.max}`;
+  const listCards = pr.kind==='list'
+    ? `<div class="cardrow" style="width:100%;margin-top:4px">${pr.list.map((c,i)=>
+        `<div data-list="${i}">${cardHTML(c,{size:'hcard'+(pr.sel.has(i)?' sel pickable':' pickable'),full:true})}</div>`).join('')}</div>`
+    : '';
+  return `<div class="prompt">${who}<span class="ptitle">${esc(pr.title)}</span>
+    <span class="pcount">${n} selected · ${range}</span>
+    <div class="spacer"></div>
+    <button class="act primary" data-act="confirm" ${ok?'':'disabled'}>${esc(pr.confirm)}</button>
+    ${listCards}</div>`;
+}
+
+function controlsHTML(onTurn,p){
+  if(!onTurn) return `<div class="controls"><span class="hint">The Adversary is taking their turn…</span></div>`;
+  const treasures=p.hand.some(c=>isType(c,T.TRE));
+  return `<div class="controls">
+    ${S.phase==='action'
+      ? `<button class="act primary" data-act="tobuy">Go to buy phase</button>
+         <span class="hint">Click an Action card to play it.</span>`
+      : `${treasures?'<button class="act primary" data-act="allmoney">Play all Treasures</button>':''}
+         <button class="act" data-act="endturn">End turn</button>
+         <span class="hint">${p.buys>0?`Click a glowing pile to buy. $${p.coins} available.`:'No buys left.'}</span>`}
+  </div>`;
+}
+
+function modalHTML(){
+  const m=S.modal;
+  if(m.kind==='end'){
+    const rows=S.players.map(p=>({p,vp:scoreOf(p),turns:p.turns}));
+    const top=Math.max(...rows.map(r=>r.vp));
+    const winners=rows.filter(r=>r.vp===top);
+    let verdict;
+    if(winners.length===1) verdict=`${winners[0].p.name} win${winners[0].p.isHuman?'':'s'}.`;
+    else{
+      const fewest=Math.min(...winners.map(r=>r.turns));
+      const w=winners.filter(r=>r.turns===fewest);
+      verdict = w.length===1 ? `${w[0].p.name} win${w[0].p.isHuman?'':'s'} on the tiebreak — fewer turns taken.` : 'A draw.';
+    }
+    const champ=winners[0].p;
+    return `<div class="scrim"><div class="modal">
+      <div class="mh"><h2>${esc(verdict)}</h2>
+        <p>${S.supply.Province===0?'The Province pile ran out.':'Three Supply piles ran out.'}</p></div>
+      <div class="mb">
+        <div class="cardrow" style="justify-content:center;margin-bottom:16px">
+          ${breakdown(champ).slice(0,5).map(b=>cardHTML(b.card,{size:'hcard',count:b.n,full:true})).join('')}</div>
+        <table class="score"><tr><th>Player</th><th>Victory cards</th><th style="text-align:right">Points</th></tr>
+        ${rows.map(r=>`<tr class="${r.vp===top?'win':''}">
+          <td>${esc(r.p.name)}<br><span class="lbl">${allCards(r.p).length} cards · ${r.turns} turns</span></td>
+          <td>${breakdown(r.p).map(b=>`${b.n}× ${esc(b.card)} <span style="color:#6d7686">(${b.pts>0?'+':''}${b.pts})</span>`).join('<br>')||'—'}</td>
+          <td class="n">${r.vp}</td></tr>`).join('')}
+        </table>
+      </div>
+      <div class="mf"><button class="act" data-act="closemodal">Review the board</button>
+        <button class="act primary" data-act="restart">Play again</button></div>
+    </div></div>`;
+  }
+  if(m.kind==='cards'){
+    const counts={}; m.cards.forEach(c=>counts[c]=(counts[c]||0)+1);
+    const list=Object.keys(counts).sort((a,b)=>CARDS[a].cost-CARDS[b].cost||a.localeCompare(b));
+    return `<div class="scrim" data-act="closemodal"><div class="modal">
+      <div class="mh"><h2>${esc(m.title)}</h2><p>${m.cards.length} card${m.cards.length===1?'':'s'}.</p></div>
+      <div class="mb"><div class="cardrow">${list.map(c=>cardHTML(c,{size:'hcard',count:counts[c],full:true})).join('')}</div>
+        ${m.cards.length?'':'<span class="empty-note">Empty.</span>'}</div>
+      <div class="mf"><button class="act primary" data-act="closemodal">Close</button></div>
+    </div></div>`;
+  }
+  if(m.kind==='rules'){
+    return `<div class="scrim"><div class="modal">
+      <div class="mh"><h2>How to play</h2><p>You start with a deck of 7 Coppers and 3 Estates. Everything else you buy.</p></div>
+      <div class="mb rules">
+        <h3>Your turn, in order</h3>
+        <ul>
+          <li><b>Action phase.</b> You get 1 Action. Play one Action card from your hand — many give you more Actions, so a good chain keeps going.</li>
+          <li><b>Buy phase.</b> Play Treasures from your hand for coins, then spend them. You get 1 Buy.</li>
+          <li><b>Clean-up.</b> Everything you played and everything left in hand goes to your discard pile, then you draw a fresh 5.</li>
+        </ul>
+        <p>When your deck runs out, your discard pile is shuffled to become the new deck — so every card you buy will come back around.</p>
+        <h3>Reading a card</h3>
+        <p>The gold circle at the bottom left is the cost; the number at the top right is how many are left in the pile. The small symbols under the picture are what the card gives you right away:</p>
+        <div class="legend">
+          <span class="lg"><span class="pip p-card" style="color:#c9d2df">${PIP_ICON.card}</span> Cards drawn</span>
+          <span class="lg"><span class="pip p-act" style="color:#c9d2df">${PIP_ICON.act}</span> Extra Actions</span>
+          <span class="lg"><span class="pip p-buy" style="color:#c9d2df">${PIP_ICON.buy}</span> Extra Buys</span>
+          <span class="lg"><span class="pip p-coin" style="color:#c9d2df">${PIP_ICON.coin}</span> Coins</span>
+        </div>
+        <p style="margin-top:8px">Colour tells you the kind of card:</p>
+        <div class="legend">
+          <span class="lg"><span class="sw" style="background:linear-gradient(165deg,#efe7d5,#e2d8c2)"></span> Action</span>
+          <span class="lg"><span class="sw" style="background:linear-gradient(165deg,#f2dfa8,#e3c87e)"></span> Treasure</span>
+          <span class="lg"><span class="sw" style="background:linear-gradient(165deg,#cfe0cd,#b3ccb0)"></span> Victory</span>
+          <span class="lg"><span class="sw" style="background:linear-gradient(165deg,#d6e3f0,#b9cee2)"></span> Reaction</span>
+          <span class="lg"><span class="sw" style="background:linear-gradient(165deg,#d8cbe6,#bfaed3)"></span> Curse</span>
+        </div>
+        <h3>Winning</h3>
+        <p>The game ends the moment the <b>Province</b> pile empties, or any <b>three</b> Supply piles empty. Then you count victory points: Estate 1, Duchy 3, Province 6, Curse −1. Most points wins; if tied, whoever took fewer turns wins.</p>
+        <h3>The tension</h3>
+        <p>Victory cards do nothing during play — they clog your deck. Buy them too early and your engine chokes. Buy them too late and you lose the race.</p>
+      </div>
+      <div class="mf"><button class="act primary" data-act="closemodal">Back to the game</button></div>
+    </div></div>`;
+  }
+  return '';
+}
+
+function renderStart(){
+  const keys=Object.keys(SETS), sel=(S&&S.pick)||'first';
+  const fan=['Village','Witch','Gold','Province'];
+  $.innerHTML=`<div class="start">
+    <div class="crest">A deckbuilding game</div>
+    <h1>Dominion</h1>
+    <div class="sub">You are a monarch with a small realm and smaller ambitions. Both are about to change.</div>
+    <div class="fan">${fan.map(c=>`<div>${cardHTML(c,{size:'bigcard',full:true})}</div>`).join('')}</div>
+    <div class="hr-orn"><span>Choose a kingdom</span></div>
+    <div class="setlist">
+      ${keys.map(k=>`<button class="setopt ${k===sel?'on':''}" data-act="pick" data-val="${k}">
+        <b>${esc(SETS[k].name)}</b><small>${esc(SETS[k].blurb)}</small></button>`).join('')}
+    </div>
+    <button class="bigbtn" data-act="start">Begin the game</button>
+    <div class="startnote">Two players — you against one adversary. Ten kingdom piles, drawn from the twenty-six base cards.<br>
+      New to it? Start with First Game, and open <b>Rules</b> from the top bar any time.</div>
+  </div>`;
+}
+
+/* ============================================================
+   INPUT
+   ============================================================ */
+document.addEventListener('click', async e=>{
+  const btn=e.target.closest('[data-act]');
+  const sup=e.target.closest('[data-supply]');
+  const hnd=e.target.closest('[data-hand]');
+  const lst=e.target.closest('[data-list]');
+  if(btn) return onAction(btn.dataset.act, btn.dataset.val, e);
+  if(lst) return onList(+lst.dataset.list);
+  if(hnd) return onHand(+hnd.dataset.hand);
+  if(sup) return onSupply(sup.dataset.supply);
+});
+document.addEventListener('mouseover', e=>{
+  if(!S||!S.started||!e.target.closest) return;
+  const el=e.target.closest('[data-card]');
+  if(!el) return;
+  const name=el.getAttribute('data-card');
+  if(name===S.preview) return;
+  S.preview=name;
+  const box=document.getElementById('preview');
+  if(box) box.innerHTML=previewHTML();
+});
+document.addEventListener('keydown', e=>{
+  if(e.key===' '&&S&&S.started&&!S.over&&!S.prompt&&!S.modal){ e.preventDefault();
+    onAction(S.phase==='action'?'tobuy':'endturn'); }
+  if(e.key==='Escape'&&S&&S.modal&&S.modal.kind!=='end'){ S.modal=null; render(); }
+});
+
+function finishPrompt(val){ const r=S.prompt.resolve; S.prompt=null; r(val); }
+
+async function onAction(act,val,e){
+  if(act==='pick'){ S=S||{}; S.pick=val; renderStart(); return; }
+  if(act==='start'){ newGame((S&&S.pick)||'first'); return; }
+  if(act==='restart'){ S={started:false,pick:(S&&S.pick)||'first'}; renderStart(); return; }
+  if(act==='rules'){ S.modal={kind:'rules'}; render(); return; }
+  if(act==='trash'){ S.modal={kind:'cards',title:'The Trash',cards:S.trash.slice()}; render(); return; }
+  if(act==='viewdiscard'){ S.modal={kind:'cards',title:'Your discard pile',cards:human().discard.slice()}; render(); return; }
+  if(act==='closemodal'){
+    const inside = e&&e.target.closest&&e.target.closest('.modal');
+    const onButton = e&&e.target.closest&&e.target.closest('button');
+    if(inside&&!onButton) return;          // clicks on the cards themselves shouldn't dismiss it
+    S.modal=null; render(); return;
+  }
+  if(!S||!S.started) return;
+  if(S.prompt){
+    if(act==='yes'&&S.prompt.kind==='yesno') return finishPrompt(true);
+    if(act==='no'&&S.prompt.kind==='yesno') return finishPrompt(false);
+    if(act==='confirm') return finishPrompt([...S.prompt.sel]);
+    return;
+  }
+  if(S.over||S.busy||!S.players[S.current].isHuman) return;
+  const p=human();
+  if(act==='tobuy'){ S.phase='buy'; render(); return; }
+  if(act==='allmoney'){
+    while(true){ const i=p.hand.findIndex(c=>isType(c,T.TRE)); if(i<0) break; playTreasure(p,i); }
+    render(); return;
+  }
+  if(act==='endturn'){ const r=S.endTurn; S.endTurn=null; if(r) r(); return; }
+}
+
+function toggleSel(pr,i){
+  if(pr.sel.has(i)) pr.sel.delete(i);
+  else if(pr.sel.size<pr.max) pr.sel.add(i);
+  render();
+}
+function onList(i){ const pr=S.prompt; if(pr&&pr.kind==='list') toggleSel(pr,i); }
+async function onHand(i){
+  const pr=S.prompt;
+  if(pr){ if(pr.kind==='hand'&&pr.eligible.includes(i)) toggleSel(pr,i); return; }
+  if(S.over||S.busy||!S.players[S.current].isHuman) return;
+  const p=human(), c=p.hand[i];
+  if(!c) return;
+  if(S.phase==='action'&&isType(c,T.ACT)&&p.actions>0){
+    S.busy=true;
+    try{ await playActionFromHand(p,i); }
+    finally{ S.busy=false; autoAdvance(); render(); }
+  } else if(S.phase==='buy'&&isType(c,T.TRE)){ playTreasure(p,i); render(); }
+}
+function onSupply(name){
+  const pr=S.prompt;
+  if(pr&&pr.kind==='supply'){ if(pr.opts.includes(name)){ const r=pr.resolve; S.prompt=null; r(name); render(); } return; }
+  if(pr||S.over||S.busy||!S.players[S.current].isHuman||S.phase!=='buy') return;
+  const p=human();
+  if(p.buys>0&&p.coins>=CARDS[name].cost&&S.supply[name]>0){ buyCard(p,name); render(); }
+}
+
+/* boot */
+S={started:false,pick:'first'};
+renderStart();
+</script>
+</body>
+</html>
