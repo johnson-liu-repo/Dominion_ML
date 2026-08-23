@@ -351,7 +351,7 @@ This legal-action masking saves computational power since the agent does not hav
 
 In tabular Q-learning, the Q-values for every possible state-action pair are stored in a lookup table.
 Each row $r_i$ in the table corresponds to a specific state of the environment and each column $c_j$ represents a different action.
-Each non-empty entry $Q_{ij}$ in the table holds the current Q-value (expected future return) for the state-action pair $(s_i, a_j)$.
+Each non-empty entry $Q_{ij}$ in the table holds the current running (rather than static) estimate of the Q-value (expected future return) for the state-action pair $(s_i, a_j)$.
 When the agent decides to exploit the environment from its current state $s$, it reads the Q-table and chooses the action $a$ that has the largest Q-value for that state's row.
 Otherwise, the agent explores, randomly sampling from among all valid actions within that state.
 Once an action is executed, the agent transitions to a new state and observes the environment.
@@ -359,11 +359,16 @@ It receives its immediate reward, retrieves the current Q(s,a) value and the hig
 Since Q-learning is a Temporal-Difference method, the Q-table is immediately updated with this new Q-value.
 The episode then continues on to the next step, continually updating the Q-table in this bootstrapped manner.
 
+Since the update is made to a specific cell (representing a single state-action pair), that update offers no generalization to other states, inlcuding ones that might be very similar to the state for the updated cell.
+The agent learns nothing about similar or neighboring states unless it directly visits those states.
+Consequently, this explicit lookup approach is only practical for environments with sufficiently small, discrete state and action spaces.
+
 #### The Tabular Q-Learning Algorithm
 
 The description above can be tightened into a concrete learning procedure.
-Table (1) lists the parts of that procedure and what each one is responsible for.
+[Table (1)](#tabular-q-learning-loop) lists the parts of that procedure and what each one is responsible for.
 
+<a id="tabular-q-learning-loop"></a>
 <div align="center"><b>Table 1:</b> Anatomy of the Tabular Q-Learning Loop</div>
 
 <div align="center">
@@ -411,7 +416,9 @@ The agent therefore learns the value of optimal future play while still behaving
 The terminal case matters in practice.
 A terminal $s'$ has no future to bootstrap from, so folding in $\gamma \max_{a'} Q(s',a')$ there would attribute value to a continuation that never happens and would prevent the Q-values from ever settling.
 
-> **▶ See it run:** the [interactive visualizer](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/) implements exactly this loop on a grid world. Select **Tabular Q**, switch to **Technical** mode, and the *Model* panel shows the literal Q-table filling in one row per visited state, while the *Status* panel breaks down each update into its target, TD error, and resulting Q-value.
+> **This doesn't work yet**\
+\
+ **▶ See it run:** the [interactive visualizer](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/) implements exactly this loop on a grid world. Select **Tabular Q**, switch to **Technical** mode, and the *Model* panel shows the literal Q-table filling in one row per visited state, while the *Status* panel breaks down each update into its target, TD error, and resulting Q-value.
 
 ---
 
@@ -421,8 +428,9 @@ A terminal $s'$ has no future to bootstrap from, so folding in $\gamma \max_{a'}
 This is an example of tabular Q-learning in an overly simplified deck builder.
 The environment has two states (the value of the agent's hand): low (L) and high (H).
 For both states, the possible actions are buying a treasure card (B) and buying s score card (S).
-The rewards and transitions for each state-action pair is given in Table (2).
+The rewards and transitions for each state-action pair is given in [Table (2)](#reward-and-transition-table).
 
+<a id="reward-and-transition-table"></a>
 <div align="center"><b>Table 2:</b> Reward/Transition Table for a Simple Deckbuilder</div>
 
 <div align="center">
@@ -435,12 +443,22 @@ The rewards and transitions for each state-action pair is given in Table (2).
 |H|S|3|T <br> (terminal)|
 </div>
 
-> *... Explain rationale for reward structure ...*
+#### Reward and Transition Rationale
+
+The states and actions in [Table (2)](#reward-and-transition-table) represent a fundamental strategic dilemma in many deckbuilding games.
+There is a trade-off between growing your deck "economy" and scoring points (immediate or at the end of a phase).
+
+* **Low Hand Value ($L$) $\xrightarrow{\text{Buy Treasure (B)}}$ High Hand Value ($H$) [Reward $r = 0$]:** Buying a treasure card (like Silver) does not give immediate victory points ($r = 0$). However, it permanently increases the purchasing power of your deck, transitioning your future hand value from low to high.
+* **Low Hand Value ($L$) $\xrightarrow{\text{Buy Score (S)}}$ Low Hand Value ($L$) [Reward $r = 1$]:** Buying a cheap score card (like an Estate) yields a small immediate reward ($r = 1$). However, because score cards do not contribute to your economy and "clutter" your hand, your deck's purchasing power remains low ($L$).
+* **High Hand Value ($H$) $\xrightarrow{\text{Buy Treasure (B)}}$ High Hand Value ($H$) [Reward $r = 1$]:** Buying more treasure when your hand value is already high yields minor immediate utility ($r = 1$) and maintains your high purchasing power ($H$).
+* **High Hand Value ($H$) $\xrightarrow{\text{Buy Score (S)}}$ Terminal ($T$) [Reward $r = 3$]:** Cashing in your high hand value to buy a premium score card (like a Province) yields a massive immediate reward ($r = 3$), but depletes your resources and concludes the game, transitioning to the terminal state ($T$).
+
 
 #### Agent Training
 
 The starting Q-table is initialized with 0 for all state-action pairs.
 
+<a id="q-table-0"></a>
 <div align="center"><b>Q-Table 0</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
@@ -549,6 +567,7 @@ $$
 giving $Q_2(\text{H,S}) = 1.5$ as the updated Q-value for taking action S in state H.
 The Q-table is updated with this new Q-value:
 
+<a id="q-table-after-update-2"></a>
 <div align="center"><b>Q-Table After Update 2</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
@@ -604,6 +623,7 @@ $$
 
 Through bootstrapping, the agent sees that the (current) estimated value of taking action B while in state L is 0.675 even though the immediate reword is 0 because the agent now knows that being in state H holds future value (due to the updates made during Episode 1).
 
+<a id="q-table-after-update-3"></a>
 <div align="center"><b>Q-Table After Update 3</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
@@ -652,6 +672,7 @@ $$
 Q_4(\text{H,S}) = 2.25 \ .
 $$
 
+<a id="q-table-after-update-4"></a>
 <div align="center"><b>Q-Table After Update 4</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
@@ -703,6 +724,7 @@ $$
 Q_5(\text{L,S}) = 0.80375
 $$
 
+<a id="q-table-after-update-5"></a>
 <div align="center"><b>Q-Table After Update 5</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
@@ -752,6 +774,7 @@ $$
 Q_6(\text{L,B}) = 1.35
 $$
 
+<a id="q-table-after-update-6"></a>
 <div align="center"><b>Q-Table After Update 6</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
@@ -797,6 +820,7 @@ $$
 Q_7(\text{H,S}) = 2.625
 $$
 
+<a id="q-table-after-update-7"></a>
 <div align="center"><b>Q-Table After Update 7</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
@@ -846,6 +870,7 @@ $$
 Q_8(\text{L,B}) = 1.85625
 $$
 
+<a id="q-table-after-update-8"></a>
 <div align="center"><b>Q-Table After Update 8</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
@@ -902,6 +927,7 @@ $$
 Q_9(\text{H,B}) = 1.68125 \ .
 $$
 
+<a id="q-table-after-update-9"></a>
 <div align="center"><b>Q-Table After Update 9</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
@@ -953,6 +979,7 @@ $$
 Q_{10}(\text{H,S}) = 2.8125 \ .
 $$
 
+<a id="q-table-after-update-10"></a>
 <div align="center"><b>Q-Table After Update 10</b>
 <table style="border-collapse: collapse; width: 100%; text-align: center;">
   <tr style="border-bottom: 1px solid #ccc;">
@@ -986,6 +1013,20 @@ The Q-value approaches 3 without ever quite reaching it, which is what the [temp
 Reading the final Q-table greedily gives the target policy that the agent has learned over these four episodes: in state L it prefers action B (1.85625 over 0.80375), and in state H it prefers action S (2.8125 over 1.68125).
 That is the path L ---(B)---> H ---(S)---> T, which is to say that the agent has learned to build up its hand with a treasure card and then cash it in for a score card.
 These are still early estimates rather than converged values, however, since (H,B) has been visited only once and the agent has not yet had much opportunity to learn about it.
+
+#### Interpretation of the Final Q-Table
+The final Q-table greedily reveals the optimal target policy the agent has discovered over these four episodes:
+* **In State $L$:** The agent prefers action **$B$** ($Q(\text{L, B}) = 1.85625$ vs. $Q(\text{L, S}) = 0.80375$).
+* **In State $H$:** The agent prefers action **$S$** ($Q(\text{H, S}) = 2.8125$ vs. $Q(\text{H, B}) = 1.68125$).
+
+This defines the optimal policy path: **$L \xrightarrow{B} H \xrightarrow{S} T$** (buy treasure first to build an economy, then cash in for score cards). 
+
+This example demonstrates bootstrapping in Temporal-Difference learning.
+At the start, buying treasure in state $L$ yielded a reward of $0$.
+However, during Episode 1, the agent updated $Q(\text{H, S})$ to $1.5$ after receiving a terminal reward of $3$.
+In Episode 2, when the agent took action $B$ from state $L$ and transitioned to $H$, the update formula "looked ahead" at the maximum value in state $H$ (which was $Q(\text{H, S}) = 1.5$).
+By multiplying this future value by the discount factor $\gamma = 0.9$ and learning rate $\alpha = 0.5$, the agent propagated value backwards, raising $Q(\text{L, B})$ to $0.675$.
+Over subsequent episodes, this delayed reward continued to cascade back, demonstrating that an agent can learn to value actions with zero immediate reward if they lead to lucrative future opportunities.
 
 ---
 
