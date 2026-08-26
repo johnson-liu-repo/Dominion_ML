@@ -1032,11 +1032,32 @@ Over subsequent episodes, this delayed reward continued to cascade back, demonst
 
 > *... Create an animation/gif for the Q-table ...*
 
+---
 
 <a id="strengths-and-limitations-of-tabular-q-learning"></a>
 ### 2.5 Strengths and Limitations of Tabular Q-Learning
 
-> ... more writing here ...
+Q-learning is model-free and off-policy.
+Being model-free means that the agent does not possess, learn, or use an internal model of the environment's dynamics.
+The agent does not know transition probabilities between states and the reward function for state-action pairs.
+Because of this, the agent does not have an internal rule set to allow it to look ahead into future states and plan its moves.
+Instead, the agent must learn expected future returns (Q-values) for state-action pairs through its direct experience within the environment.
+This sampling is done through the agent's enactment of its behavior policy.
+Q-learning is called off-policy because the agent's behavior policy that dictates what it does within the environment is different from the target policy that is being optimized.
+This decoupling of the behavior and target policies allows the agent to build an optimal target policy while executing possibly suboptimal, highly exploratory strategies.
+
+Unlike many other machine learning algorithms that rely on function approximation to find "optimal" Q-values, use heuristics to stabilize learning, or have no guarantee of finding global minima, the values in the Q-table in Q-learning are guaranteed to converge to the absolute, unique optimal strategy under the certain conditions.
+If the agent visits every state-action pair infinitely often and if the learning rate is large enough to escape arbitrary initial conditions but eventually shrinks small enough to stabilize learning (satisfying the Robbins-Monro conditions), the Bellman optimality operator acts as a contraction mapping on the Q-table.
+A contraction mapping is a function $f$ on a metric space $(M,d)$ from a set $M$ to itself with distance function $d$ where:
+
+$$
+\exists \ 0 \leq k < 1 \ \forall x,y \in M : d(f(x),f(y)) \leq kd(x,y)
+$$
+
+
+$$
+|\mathcal{T}Q_1 - \mathcal{T}Q_2|_\infty \leq \gamma |Q_1 - Q_2|_\infty
+$$
 
 ---
 
@@ -1044,6 +1065,9 @@ Over subsequent episodes, this delayed reward continued to cascade back, demonst
 ## 3. Deep Q-Learning
 
 > ... more writing here ...
+
+---
+> ... this doesn't currently work. it's just a placeholder ...
 
 > **▶ See it run:** the [interactive visualizer](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/) runs a real DQN — replay buffer, target network, Adam, optional Double DQN — on the same grid world, so the two approaches can be compared directly. **Technical** mode exposes the network activations, the replay buffer, per-layer gradient norms, and the loss curve; **Compare A/B** trains two agents side by side under different hyperparameters.
 
