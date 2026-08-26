@@ -1037,6 +1037,8 @@ Over subsequent episodes, this delayed reward continued to cascade back, demonst
 <a id="strengths-and-limitations-of-tabular-q-learning"></a>
 ### 2.5 Strengths and Limitations of Tabular Q-Learning
 
+#### Strengths of Tabular Q-Learning
+
 Q-learning is model-free and off-policy.
 Being model-free means that the agent does not possess, learn, or use an internal model of the environment's dynamics.
 The agent does not know transition probabilities between states and the reward function for state-action pairs.
@@ -1048,18 +1050,44 @@ This decoupling of the behavior and target policies allows the agent to build an
 
 Unlike many other machine learning algorithms that rely on function approximation to find "optimal" Q-values, use heuristics to stabilize learning, or have no guarantee of finding global minima, the values in the Q-table in Q-learning are guaranteed to converge to the absolute, unique optimal strategy under the certain conditions.
 If the agent visits every state-action pair infinitely often and if the learning rate is large enough to escape arbitrary initial conditions but eventually shrinks small enough to stabilize learning (satisfying the Robbins-Monro conditions), the Bellman optimality operator acts as a contraction mapping on the Q-table.
-A contraction mapping is a function $f$ on a metric space $(M,d)$ from a set $M$ to itself with distance function $d$ where:
+A contraction mapping is a function $f$ on a metric space $(M,d)$ from a set $M$ to itself with distance function $d$:
 
 $$
 \exists \ 0 \leq k < 1 \ \forall x,y \in M : d(f(x),f(y)) \leq kd(x,y)
 $$
 
+where $x,y \in M$.
+Let $Q_t$ be the entire Q-table (the set of Q-value estimates for all state-action pairs) at time step $t$.
+The Bellman optimality operator $\mathcal{T}$ acts on $Q_t$ to yield the next step's estimates:
 
 $$
-|\mathcal{T}Q_1 - \mathcal{T}Q_2|_\infty \leq \gamma |Q_1 - Q_2|_\infty
+\mathcal{T}Q_t = Q_{t+1} \ .
 $$
 
----
+Because $\mathcal{T}$ is a contraction mapping, applying it to successive Q-tables guarantees that they become strictly closer together in our metric space:
+
+$$
+||Q_{t+2} - Q_{t+1}||_\infty = ||\mathcal{T}Q_{t+1} - \mathcal{T}Q_t||_\infty \leq \gamma ||Q_{t+1} - Q_t||_\infty \ .
+$$
+
+Since the discount factor satisfies $0 \leq \gamma < 1$, the sequence of Q-tables $\{Q_t\}_{t=0}^\infty$ forms a Cauchy sequence.
+By the Banach Fixed-Point Theorem, any Cauchy sequence in a complete metric space converges to a unique limit point.
+Therefore, as training time approaches infinity, our estimated Q-table converges uniformly to a unique, optimal Q-table ($Q^*$):
+
+$$
+\lim_{t \to \infty} Q_t = Q^* \ .
+$$
+
+At this unique limit point, the Bellman operator no longer changes the values in the table, satisfying the fixed-point relation:
+
+$$
+\mathcal{T}Q^* = Q^* \ .
+$$
+
+This is the Bellman Optimality Equation and the running estimates in our tabular algorithm are guaranteed to converge to the absolute, unique optimal strategy.
+
+#### Limitations of Tabular Q-Learning
+
 
 <a id="deep-q-learning"></a>
 ## 3. Deep Q-Learning
