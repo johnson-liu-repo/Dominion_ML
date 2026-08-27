@@ -448,11 +448,23 @@ The rewards and transitions for each state-action pair is given in [Table (2)](#
 The states and actions in [Table (2)](#reward-and-transition-table) represent a fundamental strategic dilemma in many deckbuilding games.
 There is a trade-off between growing your deck "economy" and scoring points (immediate or at the end of a phase).
 
-* **Low Hand Value ($L$) $\xrightarrow{\text{Buy Treasure (B)}}$ High Hand Value ($H$) [Reward $r = 0$]:** Buying a treasure card (like Silver) does not give immediate victory points ($r = 0$). However, it permanently increases the purchasing power of your deck, transitioning your future hand value from low to high.
-* **Low Hand Value ($L$) $\xrightarrow{\text{Buy Score (S)}}$ Low Hand Value ($L$) [Reward $r = 1$]:** Buying a cheap score card (like an Estate) yields a small immediate reward ($r = 1$). However, because score cards do not contribute to your economy and "clutter" your hand, your deck's purchasing power remains low ($L$).
-* **High Hand Value ($H$) $\xrightarrow{\text{Buy Treasure (B)}}$ High Hand Value ($H$) [Reward $r = 1$]:** Buying more treasure when your hand value is already high yields minor immediate utility ($r = 1$) and maintains your high purchasing power ($H$).
-* **High Hand Value ($H$) $\xrightarrow{\text{Buy Score (S)}}$ Terminal ($T$) [Reward $r = 3$]:** Cashing in your high hand value to buy a premium score card (like a Province) yields a massive immediate reward ($r = 3$), but depletes your resources and concludes the game, transitioning to the terminal state ($T$).
-
+---
+* **Low $(L)$ Hand Value $\xrightarrow{\text{Buy (B) Treasure Card}}$ High $(H)$ Hand Value $[\textbf{Reward} \ r = 0]$:**\
+\
+Buying a treasure card (like Silver) does not give immediate victory points ($r = 0$). However, it permanently increases the purchasing power of your deck, transitioning your future hand value from low to high.
+---
+* **Low $(L)$ Hand Value $\xrightarrow{\text{Buy Score (S) Card}}$ Low $(L)$ Hand Value $[\textbf{Reward} \ r = 1]$:**\
+\
+Buying a cheap score card (like an Estate) yields a small immediate reward ($r = 1$). However, because score cards do not contribute to your economy and "clutter" your hand, your deck's purchasing power remains low ($L$).
+---
+* **High $(H)$ Hand Value $\xrightarrow{\text{Buy Treasure (B) Card}}$ High $(H)$ Hand Value $[\textbf{Reward} \ r = 1]$:**\
+\
+Buying more treasure when your hand value is already high yields minor immediate utility ($r = 1$) and maintains your high purchasing power $(H)$.
+---
+* **High $(H)$ Hand Value $\xrightarrow{\text{Buy Score (S) Card}}$ Terminal $(T)$ $[\textbf{Reward} \ r = 3]$:**\
+\
+Cashing in your high hand value to buy a premium score card (like a Province) yields a massive immediate reward ($r = 3$), but depletes your resources and concludes the game, transitioning to the terminal state $(T)$.
+---
 
 #### Agent Training
 
@@ -1088,6 +1100,35 @@ This is the Bellman Optimality Equation and the running estimates in our tabular
 
 #### Limitations of Tabular Q-Learning
 
+In our simple deckbuilder example, there are only two states (low hand value and high hand value) and two actions in each state (buy treasure card and buy score card), creating four entries in the Q-table.
+Updating these four entries requires relatively little compute time and resources.
+However, computations in the Q-learning algorithm become much more expensive as the number of states or actions increases.
+Note also that in "real" games, there will most likely be invalid moves for which the agent cannot make, leading to bounding on the actual number of valid entries in the Q-table.
+To analyze the tractability of tabular representation under the curse of dimensionality, we must examine how the number of active, valid state-action pairs in a Q-table is bounded.
+For a system with a state space size of $M = |\mathcal{S}|$ and an action space size of $N = |\mathcal{A}|$, the table is rarely a simple, dense $M \times N$ grid, as many state-action pairs are invalid or masked by environmental rules.
+Let $A(s)$ be the set of valid actions in state $s$, and let $S(a)$ be the set of states where action $a$ is legal.
+With $L$ and $U$ being the lower and upper bounds on the number of entries, the total number of valid Q-table entries, $E$, can be bounded from two perspectives:
+1. The State (Row) Perspective:
+
+$$
+L_{\text{state}} = M \cdot \min_{s} |A(s)| \quad \text{and} \quad U_{\text{state}} = M \cdot \max_{s} |A(s)|
+$$
+
+2. The Action (Column) Perspective:
+
+$$
+L_{\text{action}} = N \cdot \min_{a} |S(a)| \quad \text{and} \quad U_{\text{action}} = N \cdot \max_{a} |S(a)|
+$$
+
+To find the tightest possible mathematical bounds on the physical table size, these two perspectives must be reconciled.
+Because the actual number of entries $E$ must satisfy both sets of bounds simultaneously, we take the maximum of the two lower bounds and the minimum of the two upper bounds:
+
+$$
+E \in \Bigg[ \max \Big( L_{\text{state}}, \ L_{\text{action}} \Big), \min \Big( U_{\text{state}}, \ U_{\text{action}} \Big) \Bigg]
+$$
+
+In a complex, multi-variable environment like Dominion, as the number of tracked features (such as deck size, individual card counts, and supply piles) grows, the state space size $M$ explodes exponentially.
+Because the reconciled lower bound scales directly with $M$, even this highly optimized, restricted state-action interval quickly scales past the physical memory capacity of standard hardware, making explicit lookup tables completely intractable to store or explore.
 
 <a id="deep-q-learning"></a>
 ## 3. Deep Q-Learning
