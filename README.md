@@ -1130,6 +1130,19 @@ $$
 In a complex, multi-variable environment like Dominion, as the number of tracked features (such as deck size, individual card counts, and supply piles) grows, the state space size $M$ explodes exponentially.
 Because the reconciled lower bound scales directly with $M$, even this highly optimized, restricted state-action interval quickly scales past the physical memory capacity of standard hardware, making explicit lookup tables completely intractable to store or explore.
 
+Each Q-value in the table is typically stored in computer memory as a double-precision floating-point number (which takes up 8 bytes of RAM).
+In our toy example with only four entries (two actions for each of two states), storing the table requires very little RAM.
+Even for a system with $10^3$ states and $10$ actions, the table has $10,000$ entries, requiring only 80 KB of RAM.
+For complex system, like a real game of Dominion, the number of state-action pairs can easily scale into the billions or trillions, requiring hundreds to thousands of GB of RAM just to load the table.
+
+In tabular Q-learning, Q-values for individual state-action pairs do not affect each other.
+When one cell in the table is updated, the other cells remain fixed for that update turn.
+Therefore, when the agent learns something about action $a_2$ in state $s_3$, it learns nothing about action $a_1$ in state $s_3$ or action $a_2$ in state $s_2$.
+In order for the agent to learn about similar states and actions, it must visit those specific cells individually.
+For example, in Dominion the hand of [Copper, Silver, Silver, Estate, Estate] is very similar in strategy to a hand of [Silver, Silver, Silver, Estate, Estate].
+If the agent has learned the perfect play for the first hand, it still does not know anything about the second hand and must "relearn" similar strategies.
+Because of this lack of generalization, tabular Q-learning does not allow the agent to learn that a strategy that is good in one state might also be good in a very similar state.
+
 <a id="deep-q-learning"></a>
 ## 3. Deep Q-Learning
 
@@ -1255,7 +1268,7 @@ Because the reconciled lower bound scales directly with $M$, even this highly op
 
 # Dominion ML — Reinforcement Learning for Dominion
 
-> ---> Outdated <---
+> ---> Outdated from here on <---
 
 Dominion ML is a work-in-progress reinforcement-learning project for training agents to play the deck-building game **Dominion**. The repository layers a Gymnasium-style buy-phase environment, a Dueling/Double DQN training loop, diagnostics tooling, and replay visualization on top of a bundled copy of [Pyminion](https://github.com/evanofslack/pyminion).
 
