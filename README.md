@@ -6,11 +6,11 @@
 
 <div align="center">
 
-[![Screenshot of the Q-Learning Grid World Visualizer, showing a trained agent's Q-values on a grid alongside a live Bellman update panel](docs/images/q-learning-visualizer.png)](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/)
+<!-- [![Screenshot of the Q-Learning Grid World Visualizer, showing a trained agent's Q-values on a grid alongside a live Bellman update panel](docs/images/q-learning-visualizer.png)](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/)
 
-### ▶ [Open the interactive Q-Learning Visualizer](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/)
+### ▶ [(this doesn't work yet) Open the interactive Q-Learning Visualizer](https://johnson-liu-repo.github.io/Dominion_ML/q-learning-visualizer/) -->
 
-*Runs entirely in your browser. Train a tabular Q-learner or a Deep Q-Network on a grid world,<br>step through individual Bellman updates, and watch value propagate back from the goal.*
+<!-- *Runs entirely in your browser. Train a tabular Q-learner or a Deep Q-Network on a grid world,<br>step through individual Bellman updates, and watch value propagate back from the goal.* -->
 
 </div>
 
@@ -42,7 +42,7 @@
   3.8 [Dueling DQN](#dueling-dqn)\
   3.9 [Legal-Action Masking](#legal-action-masking)
 
-4. [Deep Q-Learning for Dominion](#deep-q-learning-for-dominion)\
+<!-- 4. [Deep Q-Learning for Dominion](#deep-q-learning-for-dominion)\
   4.1 [Why Dominion Is a Reinforcement-Learning Problem](#why-dominion-is-a-reinforcement-learning-problem)\
   4.2 [Dominion as a Markov Decision Process](#dominion-as-a-markov-decision-process)\
   4.3 [State Representation](#state-representation)\
@@ -53,7 +53,7 @@
   4.8 [Agent Architecture](#agent-architecture)\
   4.9 [Training Procedure](#training-procedure)\
   4.10 [Evaluation](#evaluation)\
-  4.11 [Current Limitations and Future Work](#current-limitations-and-future-work)
+  4.11 [Current Limitations and Future Work](#current-limitations-and-future-work) -->
 
 
 <a id="reinforcement-learning"></a>
@@ -1143,6 +1143,12 @@ For example, in Dominion the hand of [Copper, Silver, Silver, Estate, Estate] is
 If the agent has learned the perfect play for the first hand, it still does not know anything about the second hand and must "relearn" similar strategies.
 Because of this lack of generalization, tabular Q-learning does not allow the agent to learn that a strategy that is good in one state might also be good in a very similar state.
 
+One way to solve the issues of prohibitive memory demands and lack of generalization is to replace the discrete lookup table in Q-learning with a parameterized function approximator, such as a neural network that maps states to expected action-value estimates (Q-values).
+In this framing, different states share weights (parameters) within the neural network, enabling the model to generalize learned knowledge to unseen or highly similar states based on shared structural features.
+This architectural shift changes the system's representation complexity.
+Instead of storing a discrete estimate for every possible state-action pair, which scales exponentially with the number of state variables at $\mathcal{O}(|\mathcal{S}| \times |\mathcal{A}|)$ parameters, the memory footprint is determined by the number of network weights, scaling at $\mathcal{O}(|\theta|)$.
+This completely decouples the storage requirements of our model from the physical size of the state-action space, making complex environments like Dominion tractable to explore and represent.
+
 <a id="deep-q-learning"></a>
 ## 3. Deep Q-Learning
 
@@ -1156,8 +1162,10 @@ Because of this lack of generalization, tabular Q-learning does not allow the ag
 <a id="from-tables-to-function-approximation"></a>
 ### 3.1 From Tables to Function Approximation
 
-> ... more writing here ...
-
+Instead of storing and retrieving Q-values from a table (i.e. extracting a state-action value from a specific row and column of $Q(s,a)$), Q-values can be computed using a function approximator $Q(s,a;\theta)$ where $\theta$ is a set of free parameters (weights) that can vary to change the mapping from state-action space to Q-values. [is it correct to say state-action "space"? doesn't the term "space" have a specific meaning in math? what does "space" mean in this context? why not just say state-action "set"?]
+Using a function approximator to map state-action pairs to Q-values can alleviate demands on memory usage.
+Rather than needing enough memory to store a maximum of $|\mathcal{S}| \times |\mathcal{A}|$ state-action values, using a function approximator only requires the storage of $N = |\theta|$ parameters.
+For a specific approximator, $N$ is fixed even if the number of state-action pairs change.
 <a id="neural-networks"></a>
 ### 3.2 Neural Networks
 
@@ -1266,9 +1274,9 @@ Because of this lack of generalization, tabular Q-learning does not allow the ag
 
 
 
-# Dominion ML — Reinforcement Learning for Dominion
+<!-- # Dominion ML — Reinforcement Learning for Dominion
 
-> ---> Outdated from here on <---
+Outdated from here on
 
 Dominion ML is a work-in-progress reinforcement-learning project for training agents to play the deck-building game **Dominion**. The repository layers a Gymnasium-style buy-phase environment, a Dueling/Double DQN training loop, diagnostics tooling, and replay visualization on top of a bundled copy of [Pyminion](https://github.com/evanofslack/pyminion).
 
@@ -1361,6 +1369,7 @@ You can also run the vendored Pyminion test suite separately if you are changing
 ```bash
 python -m pytest pyminion_master/tests
 ```
+
 
 ## Training workflow
 
@@ -1513,4 +1522,4 @@ The current neural-network baseline is a Dueling DQN MLP with:
 - Add a checked-in starter JSON config or config-generation helper.
 - Expand automated tests around trainer I/O, checkpoint resume, and diagnostics.
 - Evaluate learned policies against scripted baselines over repeated seeded games.
-- Extend beyond buy-phase-only control toward action/buy multi-phase agents.
+- Extend beyond buy-phase-only control toward action/buy multi-phase agents. -->
