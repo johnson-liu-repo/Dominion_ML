@@ -1,6 +1,8 @@
 <div align="justify">
 
-*— Work in progress —*
+<p align="center">
+———Work in progress———
+</p>
 
 # Deep Q-Learning for Dominion
 
