@@ -1162,10 +1162,39 @@ This completely decouples the storage requirements of our model from the physica
 <a id="from-tables-to-function-approximation"></a>
 ### 3.1 From Tables to Function Approximation
 
-Instead of storing and retrieving Q-values from a table (i.e. extracting a state-action value from a specific row and column of $Q(s,a)$), Q-values can be computed using a function approximator $Q(s,a;\theta)$ where $\theta$ is a set of free parameters (weights) that can vary to change the mapping from state-action space to Q-values. [is it correct to say state-action "space"? doesn't the term "space" have a specific meaning in math? what does "space" mean in this context? why not just say state-action "set"?]
+Instead of storing and retrieving Q-values from a table (i.e. extracting a state-action value from a specific row and column of $Q(s,a)$), Q-values can be computed using a function approximator $Q(s,a;\theta)$ where $\theta$ is a set of free parameters (weights) that can vary to change the mapping from state-action space to Q-values. 
 Using a function approximator to map state-action pairs to Q-values can alleviate demands on memory usage.
-Rather than needing enough memory to store a maximum of $|\mathcal{S}| \times |\mathcal{A}|$ state-action values, using a function approximator only requires the storage of $N = |\theta|$ parameters.
-For a specific approximator, $N$ is fixed even if the number of state-action pairs change.
+Rather than needing enough memory to store a maximum of $|\mathcal{S}| \times |\mathcal{A}|$ state-action values, using a function approximator only requires the storage of $P = |\theta|$ parameters.
+For a specific approximator, $P$ is fixed even if the number of state-action pairs changes.
+
+In supervised learning, a model's predictions are compared to reference labels and the error between the predicted classifications and expected labels are used to update the model's internal weights.
+In usual reinforcement learning, there are no ground-truth labels to calibrate the model.
+However, in deep Q-learning, we can use the temporal-difference target as the expected label to optimize the weights in our function approximator.
+
+The mean squared error (MSE) loss being minimized in supervised learning is defined as
+
+$$
+L(\theta) = \mathbb{E} \left[ \Big( Y - f (X; \theta) \Big)^2 \right]
+$$
+
+where $Y$, $X$, $f (X; \theta)$ are the target, input, and prediction, respectively.
+Adapted to Q-learning, the MSE becomes
+
+$$
+L_{t}(\theta) = \mathbb{E} \left[ \left( R_{t+1} + \gamma \max_{a'} Q(S_{t+1}, a'; \theta) - Q( S_t, A_t; \theta ) \right)^2 \right] \ .
+$$
+
+In supervised learning, the target is fixed, not changing as learning progresses.
+In Q-learning with function approximation, the target ...
+
+
+
+$\nabla \mathbb{E}[f(p)] = \mathbb{E}[\nabla f(p)]$
+
+$\mathbb{E}[cf(p)] = c \mathbb{E}[f(p)]$
+
+
+
 <a id="neural-networks"></a>
 ### 3.2 Neural Networks
 
