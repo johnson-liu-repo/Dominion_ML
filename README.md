@@ -1067,10 +1067,9 @@ If the agent visits every state-action pair infinitely often and if the learning
 A contraction mapping is a function $f$ on a metric space $(M,d)$ from a set $M$ to itself with distance function $d$:
 
 $$
-\exists \ 0 \leq k < 1 \ \forall x,y \in M : d(f(x),f(y)) \leq kd(x,y)
+\exists \ 0 \leq k < 1 \ \ ( \forall \ x,y \in M ): d(f(x),f(y)) \leq kd(x,y) \ .
 $$
 
-where $x,y \in M$.
 Let $Q_t$ be the entire Q-table (the set of Q-value estimates for all state-action pairs) at time step $t$.
 The Bellman optimality operator $\mathcal{T}$ acts on $Q_t$ to yield the next step's estimates:
 

@@ -1,6 +1,7 @@
 """Factory helpers for building Dominion Gym environments."""
 
 import sys
+from typing import Any
 
 # NOTE: Local development path used to import the bundled Pyminion package.
 dominion_dir = 'C:/Users/johns/Desktop/projects/Dominion_AI_ML'
@@ -32,7 +33,7 @@ def make_env(cards_used_in_game, seed=None, opponent_bots=None):
             )
 
         selected_expansions = [base.curriculum_basic] # <--- adjust curriculum cards here
-        players = [bot1] + opponents
+        players: list[Any] = [bot1] + opponents
 
         game = Game(
             players=players,
