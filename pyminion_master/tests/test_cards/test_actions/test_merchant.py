@@ -1,8 +1,8 @@
-from pyminion.expansions.base import merchant, throne_room, silver
-from pyminion.human import Human
-from pyminion.game import Game
-from pyminion.expansions.base import Merchant
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import merchant, throne_room, silver
+from pyminion_master.pyminion.human import Human
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import Merchant
+from pyminion_master.pyminion.player import Player
 
 
 def test_merchant_no_silver(player: Player, game: Game):

@@ -7,9 +7,9 @@ We only print the result of the game to console.
 
 """
 
-from pyminion.bots.examples import BigMoney, BigMoneyUltimate
-from pyminion.expansions.base import base_set, smithy
-from pyminion.game import Game
+from pyminion_master.pyminion.bots.examples import BigMoney, BigMoneyUltimate
+from pyminion_master.pyminion.expansions.base import base_set, smithy
+from pyminion_master.pyminion.game import Game
 
 bm = BigMoney(player_id="BM")
 bm_ultimate = BigMoneyUltimate(player_id="BM_Ultimate")

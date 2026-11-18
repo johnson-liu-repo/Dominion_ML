@@ -1,10 +1,10 @@
 import pytest
-from pyminion.bots.bot import Bot
-from pyminion.bots.examples import BigMoney
-from pyminion.bots.optimized_bot import OptimizedBot
-from pyminion.core import Deck, Pile, Supply, Trash
-from pyminion.effects import EffectRegistry
-from pyminion.expansions.base import (
+from pyminion_master.pyminion.bots.bot import Bot
+from pyminion_master.pyminion.bots.examples import BigMoney
+from pyminion_master.pyminion.bots.optimized_bot import OptimizedBot
+from pyminion_master.pyminion.core import Deck, Pile, Supply, Trash
+from pyminion_master.pyminion.effects import EffectRegistry
+from pyminion_master.pyminion.expansions.base import (
     base_set,
     copper,
     duchy,
@@ -13,9 +13,9 @@ from pyminion.expansions.base import (
     province,
     silver,
 )
-from pyminion.game import Game, Card
-from pyminion.human import Human
-from pyminion.player import Player
+from pyminion_master.pyminion.game import Game, Card
+from pyminion_master.pyminion.human import Human
+from pyminion_master.pyminion.player import Player
 
 START_COPPER = 7
 START_ESTATE = 3

@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING, Iterator, Sequence
 
-from pyminion.core import Card
-from pyminion.decider import Decider
-from pyminion.player import Player
+from pyminion_master.pyminion.core import Card
+from pyminion_master.pyminion.decider import Decider
+from pyminion_master.pyminion.player import Player
 
 if TYPE_CHECKING:
-    from pyminion.effects import Effect
-    from pyminion.game import Game
+    from pyminion_master.pyminion.effects import Effect
+    from pyminion_master.pyminion.game import Game
 
 
 class BotDecider:

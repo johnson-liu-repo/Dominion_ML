@@ -1,7 +1,7 @@
-from pyminion.expansions.base import throne_room
-from pyminion.expansions.alchemy import alchemist, potion
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import throne_room
+from pyminion_master.pyminion.expansions.alchemy import alchemist, potion
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_alchemist_topdeck(human: Human, game: Game, monkeypatch):

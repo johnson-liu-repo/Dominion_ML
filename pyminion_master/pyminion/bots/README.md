@@ -11,10 +11,10 @@ For example, this card can technically play chapel, but it would choose not to t
 When inheriting from `BotDecider`, it is only necessary to overwrite the `action_priority` and  `buy_priority` methods. This is an example of a bot created from `Bot` and `BotDecider`:
 
 ```python
-from pyminion.bots.bot import Bot, BotDecider
-from pyminion.expansions.base import gold, province, silver, smithy
-from pyminion.player import Player
-from pyminion.game import Game
+from pyminion_master.pyminion.bots.bot import Bot, BotDecider
+from pyminion_master.pyminion.expansions.base import gold, province, silver, smithy
+from pyminion_master.pyminion.player import Player
+from pyminion_master.pyminion.game import Game
 
 class BigMoneySmithyDecider(BotDecider):
     """
@@ -53,10 +53,10 @@ Again, when inheriting from this class, it is only necessary to overwrite the `a
 For example, here is a bot based on `OptimizedBotDecider` that will buy and play Workshop:
 
 ```python
-from pyminion.bots.optimized_bot import OptimizedBot, OptimizedBotDecider
-from pyminion.expansions.base import workshop, gold, province, silver
-from pyminion.player import Player
-from pyminion.game import Game
+from pyminion_master.pyminion.bots.optimized_bot import OptimizedBot, OptimizedBotDecider
+from pyminion_master.pyminion.expansions.base import workshop, gold, province, silver
+from pyminion_master.pyminion.player import Player
+from pyminion_master.pyminion.game import Game
 
 class WorkshopBotDecider(OptimizedBotDecider):
     def action_priority(self, player: Player, game: Game):
@@ -96,7 +96,7 @@ class WorkshopBot(OptimizedBot):
 But we can easily override this method to create a new strategy. We can implement a bot that instead uses Workshop to gain Gardens:
 
 ```python
-from pyminion.expansions.base import gardens
+from pyminion_master.pyminion.expansions.base import gardens
 
 class WorkshopBotDecider(OptimizedBotDecider):
 

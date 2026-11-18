@@ -1,6 +1,6 @@
-from pyminion.expansions.intrigue import Farm, farm
-from pyminion.game import Game
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.intrigue import Farm, farm
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
 
 
 def test_money(player: Player, game: Game):

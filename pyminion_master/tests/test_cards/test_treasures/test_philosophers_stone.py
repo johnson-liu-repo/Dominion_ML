@@ -1,7 +1,7 @@
-from pyminion.expansions.base import copper
-from pyminion.expansions.alchemy import philosophers_stone
-from pyminion.game import Game
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import copper
+from pyminion_master.pyminion.expansions.alchemy import philosophers_stone
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
 
 
 def test_philosophers_stone(player: Player, game: Game):

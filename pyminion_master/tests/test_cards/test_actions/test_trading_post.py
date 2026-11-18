@@ -1,7 +1,7 @@
-from pyminion.expansions.base import copper, duchy, estate
-from pyminion.expansions.intrigue import TradingPost, trading_post
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import copper, duchy, estate
+from pyminion_master.pyminion.expansions.intrigue import TradingPost, trading_post
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_trading_post_no_cards(human: Human, game: Game):

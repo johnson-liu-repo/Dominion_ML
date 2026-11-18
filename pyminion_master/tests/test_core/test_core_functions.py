@@ -1,8 +1,8 @@
-from pyminion.core import Action, CardType, Victory, get_action_cards, get_treasure_cards, get_victory_cards, get_score_cards, plural
-from pyminion.expansions.base import gold, silver, copper, province, duchy, estate, curse, market, smithy
-from pyminion.expansions.intrigue import nobles
-from pyminion.game import Game
-from pyminion.player import Player
+from pyminion_master.pyminion.core import Action, CardType, Victory, get_action_cards, get_treasure_cards, get_victory_cards, get_score_cards, plural
+from pyminion_master.pyminion.expansions.base import gold, silver, copper, province, duchy, estate, curse, market, smithy
+from pyminion_master.pyminion.expansions.intrigue import nobles
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
 
 test_action = Action("test", 1, (CardType.Action,))
 test_victory = Victory("test", 1, (CardType.Victory,))

@@ -1,8 +1,8 @@
 from typing import Iterator
 
-from pyminion.bots.optimized_bot import OptimizedBot, OptimizedBotDecider
-from pyminion.core import CardType, Card
-from pyminion.expansions.base import (
+from pyminion_master.pyminion.bots.optimized_bot import OptimizedBot, OptimizedBotDecider
+from pyminion_master.pyminion.core import CardType, Card
+from pyminion_master.pyminion.expansions.base import (
     bandit,
     duchy,
     estate,
@@ -11,8 +11,8 @@ from pyminion.expansions.base import (
     silver,
     smithy,
 )
-from pyminion.player import Player
-from pyminion.game import Game
+from pyminion_master.pyminion.player import Player
+from pyminion_master.pyminion.game import Game
 
 
 class BanditBotDecider(OptimizedBotDecider):

@@ -1,6 +1,6 @@
-from pyminion.expansions.base import copper, duchy, village
-from pyminion.expansions.alchemy import vineyard
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import copper, duchy, village
+from pyminion_master.pyminion.expansions.alchemy import vineyard
+from pyminion_master.pyminion.player import Player
 
 
 def test_vineyard(player: Player):

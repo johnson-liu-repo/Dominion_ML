@@ -1,6 +1,6 @@
 import pytest
-from pyminion.human import deck_position_decision
-from pyminion.exceptions import InvalidDeckPositionInput
+from pyminion_master.pyminion.human import deck_position_decision
+from pyminion_master.pyminion.exceptions import InvalidDeckPositionInput
 
 
 def test_no_input(monkeypatch):

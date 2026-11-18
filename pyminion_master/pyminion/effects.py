@@ -2,9 +2,9 @@ from enum import IntEnum, unique
 from typing import TYPE_CHECKING, Callable, Sequence
 
 if TYPE_CHECKING:
-    from pyminion.core import AbstractDeck, Card
-    from pyminion.game import Game
-    from pyminion.player import Player
+    from pyminion_master.pyminion.core import AbstractDeck, Card
+    from pyminion_master.pyminion.game import Game
+    from pyminion_master.pyminion.player import Player
 
 
 PlayerGameEffectHandler = Callable[["Player", "Game"], None]

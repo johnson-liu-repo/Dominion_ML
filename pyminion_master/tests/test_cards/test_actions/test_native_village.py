@@ -1,7 +1,7 @@
-from pyminion.expansions.base import Duchy, Silver, silver, duchy
-from pyminion.expansions.seaside import NativeVillage, native_village
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import Duchy, Silver, silver, duchy
+from pyminion_master.pyminion.expansions.seaside import NativeVillage, native_village
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_native_village(human: Human, game: Game, monkeypatch):

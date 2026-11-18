@@ -1,6 +1,6 @@
-from pyminion.expansions.base import copper, moat, witch
-from pyminion.game import Game
-from pyminion.human import Human, get_matches
+from pyminion_master.pyminion.expansions.base import copper, moat, witch
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human, get_matches
 import pytest
 
 

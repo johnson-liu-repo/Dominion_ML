@@ -1,7 +1,7 @@
-from pyminion.expansions.base import chapel, copper, estate, silver
-from pyminion.expansions.alchemy import golem
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import chapel, copper, estate, silver
+from pyminion_master.pyminion.expansions.alchemy import golem
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_golem(human: Human, game: Game, monkeypatch):

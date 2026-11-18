@@ -1,8 +1,8 @@
-from pyminion.expansions.base import Copper, copper
-from pyminion.expansions.intrigue import Mill, mill
-from pyminion.game import Game
-from pyminion.human import Human
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import Copper, copper
+from pyminion_master.pyminion.expansions.intrigue import Mill, mill
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
+from pyminion_master.pyminion.player import Player
 
 
 def test_mill_discard(human: Human, game: Game, monkeypatch):

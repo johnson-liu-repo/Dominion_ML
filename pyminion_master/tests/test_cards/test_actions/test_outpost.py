@@ -1,7 +1,7 @@
-from pyminion.core import DeckCounter
-from pyminion.expansions.base import silver, gold, curse
-from pyminion.expansions.seaside import outpost
-from pyminion.game import Game
+from pyminion_master.pyminion.core import DeckCounter
+from pyminion_master.pyminion.expansions.base import silver, gold, curse
+from pyminion_master.pyminion.expansions.seaside import outpost
+from pyminion_master.pyminion.game import Game
 
 
 def test_outpost(multiplayer_game: Game, monkeypatch):

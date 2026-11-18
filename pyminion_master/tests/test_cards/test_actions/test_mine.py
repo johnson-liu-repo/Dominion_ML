@@ -1,6 +1,6 @@
-from pyminion.expansions.base import copper, mine
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import copper, mine
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_mine_no_treasures(human: Human, game: Game):

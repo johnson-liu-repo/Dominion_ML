@@ -1,7 +1,7 @@
-from pyminion.expansions.base import Copper, Estate, Silver, copper, estate
-from pyminion.expansions.intrigue import Upgrade, upgrade
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import Copper, Estate, Silver, copper, estate
+from pyminion_master.pyminion.expansions.intrigue import Upgrade, upgrade
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_upgrade(human: Human, game: Game, monkeypatch):

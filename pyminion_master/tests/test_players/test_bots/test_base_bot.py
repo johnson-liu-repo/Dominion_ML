@@ -1,8 +1,8 @@
-from pyminion.bots.bot import Bot
-from pyminion.core import Card
-from pyminion.effects import PlayerGameEffect
-from pyminion.expansions.base import copper, estate, gold, witch
-from pyminion.game import Game
+from pyminion_master.pyminion.bots.bot import Bot
+from pyminion_master.pyminion.core import Card
+from pyminion_master.pyminion.effects import PlayerGameEffect
+from pyminion_master.pyminion.expansions.base import copper, estate, gold, witch
+from pyminion_master.pyminion.game import Game
 import pytest
 
 

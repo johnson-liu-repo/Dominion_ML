@@ -1,8 +1,8 @@
-from pyminion.core import DeckCounter
-from pyminion.expansions.base import Silver, silver
-from pyminion.expansions.seaside import Haven, haven
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.core import DeckCounter
+from pyminion_master.pyminion.expansions.base import Silver, silver
+from pyminion_master.pyminion.expansions.seaside import Haven, haven
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_haven_set_aside(human: Human, game: Game, monkeypatch):

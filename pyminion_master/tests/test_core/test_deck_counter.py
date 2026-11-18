@@ -1,8 +1,8 @@
-from pyminion.core import Deck, DeckCounter
-from pyminion.expansions.base import base_set, copper, estate
-from pyminion.game import Game
-from pyminion.human import Human
-from pyminion.player import Player
+from pyminion_master.pyminion.core import Deck, DeckCounter
+from pyminion_master.pyminion.expansions.base import base_set, copper, estate
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
+from pyminion_master.pyminion.player import Player
 
 
 def test_deck_counter_no_args():

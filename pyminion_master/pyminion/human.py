@@ -3,18 +3,18 @@ import logging
 from collections import Counter
 from typing import TYPE_CHECKING, Callable, Sequence
 
-from pyminion.core import (Card, Deck)
-from pyminion.effects import Effect
-from pyminion.exceptions import (InvalidBinaryInput,
+from pyminion_master.pyminion.core import (Card, Deck)
+from pyminion_master.pyminion.effects import Effect
+from pyminion_master.pyminion.exceptions import (InvalidBinaryInput,
                                  InvalidMultiCardInput, InvalidMultiOptionInput,
                                  InvalidSingleCardInput, InvalidDeckPositionInput,
                                  InvalidEffectsOrderInput)
-from pyminion.player import Player
-from pyminion.expansions.base import base_set
-from pyminion.expansions.base import base_set_info
+from pyminion_master.pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import base_set
+from pyminion_master.pyminion.expansions.base import base_set_info
 
 if TYPE_CHECKING:
-    from pyminion.game import Game
+    from pyminion_master.pyminion.game import Game
 
 
 logger = logging.getLogger()

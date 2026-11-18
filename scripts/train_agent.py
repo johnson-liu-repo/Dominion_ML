@@ -13,7 +13,7 @@ from pyminion_master.pyminion.bots.examples import BigMoney, BigMoneyUltimate
 
 from agent_rl.card_catalog import BASE_CARDS
 from agent_rl.train_dqn import train_buy_phase
-from src.agent_rl.dominion_env_factory import make_env
+from src.prev_agent_rl.dominion_env_factory import make_env
 
 
 BOT_FACTORIES = {

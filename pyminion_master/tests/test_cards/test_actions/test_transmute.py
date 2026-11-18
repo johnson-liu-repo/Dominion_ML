@@ -1,8 +1,8 @@
-from pyminion.expansions.base import copper, estate
-from pyminion.expansions.intrigue import intrigue_set, conspirator, nobles
-from pyminion.expansions.alchemy import alchemy_set, transmute
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import copper, estate
+from pyminion_master.pyminion.expansions.intrigue import intrigue_set, conspirator, nobles
+from pyminion_master.pyminion.expansions.alchemy import alchemy_set, transmute
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 import pytest
 
 

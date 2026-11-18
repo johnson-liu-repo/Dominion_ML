@@ -1,7 +1,7 @@
-from pyminion.core import DeckCounter
-from pyminion.expansions.base import Smithy, curse, smithy
-from pyminion.expansions.seaside import Blockade, blockade
-from pyminion.game import Game
+from pyminion_master.pyminion.core import DeckCounter
+from pyminion_master.pyminion.expansions.base import Smithy, curse, smithy
+from pyminion_master.pyminion.expansions.seaside import Blockade, blockade
+from pyminion_master.pyminion.game import Game
 import pytest
 
 

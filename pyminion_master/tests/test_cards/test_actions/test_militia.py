@@ -1,5 +1,5 @@
-from pyminion.expansions.base import militia
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import militia
+from pyminion_master.pyminion.game import Game
 
 
 def test_militia_makes_2_money(multiplayer_game: Game):

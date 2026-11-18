@@ -1,6 +1,6 @@
-from pyminion.bots.optimized_bot import OptimizedBot
-from pyminion.core import CardType, DeckCounter
-from pyminion.expansions.base import (
+from pyminion_master.pyminion.bots.optimized_bot import OptimizedBot
+from pyminion_master.pyminion.core import CardType, DeckCounter
+from pyminion_master.pyminion.expansions.base import (
     Smithy,
     artisan,
     bandit,
@@ -31,7 +31,7 @@ from pyminion.expansions.base import (
     witch,
     workshop,
 )
-from pyminion.expansions.intrigue import (
+from pyminion_master.pyminion.expansions.intrigue import (
     baron,
     courtier,
     courtyard,
@@ -56,7 +56,7 @@ from pyminion.expansions.intrigue import (
     upgrade,
     wishing_well,
 )
-from pyminion.expansions.seaside import (
+from pyminion_master.pyminion.expansions.seaside import (
     blockade,
     fishing_village,
     haven,
@@ -73,7 +73,7 @@ from pyminion.expansions.seaside import (
     treasury,
     warehouse,
 )
-from pyminion.expansions.alchemy import (
+from pyminion_master.pyminion.expansions.alchemy import (
     alchemist,
     alchemy_set,
     apothecary,
@@ -85,7 +85,7 @@ from pyminion.expansions.alchemy import (
     transmute,
     university,
 )
-from pyminion.game import Game
+from pyminion_master.pyminion.game import Game
 import pytest
 
 

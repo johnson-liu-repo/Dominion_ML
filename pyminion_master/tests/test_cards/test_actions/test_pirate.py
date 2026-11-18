@@ -1,7 +1,7 @@
-from pyminion.expansions.base import copper, gold
-from pyminion.expansions.seaside import monkey, pirate, seaside_set
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import copper, gold
+from pyminion_master.pyminion.expansions.seaside import monkey, pirate, seaside_set
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 import pytest
 
 

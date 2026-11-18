@@ -1,10 +1,10 @@
-from pyminion.expansions.base import copper, silver
-from pyminion.expansions.alchemy import apothecary
-from pyminion.core import Cost
-from pyminion.core import DeckCounter
-from pyminion.expansions.intrigue import Bridge, bridge, shanty_town
-from pyminion.game import Game
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import copper, silver
+from pyminion_master.pyminion.expansions.alchemy import apothecary
+from pyminion_master.pyminion.core import Cost
+from pyminion_master.pyminion.core import DeckCounter
+from pyminion_master.pyminion.expansions.intrigue import Bridge, bridge, shanty_town
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
 
 
 def test_one_bridge(player: Player, game: Game):

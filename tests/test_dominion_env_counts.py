@@ -11,8 +11,8 @@ sys.path.append(str(REPO_ROOT / "src"))
 from pyminion_master.pyminion.bots.examples import BigMoney
 from pyminion_master.pyminion.expansions.base import copper, estate, silver
 
-from src.agent_rl.card_catalog import BASE_CARDS
-from src.agent_rl.dominion_env_factory import make_env
+from src.prev_agent_rl.card_catalog import BASE_CARDS
+from src.prev_agent_rl.dominion_env_factory import make_env
 
 
 def _make_env():

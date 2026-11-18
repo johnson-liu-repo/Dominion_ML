@@ -3,9 +3,9 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pyminion.core import DeckCounter
-    from pyminion.game import Game
-    from pyminion.player import Player
+    from pyminion_master.pyminion.core import DeckCounter
+    from pyminion_master.pyminion.game import Game
+    from pyminion_master.pyminion.player import Player
 
 
 class GameOutcome(Enum):

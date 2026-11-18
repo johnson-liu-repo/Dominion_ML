@@ -1,13 +1,13 @@
 import pytest
-from pyminion.core import AbstractDeck, DiscardPile, Hand, Playmat
-from pyminion.exceptions import (
+from pyminion_master.pyminion.core import AbstractDeck, DiscardPile, Hand, Playmat
+from pyminion_master.pyminion.exceptions import (
     CardNotFound,
     InsufficientActions,
     InsufficientBuys,
     InsufficientMoney,
     InvalidCardPlay,
 )
-from pyminion.expansions.base import (
+from pyminion_master.pyminion.expansions.base import (
     Copper,
     Estate,
     copper,
@@ -20,12 +20,12 @@ from pyminion.expansions.base import (
     smithy,
     vassal,
 )
-from pyminion.expansions.alchemy import (
+from pyminion_master.pyminion.expansions.alchemy import (
     alchemy_set,
     alchemist,
 )
-from pyminion.game import Game
-from pyminion.player import Player
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
 import pytest
 
 

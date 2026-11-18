@@ -1,4 +1,4 @@
-from pyminion.expansions.base import (
+from pyminion_master.pyminion.expansions.base import (
     base_set,
     artisan,
     cellar,
@@ -11,9 +11,9 @@ from pyminion.expansions.base import (
     village,
     witch,
 )
-from pyminion.expansions.intrigue import Swindler, intrigue_set, swindler
-from pyminion.expansions.alchemy import alchemy_set, familiar, philosophers_stone
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.intrigue import Swindler, intrigue_set, swindler
+from pyminion_master.pyminion.expansions.alchemy import alchemy_set, familiar, philosophers_stone
+from pyminion_master.pyminion.game import Game
 import pytest
 
 

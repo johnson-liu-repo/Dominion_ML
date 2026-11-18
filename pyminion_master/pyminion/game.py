@@ -3,14 +3,14 @@ import logging
 import random
 from typing import Iterator
 
-from pyminion.core import Card, DeckCounter, DiscardPile, Pile, Supply, Trash
-from pyminion.effects import EffectRegistry
-from pyminion.exceptions import InvalidGameSetup, InvalidPlayerCount
-from pyminion.expansions.base import (copper, curse, duchy, estate, gold,
+from pyminion_master.pyminion.core import Card, DeckCounter, DiscardPile, Pile, Supply, Trash
+from pyminion_master.pyminion.effects import EffectRegistry
+from pyminion_master.pyminion.exceptions import InvalidGameSetup, InvalidPlayerCount
+from pyminion_master.pyminion.expansions.base import (copper, curse, duchy, estate, gold,
                                       province, silver)
-from pyminion.expansions.alchemy import potion
-from pyminion.player import Player
-from pyminion.result import GameOutcome, GameResult, PlayerSummary
+from pyminion_master.pyminion.expansions.alchemy import potion
+from pyminion_master.pyminion.player import Player
+from pyminion_master.pyminion.result import GameOutcome, GameResult, PlayerSummary
 
 
 # logger = logging.getLogger()

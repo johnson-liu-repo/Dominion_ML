@@ -1,5 +1,5 @@
-from pyminion.expansions.base import Witch, curse, witch
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import Witch, curse, witch
+from pyminion_master.pyminion.game import Game
 
 
 def test_witch(multiplayer_game: Game):

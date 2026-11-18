@@ -1,8 +1,8 @@
-from pyminion.core import DeckCounter
-from pyminion.expansions.base import copper
-from pyminion.expansions.seaside import TidePools, tide_pools
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.core import DeckCounter
+from pyminion_master.pyminion.expansions.base import copper
+from pyminion_master.pyminion.expansions.seaside import TidePools, tide_pools
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_tide_pools(human: Human, game: Game, monkeypatch):

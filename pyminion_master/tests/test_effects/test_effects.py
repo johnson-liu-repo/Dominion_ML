@@ -1,5 +1,5 @@
-from pyminion.core import AbstractDeck, Card
-from pyminion.effects import (
+from pyminion_master.pyminion.core import AbstractDeck, Card
+from pyminion_master.pyminion.effects import (
     AttackEffect,
     Effect,
     EffectAction,
@@ -9,9 +9,9 @@ from pyminion.effects import (
     PlayerCardGameEffect,
     PlayerCardGameDeckEffect,
 )
-from pyminion.expansions.base import gold, smithy, witch
-from pyminion.game import Game
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import gold, smithy, witch
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
 import pytest
 
 

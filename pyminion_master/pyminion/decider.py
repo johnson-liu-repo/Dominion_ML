@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Protocol, Sequence
 
 if TYPE_CHECKING:
-    from pyminion.core import Card, Player
-    from pyminion.effects import Effect
-    from pyminion.game import Game
+    from pyminion_master.pyminion.core import Card, Player
+    from pyminion_master.pyminion.effects import Effect
+    from pyminion_master.pyminion.game import Game
 
 
 class Decider(Protocol):

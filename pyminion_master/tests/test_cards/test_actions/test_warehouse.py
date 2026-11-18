@@ -1,7 +1,7 @@
-from pyminion.expansions.base import curse, estate, duchy, silver
-from pyminion.expansions.seaside import warehouse
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import curse, estate, duchy, silver
+from pyminion_master.pyminion.expansions.seaside import warehouse
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_warehouse_many_cards(human: Human, game: Game, monkeypatch):

@@ -1,6 +1,6 @@
-from pyminion.expansions.base import province, silver
-from pyminion.expansions.seaside import smugglers
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import province, silver
+from pyminion_master.pyminion.expansions.seaside import smugglers
+from pyminion_master.pyminion.game import Game
 
 
 def test_smugglers_gain(multiplayer_game: Game, monkeypatch):

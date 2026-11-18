@@ -1,13 +1,13 @@
 import pytest
 
-from pyminion.core import CardType, Card, Supply, Trash
-from pyminion.exceptions import InvalidGameSetup, InvalidPlayerCount
-from pyminion.expansions.base import (base_set, curse, duchy, estate, gold, province,
+from pyminion_master.pyminion.core import CardType, Card, Supply, Trash
+from pyminion_master.pyminion.exceptions import InvalidGameSetup, InvalidPlayerCount
+from pyminion_master.pyminion.expansions.base import (base_set, curse, duchy, estate, gold, province,
                                       smithy, witch)
-from pyminion.expansions.alchemy import alchemy_set
-from pyminion.game import Game
-from pyminion.human import Human
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.alchemy import alchemy_set
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
+from pyminion_master.pyminion.player import Player
 
 
 def test_game_fixture(game: Game):

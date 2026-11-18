@@ -20,10 +20,10 @@ games through the command line and simulation of games between bots.
 
 ## Installation
 
-Pyminion requires at least Python 3.10 and can easily be installed through pypi
+To install this vendored copy with Python 3.10 or later, run the following command from the Dominion_ML repository root.
 
 ```bash
-python3 -m pip install pyminion
+python -m pip install ./pyminion_master
 ```
 
 ## Usage
@@ -35,10 +35,10 @@ a human and a bot and assign them as players. Alternatively, games can be
 created between multiple humans or multiple bots.
 
 ```python
-from pyminion.expansions import base, intrigue, seaside, alchemy
-from pyminion.game import Game
-from pyminion.bots.examples import BigMoney
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions import base, intrigue, seaside, alchemy
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.bots.examples import BigMoney
+from pyminion_master.pyminion.human import Human
 
 # Initialize human and bot
 human = Human()
@@ -61,10 +61,10 @@ Defining new bots is relatively straightforward. Inherit from the
 For example, here is a simple big money + smithy bot:
 
 ```python
-from pyminion.bots.bot import Bot, BotDecider
-from pyminion.expansions.base import gold, province, silver, smithy
-from pyminion.player import Player
-from pyminion.game import Game
+from pyminion_master.pyminion.bots.bot import Bot, BotDecider
+from pyminion_master.pyminion.expansions.base import gold, province, silver, smithy
+from pyminion_master.pyminion.player import Player
+from pyminion_master.pyminion.game import Game
 
 class BigMoneySmithyDecider(BotDecider):
     """
@@ -103,10 +103,10 @@ To create a simulation, pass a pyminion game instance into the `Simulator`
 class and set the number of iterations to be run.
 
 ```python
-from pyminion.bots.examples import BigMoney, BigMoneySmithy
-from pyminion.expansions.base import base_set, smithy
-from pyminion.game import Game
-from pyminion.simulator import Simulator
+from pyminion_master.pyminion.bots.examples import BigMoney, BigMoneySmithy
+from pyminion_master.pyminion.expansions.base import base_set, smithy
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.simulator import Simulator
 
 bm = BigMoney()
 bm_smithy = BigMoneySmithy()
@@ -120,7 +120,7 @@ print(result)
 with the following terminal output:
 
 ```console
-~$ python simulation.py
+~$ python -m pyminion_master.examples.simulation
 Simulation Result: ran 1000 games
 big_money won 110, lost 676, tied 214
 big_money_smithy won 676, lost 110, tied 214

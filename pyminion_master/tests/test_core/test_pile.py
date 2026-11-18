@@ -1,7 +1,7 @@
 import pytest
-from pyminion.core import Card, Pile
-from pyminion.exceptions import EmptyPile
-from pyminion.expansions.base import copper, estate
+from pyminion_master.pyminion.core import Card, Pile
+from pyminion_master.pyminion.exceptions import EmptyPile
+from pyminion_master.pyminion.expansions.base import copper, estate
 
 
 def test_make_pile():

@@ -3,6 +3,8 @@ import setuptools
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+packages = setuptools.find_packages(include=("pyminion", "pyminion.*"))
+
 setuptools.setup(
     name="pyminion",
     version="0.5.0",
@@ -17,13 +19,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    packages=setuptools.find_packages(
-        exclude=(
-            "tests",
-            "tests.*",
-            "examples",
-            "examples.*",
-        )
-    ),
+    packages=["pyminion_master", *(f"pyminion_master.{package}" for package in packages)],
+    package_dir={"pyminion_master": "."},
     python_requires=">=3.10",
 )

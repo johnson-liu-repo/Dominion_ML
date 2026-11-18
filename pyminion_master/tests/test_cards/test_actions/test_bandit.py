@@ -1,6 +1,6 @@
-from pyminion.expansions.base import (Bandit, Gold, Silver, bandit, copper,
+from pyminion_master.pyminion.expansions.base import (Bandit, Gold, Silver, bandit, copper,
                                       gold, silver)
-from pyminion.game import Game
+from pyminion_master.pyminion.game import Game
 
 
 def test_bandit_gains_gold(multiplayer_game: Game):

@@ -1,12 +1,12 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
-from pyminion.core import Action, Card, CardType, plural
-from pyminion.effects import EffectAction, PlayerGameEffect
-from pyminion.player import Player
+from pyminion_master.pyminion.core import Action, Card, CardType, plural
+from pyminion_master.pyminion.effects import EffectAction, PlayerGameEffect
+from pyminion_master.pyminion.player import Player
 
 if TYPE_CHECKING:
-    from pyminion.game import Game
+    from pyminion_master.pyminion.game import Game
 
 
 logger = logging.getLogger()

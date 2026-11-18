@@ -1,6 +1,6 @@
-from pyminion.expansions.base import moat
-from pyminion.expansions.intrigue import Minion, minion
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import moat
+from pyminion_master.pyminion.expansions.intrigue import Minion, minion
+from pyminion_master.pyminion.game import Game
 import pytest
 
 

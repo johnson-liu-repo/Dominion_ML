@@ -1,7 +1,7 @@
-from pyminion.expansions.base import Estate, Silver, Smithy, smithy
-from pyminion.expansions.intrigue import Ironworks, Mill, intrigue_set, ironworks, mill
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import Estate, Silver, Smithy, smithy
+from pyminion_master.pyminion.expansions.intrigue import Ironworks, Mill, intrigue_set, ironworks, mill
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 import pytest
 
 

@@ -1,6 +1,6 @@
-from pyminion.expansions.base import (Bureaucrat, Estate, Silver, bureaucrat,
+from pyminion_master.pyminion.expansions.base import (Bureaucrat, Estate, Silver, bureaucrat,
                                       copper, estate)
-from pyminion.game import Game
+from pyminion_master.pyminion.game import Game
 
 
 def test_bureaucrat_topdecks_silver(multiplayer_game: Game, monkeypatch):

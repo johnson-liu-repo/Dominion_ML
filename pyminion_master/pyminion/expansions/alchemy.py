@@ -1,7 +1,7 @@
 import logging
 from typing import TYPE_CHECKING
 
-from pyminion.core import (
+from pyminion_master.pyminion.core import (
     AbstractDeck,
     Action,
     Card,
@@ -10,18 +10,18 @@ from pyminion.core import (
     Treasure,
     Victory,
 )
-from pyminion.effects import (
+from pyminion_master.pyminion.effects import (
     EffectAction,
     FuncPlayerGameEffect,
     PlayerGameEffect,
     PlayerCardGameDeckEffect,
 )
-from pyminion.expansions.base import duchy, gold
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import duchy, gold
+from pyminion_master.pyminion.player import Player
 from typing import Any
 
 if TYPE_CHECKING:
-    from pyminion.game import Game
+    from pyminion_master.pyminion.game import Game
 
 
 logger = logging.getLogger()

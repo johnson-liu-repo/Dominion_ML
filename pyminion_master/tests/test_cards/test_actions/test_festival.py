@@ -1,7 +1,7 @@
-from pyminion.expansions.base import festival
-from pyminion.game import Game
-from pyminion.expansions.base import Festival
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import festival
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import Festival
+from pyminion_master.pyminion.player import Player
 
 
 def test_festival(player: Player, game: Game):

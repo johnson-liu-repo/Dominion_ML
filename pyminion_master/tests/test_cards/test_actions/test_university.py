@@ -1,15 +1,15 @@
-from pyminion.expansions.base import (
+from pyminion_master.pyminion.expansions.base import (
     base_set,
     council_room,
     gardens,
     artisan,
 )
-from pyminion.expansions.intrigue import (
+from pyminion_master.pyminion.expansions.intrigue import (
     intrigue_set,
     farm,
     nobles,
 )
-from pyminion.expansions.alchemy import (
+from pyminion_master.pyminion.expansions.alchemy import (
     alchemy_set,
     apothecary,
     familiar,
@@ -18,8 +18,8 @@ from pyminion.expansions.alchemy import (
     university,
     vineyard,
 )
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 import pytest
 
 

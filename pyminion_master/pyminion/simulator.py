@@ -1,9 +1,9 @@
 import copy
 import logging
 
-from pyminion.game import Game
-from pyminion.player import Player
-from pyminion.result import GameResult, PlayerSimulatorResult, SimulatorResult
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
+from pyminion_master.pyminion.result import GameResult, PlayerSimulatorResult, SimulatorResult
 
 logger = logging.getLogger()
 

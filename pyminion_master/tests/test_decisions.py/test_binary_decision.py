@@ -1,4 +1,4 @@
-from pyminion.human import binary_decision
+from pyminion_master.pyminion.human import binary_decision
 
 
 def test_yes_input(monkeypatch):
@@ -13,7 +13,7 @@ def test_no_input(monkeypatch):
 
 def test_invalid_input(monkeypatch):
     import pytest
-    from pyminion.exceptions import InvalidBinaryInput
+    from pyminion_master.pyminion.exceptions import InvalidBinaryInput
 
     monkeypatch.setattr("builtins.input", lambda _: "")
     with pytest.raises(InvalidBinaryInput):

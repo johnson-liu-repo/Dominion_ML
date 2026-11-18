@@ -1,6 +1,6 @@
-from pyminion.expansions.base import Copper, Moneylender, copper, moneylender
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import Copper, Moneylender, copper, moneylender
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_moneylender_human_input_yes(human: Human, game: Game, monkeypatch):

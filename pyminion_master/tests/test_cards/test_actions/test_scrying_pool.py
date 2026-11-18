@@ -1,6 +1,6 @@
-from pyminion.expansions.base import silver, gold, smithy, village
-from pyminion.expansions.alchemy import familiar, scrying_pool
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import silver, gold, smithy, village
+from pyminion_master.pyminion.expansions.alchemy import familiar, scrying_pool
+from pyminion_master.pyminion.game import Game
 
 
 def test_scrying_pool(multiplayer_game: Game, monkeypatch):

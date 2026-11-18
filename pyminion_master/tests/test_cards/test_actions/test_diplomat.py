@@ -1,7 +1,7 @@
-from pyminion.expansions.base import Copper, Curse, copper, witch
-from pyminion.expansions.intrigue import Diplomat, intrigue_set, diplomat
-from pyminion.player import Player
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import Copper, Curse, copper, witch
+from pyminion_master.pyminion.expansions.intrigue import Diplomat, intrigue_set, diplomat
+from pyminion_master.pyminion.player import Player
+from pyminion_master.pyminion.game import Game
 import pytest
 
 

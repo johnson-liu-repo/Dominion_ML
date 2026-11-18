@@ -2,15 +2,15 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Iterable, Iterator
 
-from pyminion.core import (AbstractDeck, Action, CardType, Card, Deck, DiscardPile, Hand,
+from pyminion_master.pyminion.core import (AbstractDeck, Action, CardType, Card, Deck, DiscardPile, Hand,
                            Playmat, Supply, Trash, Treasure, get_action_cards, get_treasure_cards,
                            get_score_cards)
-from pyminion.decider import Decider
-from pyminion.exceptions import (CardNotFound, EmptyPile, InsufficientBuys,
+from pyminion_master.pyminion.decider import Decider
+from pyminion_master.pyminion.exceptions import (CardNotFound, EmptyPile, InsufficientBuys,
                                  InsufficientMoney, InvalidCardPlay)
 
 if TYPE_CHECKING:
-    from pyminion.game import Game
+    from pyminion_master.pyminion.game import Game
 
 
 logger = logging.getLogger()

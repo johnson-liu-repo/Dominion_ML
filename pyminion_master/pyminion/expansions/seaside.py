@@ -2,7 +2,7 @@ from enum import IntEnum, unique
 import logging
 from typing import Any, Iterable, cast
 
-from pyminion.core import (
+from pyminion_master.pyminion.core import (
     AbstractDeck,
     Action,
     Card,
@@ -11,13 +11,13 @@ from pyminion.core import (
     Victory,
     plural,
 )
-from pyminion.duration import (
+from pyminion_master.pyminion.duration import (
     ActionDuration,
     BasicNextTurnEffect,
     GetSetAsideCardEffect,
     RemovePersistentCardsEffect,
 )
-from pyminion.effects import (
+from pyminion_master.pyminion.effects import (
     AttackEffect,
     EffectAction,
     FuncPlayerCardGameEffect,
@@ -26,9 +26,9 @@ from pyminion.effects import (
     PlayerCardGameEffect,
     PlayerGameEffect,
 )
-from pyminion.expansions.base import copper, curse, gold
-from pyminion.game import Game
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import copper, curse, gold
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
 
 
 logger = logging.getLogger()

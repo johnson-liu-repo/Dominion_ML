@@ -2,13 +2,13 @@ from enum import IntEnum, unique
 import logging
 from typing import TYPE_CHECKING, Any
 
-from pyminion.core import AbstractDeck, Action, Card, CardType, Treasure, Victory, get_score_cards
-from pyminion.player import Player
-from pyminion.effects import AttackEffect, EffectAction, FuncPlayerCardGameEffect
-from pyminion.expansions.base import curse, duchy, estate, gold, silver
+from pyminion_master.pyminion.core import AbstractDeck, Action, Card, CardType, Treasure, Victory, get_score_cards
+from pyminion_master.pyminion.player import Player
+from pyminion_master.pyminion.effects import AttackEffect, EffectAction, FuncPlayerCardGameEffect
+from pyminion_master.pyminion.expansions.base import curse, duchy, estate, gold, silver
 
 if TYPE_CHECKING:
-    from pyminion.game import Game
+    from pyminion_master.pyminion.game import Game
 
 
 logger = logging.getLogger()

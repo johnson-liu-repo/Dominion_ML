@@ -1,6 +1,6 @@
-from pyminion.bots.examples import BigMoney, BigMoneyUltimate
-from pyminion.expansions.base import base_set, smithy
-from pyminion.game import Game
+from pyminion_master.pyminion.bots.examples import BigMoney, BigMoneyUltimate
+from pyminion_master.pyminion.expansions.base import base_set, smithy
+from pyminion_master.pyminion.game import Game
 
 
 def test_game_single_player_play(bm_bot: BigMoney):

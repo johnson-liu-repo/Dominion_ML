@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: Dominion_ML
+Version: 0.1.0
+Summary: Reinforcement learning for training a bot to play Dominion.
+Requires-Python: >=3.14

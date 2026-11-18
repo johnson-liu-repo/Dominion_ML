@@ -4,11 +4,11 @@ import logging
 import random
 from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator
 
-from pyminion.exceptions import EmptyPile, InsufficientActions, PileNotFound
+from pyminion_master.pyminion.exceptions import EmptyPile, InsufficientActions, PileNotFound
 
 if TYPE_CHECKING:
-    from pyminion.game import Game
-    from pyminion.player import Player
+    from pyminion_master.pyminion.game import Game
+    from pyminion_master.pyminion.player import Player
 
 
 logger = logging.getLogger()

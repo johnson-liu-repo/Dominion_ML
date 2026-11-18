@@ -1,7 +1,7 @@
-from pyminion.expansions.base import smithy
-from pyminion.game import Game
-from pyminion.expansions.base import Smithy
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import smithy
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import Smithy
+from pyminion_master.pyminion.player import Player
 
 
 def test_smithy_draw(player: Player, game: Game):

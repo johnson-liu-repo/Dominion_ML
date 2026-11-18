@@ -1,7 +1,7 @@
-from pyminion.expansions.base import estate
-from pyminion.expansions.intrigue import Replace, intrigue_set, mill, replace
-from pyminion.game import Game
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import estate
+from pyminion_master.pyminion.expansions.intrigue import Replace, intrigue_set, mill, replace
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
 import pytest
 
 def test_replace_gain_treasure(multiplayer_game: Game, monkeypatch):

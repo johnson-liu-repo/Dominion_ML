@@ -1,8 +1,8 @@
-from pyminion.core import DeckCounter
-from pyminion.expansions.base import copper
-from pyminion.expansions.seaside import Monkey, monkey
-from pyminion.game import Game
-from pyminion.player import Player
+from pyminion_master.pyminion.core import DeckCounter
+from pyminion_master.pyminion.expansions.base import copper
+from pyminion_master.pyminion.expansions.seaside import Monkey, monkey
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
 
 
 def test_monkey_no_gain(player: Player, game: Game):

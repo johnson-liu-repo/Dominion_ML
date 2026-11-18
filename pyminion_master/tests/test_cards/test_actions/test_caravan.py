@@ -1,9 +1,9 @@
-from pyminion.core import DeckCounter
-from pyminion.expansions.base import copper, throne_room
-from pyminion.expansions.seaside import Caravan, caravan
-from pyminion.game import Game
-from pyminion.human import Human
-from pyminion.player import Player
+from pyminion_master.pyminion.core import DeckCounter
+from pyminion_master.pyminion.expansions.base import copper, throne_room
+from pyminion_master.pyminion.expansions.seaside import Caravan, caravan
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
+from pyminion_master.pyminion.player import Player
 
 
 def test_caravan(player: Player, game: Game):

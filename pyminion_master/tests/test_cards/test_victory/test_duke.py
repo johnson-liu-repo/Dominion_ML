@@ -1,6 +1,6 @@
-from pyminion.expansions.base import duchy
-from pyminion.expansions.intrigue import duke
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import duchy
+from pyminion_master.pyminion.expansions.intrigue import duke
+from pyminion_master.pyminion.player import Player
 
 
 def test_duke_no_duchy(player: Player):

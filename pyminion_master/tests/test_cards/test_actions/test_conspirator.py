@@ -1,8 +1,8 @@
-from pyminion.expansions.base import throne_room
-from pyminion.expansions.intrigue import conspirator, shanty_town
-from pyminion.human import Human
-from pyminion.player import Player
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import throne_room
+from pyminion_master.pyminion.expansions.intrigue import conspirator, shanty_town
+from pyminion_master.pyminion.human import Human
+from pyminion_master.pyminion.player import Player
+from pyminion_master.pyminion.game import Game
 
 
 def test_conspirator_1_action(player: Player, game: Game):

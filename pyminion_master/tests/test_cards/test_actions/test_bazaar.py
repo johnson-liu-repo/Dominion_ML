@@ -1,6 +1,6 @@
-from pyminion.expansions.seaside import Bazaar, bazaar
-from pyminion.game import Game
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.seaside import Bazaar, bazaar
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
 
 def test_bazaar(player: Player, game: Game):
     player.hand.add(bazaar)

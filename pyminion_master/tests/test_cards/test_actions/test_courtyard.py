@@ -1,7 +1,7 @@
-from pyminion.expansions.base import Duchy, duchy
-from pyminion.expansions.intrigue import courtyard
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import Duchy, duchy
+from pyminion_master.pyminion.expansions.intrigue import courtyard
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 def test_courtyard_topdeck(human: Human, game: Game, monkeypatch):
     human.hand.add(courtyard)

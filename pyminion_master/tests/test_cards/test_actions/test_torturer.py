@@ -1,7 +1,7 @@
-from pyminion.core import Card, CardType
-from pyminion.expansions.base import moat
-from pyminion.expansions.intrigue import Torturer, torturer
-from pyminion.game import Game
+from pyminion_master.pyminion.core import Card, CardType
+from pyminion_master.pyminion.expansions.base import moat
+from pyminion_master.pyminion.expansions.intrigue import Torturer, torturer
+from pyminion_master.pyminion.game import Game
 import pytest
 
 

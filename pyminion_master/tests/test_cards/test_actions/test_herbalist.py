@@ -1,8 +1,8 @@
-from pyminion.expansions.base import gold
-from pyminion.expansions.alchemy import alchemy_set, herbalist
-from pyminion.game import Game
-from pyminion.human import Human
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import gold
+from pyminion_master.pyminion.expansions.alchemy import alchemy_set, herbalist
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
+from pyminion_master.pyminion.player import Player
 import pytest
 
 

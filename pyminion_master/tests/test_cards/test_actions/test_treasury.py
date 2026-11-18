@@ -1,8 +1,8 @@
-from pyminion.expansions.base import estate, throne_room, silver
-from pyminion.expansions.seaside import treasury
-from pyminion.game import Game
-from pyminion.human import Human
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.base import estate, throne_room, silver
+from pyminion_master.pyminion.expansions.seaside import treasury
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
+from pyminion_master.pyminion.player import Player
 
 
 def test_treasury_play(player: Player, game: Game):

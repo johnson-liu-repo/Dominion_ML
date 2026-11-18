@@ -4,11 +4,11 @@ Either by yourself, with another human, or against a bot.
 
 """
 
-from pyminion.bots.examples import BigMoney
-from pyminion.expansions.base import artisan, bandit, base_set, witch
-from pyminion.expansions.intrigue import intrigue_set, nobles, bridge
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.bots.examples import BigMoney
+from pyminion_master.pyminion.expansions.base import artisan, bandit, base_set, witch
+from pyminion_master.pyminion.expansions.intrigue import intrigue_set, nobles, bridge
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 human = Human(player_id="Human")
 bm = BigMoney(player_id="Big Money")

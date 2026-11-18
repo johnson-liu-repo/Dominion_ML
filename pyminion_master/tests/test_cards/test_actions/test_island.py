@@ -1,9 +1,9 @@
-from pyminion.core import DeckCounter
-from pyminion.expansions.base import copper, estate, throne_room
-from pyminion.expansions.seaside import island
-from pyminion.game import Game
-from pyminion.human import Human
-from pyminion.player import Player
+from pyminion_master.pyminion.core import DeckCounter
+from pyminion_master.pyminion.expansions.base import copper, estate, throne_room
+from pyminion_master.pyminion.expansions.seaside import island
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
+from pyminion_master.pyminion.player import Player
 
 
 def test_island_multiple_cards(human: Human, game: Game, monkeypatch):

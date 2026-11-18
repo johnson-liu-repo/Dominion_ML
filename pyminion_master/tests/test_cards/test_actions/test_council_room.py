@@ -1,5 +1,5 @@
-from pyminion.game import Game
-from pyminion.expansions.base import CouncilRoom, council_room
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import CouncilRoom, council_room
 
 
 def test_council_room(multiplayer_game: Game):

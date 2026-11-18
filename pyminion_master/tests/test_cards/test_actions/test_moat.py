@@ -1,5 +1,5 @@
-from pyminion.game import Game
-from pyminion.expansions.base import Moat, curse, moat, witch
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import Moat, curse, moat, witch
 import pytest
 
 

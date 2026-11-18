@@ -1,6 +1,6 @@
-from pyminion.expansions.alchemy import potion
-from pyminion.game import Game
-from pyminion.player import Player
+from pyminion_master.pyminion.expansions.alchemy import potion
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.player import Player
 
 def test_potion(player: Player, game: Game):
     player.hand.add(potion)

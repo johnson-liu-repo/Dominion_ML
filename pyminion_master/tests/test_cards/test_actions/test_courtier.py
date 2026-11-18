@@ -1,7 +1,7 @@
-from pyminion.expansions.base import Gold, copper
-from pyminion.expansions.intrigue import Courtier, courtier, nobles
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import Gold, copper
+from pyminion_master.pyminion.expansions.intrigue import Courtier, courtier, nobles
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_courtier_1_type_action(human: Human, game: Game, monkeypatch):

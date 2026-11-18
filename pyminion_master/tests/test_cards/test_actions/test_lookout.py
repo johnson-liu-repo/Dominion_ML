@@ -1,7 +1,7 @@
-from pyminion.expansions.base import curse, estate, silver
-from pyminion.expansions.seaside import lookout
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import curse, estate, silver
+from pyminion_master.pyminion.expansions.seaside import lookout
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_lookout_3_cards(human: Human, game: Game, monkeypatch):

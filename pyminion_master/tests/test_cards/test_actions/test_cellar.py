@@ -1,6 +1,6 @@
-from pyminion.expansions.base import Cellar, Copper, Estate, cellar, copper, estate
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import Cellar, Copper, Estate, cellar, copper, estate
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_cellar_discard_one(human: Human, game: Game, monkeypatch):

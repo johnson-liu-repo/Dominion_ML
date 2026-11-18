@@ -1,10 +1,10 @@
 from typing import Iterator
 
-from pyminion.bots.optimized_bot import OptimizedBot, OptimizedBotDecider
-from pyminion.core import Card
-from pyminion.expansions.base import chapel, duchy, estate, gold, province, silver
-from pyminion.player import Player
-from pyminion.game import Game
+from pyminion_master.pyminion.bots.optimized_bot import OptimizedBot, OptimizedBotDecider
+from pyminion_master.pyminion.core import Card
+from pyminion_master.pyminion.expansions.base import chapel, duchy, estate, gold, province, silver
+from pyminion_master.pyminion.player import Player
+from pyminion_master.pyminion.game import Game
 
 class ChapelBotDecider(OptimizedBotDecider):
     """

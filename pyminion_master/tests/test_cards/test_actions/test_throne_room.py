@@ -1,6 +1,6 @@
-from pyminion.expansions.base import smithy, throne_room, village
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import smithy, throne_room, village
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_throne_room_no_action(human: Human, game: Game):

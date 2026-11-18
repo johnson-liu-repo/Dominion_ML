@@ -1,6 +1,6 @@
-from pyminion.expansions.base import chapel, copper, silver
-from pyminion.expansions.alchemy import possession
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import chapel, copper, silver
+from pyminion_master.pyminion.expansions.alchemy import possession
+from pyminion_master.pyminion.game import Game
 
 
 def test_possession(multiplayer_game: Game, monkeypatch):

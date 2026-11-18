@@ -1,6 +1,6 @@
-from pyminion.expansions.base import copper, estate
-from pyminion.expansions.seaside import cutpurse
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import copper, estate
+from pyminion_master.pyminion.expansions.seaside import cutpurse
+from pyminion_master.pyminion.game import Game
 
 
 def test_cutpurse(multiplayer_game: Game):

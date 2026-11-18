@@ -6,12 +6,12 @@ import sys
 pyminion_master_dir = 'C:/Users/johns/Desktop/projects/Dominion_AI_ML/pyminion_master'
 sys.path.append(pyminion_master_dir)
 
-from pyminion.core import AbstractDeck, CardType, Action, Card, ScoreCard, Treasure, Victory, plural
-from pyminion.effects import AttackEffect, EffectAction, FuncPlayerCardGameEffect, FuncPlayerGameEffect, PlayerCardGameEffect
-from pyminion.player import Player
+from pyminion_master.pyminion.core import AbstractDeck, CardType, Action, Card, ScoreCard, Treasure, Victory, plural
+from pyminion_master.pyminion.effects import AttackEffect, EffectAction, FuncPlayerCardGameEffect, FuncPlayerGameEffect, PlayerCardGameEffect
+from pyminion_master.pyminion.player import Player
 
 if TYPE_CHECKING:
-    from pyminion.game import Game
+    from pyminion_master.pyminion.game import Game
 
 
 logger = logging.getLogger()

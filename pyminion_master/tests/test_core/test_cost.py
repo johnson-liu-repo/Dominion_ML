@@ -1,4 +1,4 @@
-from pyminion.core import Cost
+from pyminion_master.pyminion.core import Cost
 import pytest
 
 

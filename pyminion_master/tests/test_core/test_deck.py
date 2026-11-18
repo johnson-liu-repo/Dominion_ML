@@ -1,5 +1,5 @@
-from pyminion.core import AbstractDeck, Card, Deck
-from pyminion.expansions.base import Copper, Estate, copper, estate
+from pyminion_master.pyminion.core import AbstractDeck, Card, Deck
+from pyminion_master.pyminion.expansions.base import Copper, Estate, copper, estate
 
 NUM_COPPER = 7
 NUM_ESTATE = 3

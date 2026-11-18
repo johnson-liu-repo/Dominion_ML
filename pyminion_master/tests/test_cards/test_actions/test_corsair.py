@@ -1,6 +1,6 @@
-from pyminion.expansions.base import silver, gold
-from pyminion.expansions.seaside import corsair
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import silver, gold
+from pyminion_master.pyminion.expansions.seaside import corsair
+from pyminion_master.pyminion.game import Game
 
 
 def test_corsair(multiplayer_game: Game):

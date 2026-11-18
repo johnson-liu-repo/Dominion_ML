@@ -1,7 +1,7 @@
-from pyminion.expansions.base import copper, silver
-from pyminion.expansions.seaside import salvager
-from pyminion.game import Game
-from pyminion.human import Human
+from pyminion_master.pyminion.expansions.base import copper, silver
+from pyminion_master.pyminion.expansions.seaside import salvager
+from pyminion_master.pyminion.game import Game
+from pyminion_master.pyminion.human import Human
 
 
 def test_salvager(human: Human, game: Game, monkeypatch):

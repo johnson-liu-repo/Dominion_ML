@@ -1,16 +1,16 @@
 from typing import TYPE_CHECKING, Iterable, Literal, cast, overload
 
-from pyminion.bots.bot import Bot, BotDecider
-from pyminion.core import Action, CardType, Card, DeckCounter, Treasure, Victory, get_action_cards, get_treasure_cards, get_victory_cards, get_score_cards
-from pyminion.decider import Decider
-from pyminion.exceptions import InvalidBotImplementation
-from pyminion.expansions.base import duchy, estate, curse, gold, silver, copper
-from pyminion.expansions.intrigue import Baron, Courtier, Lurker, Minion, Nobles, Pawn, Steward, Torturer
-from pyminion.expansions.seaside import NativeVillage
-from pyminion.player import Player
+from pyminion_master.pyminion.bots.bot import Bot, BotDecider
+from pyminion_master.pyminion.core import Action, CardType, Card, DeckCounter, Treasure, Victory, get_action_cards, get_treasure_cards, get_victory_cards, get_score_cards
+from pyminion_master.pyminion.decider import Decider
+from pyminion_master.pyminion.exceptions import InvalidBotImplementation
+from pyminion_master.pyminion.expansions.base import duchy, estate, curse, gold, silver, copper
+from pyminion_master.pyminion.expansions.intrigue import Baron, Courtier, Lurker, Minion, Nobles, Pawn, Steward, Torturer
+from pyminion_master.pyminion.expansions.seaside import NativeVillage
+from pyminion_master.pyminion.player import Player
 
 if TYPE_CHECKING:
-    from pyminion.game import Game
+    from pyminion_master.pyminion.game import Game
 
 
 class OptimizedBotDecider(BotDecider):

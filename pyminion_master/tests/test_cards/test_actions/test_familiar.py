@@ -1,5 +1,5 @@
-from pyminion.expansions.alchemy import familiar
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.alchemy import familiar
+from pyminion_master.pyminion.game import Game
 
 
 def test_familiar(multiplayer_game: Game):

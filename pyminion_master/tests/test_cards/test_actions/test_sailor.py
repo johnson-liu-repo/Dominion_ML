@@ -1,6 +1,6 @@
-from pyminion.expansions.base import artisan, base_set, copper, curse, silver, throne_room
-from pyminion.expansions.seaside import Sailor, bazaar, fishing_village, seaside_set, sailor
-from pyminion.game import Game
+from pyminion_master.pyminion.expansions.base import artisan, base_set, copper, curse, silver, throne_room
+from pyminion_master.pyminion.expansions.seaside import Sailor, bazaar, fishing_village, seaside_set, sailor
+from pyminion_master.pyminion.game import Game
 import pytest
 
 
