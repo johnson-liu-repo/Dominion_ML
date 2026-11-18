@@ -13,8 +13,8 @@ import numpy as np
 from pyminion_master.pyminion.expansions import base
 from pyminion_master.pyminion.game import Game
 
-from src.agent_rl.wrappers import BuyPhaseEnv
-from src.agent_rl.dummie_bot import DummieBot
+from src.prev_agent_rl.wrappers import BuyPhaseEnv
+from src.prev_agent_rl.dummie_bot import DummieBot
 
 
 def make_env(cards_used_in_game, seed=None, opponent_bots=None):

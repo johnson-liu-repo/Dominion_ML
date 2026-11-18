@@ -13,13 +13,13 @@ import torch.nn as nn
 import torch.optim as optim
 
 # from agent_rl.logging_utils import configure_training_logging
-from agent_rl.training_io import (
+from prev_agent_rl.training_io import (
     TrainingRunWriter,
     infer_source_run_dir,
     load_checkpoint,
     resolve_run_dir,
 )
-from agent_rl.diagnostics import DiagnosticsCollector, get_player_deck_counts
+from prev_agent_rl.diagnostics import DiagnosticsCollector, get_player_deck_counts
 
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

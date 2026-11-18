@@ -1,6 +1,6 @@
 """Lightweight Gym wrappers for specific Dominion phases."""
 
-from src.agent_rl.dominion_env import DominionBuyPhaseEnv
+from src.prev_agent_rl.dominion_env import DominionBuyPhaseEnv
 
 
 class BuyPhaseEnv(DominionBuyPhaseEnv):
