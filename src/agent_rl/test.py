@@ -14,6 +14,7 @@ def test_sim():
     )
     sim = Simulator(game, iterations=2)
     result = sim.run()
+    print(result)
 
     assert "ran 2 games" in str(result)
 
