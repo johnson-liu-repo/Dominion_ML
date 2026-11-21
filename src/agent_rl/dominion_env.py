@@ -16,8 +16,7 @@ class DominionBuyEnv(gym.Env):
 
         super().__init__()
 
-        # TODO: Define action_space
-
+        # -----------------------------------------------------------------
         # Simple action space with 8 possible actions.
         # 0: Pass
         # 1: Buy Copper
@@ -29,19 +28,25 @@ class DominionBuyEnv(gym.Env):
         # 7: Buy Curse
 
         self.action_space = spaces.Discrete(8)
+        # -----------------------------------------------------------------
 
-        # TODO: Define observation_space
 
+        # -----------------------------------------------------------------
         self.observation_space = spaces.Box(
             low = -np.inf,
             high = np.inf,
             shape = (3,),
             dtype = np.float32
         )
+        # -----------------------------------------------------------------
 
+        # -----------------------------------------------------------------
         self.player = player
+        # -----------------------------------------------------------------
 
 
+
+    # -----------------------------------------------------------------
     def _get_obs(self):
         money = self.player.state.money
         victory_points = self.player.get_victory_points()
@@ -53,9 +58,10 @@ class DominionBuyEnv(gym.Env):
         )
 
         return observation
+    # -----------------------------------------------------------------
 
 
-
+    # -----------------------------------------------------------------
     def reset(self, *, seed = None, options = None):
         super().reset(seed = seed)
 
@@ -64,7 +70,10 @@ class DominionBuyEnv(gym.Env):
         # TODO: Return observation and info
 
         raise NotImplementedError
+    # -----------------------------------------------------------------
 
+
+    # -----------------------------------------------------------------
     def step(self, action):
 
         # TODO: Translate action into a purchase
@@ -74,14 +83,31 @@ class DominionBuyEnv(gym.Env):
         # TODO: Return Gymnasium's five outputs
 
         raise NotImplementedError
+    # -----------------------------------------------------------------
+
 
 
 if __name__ == "__main__":
 
+    from typing import cast
+
     from pyminion_master.pyminion.human import Human
+    from pyminion_master.pyminion.player import Player
     from pyminion_master.pyminion.game import Game
 
-    player = Human(player_id="rl_agent")
+    from pyminion_master.pyminion.decider import Decider
+    from src.agent_rl.basic_decider import BasicDecider
+
+
+
+    # player = Human( player_id = "rl_agent" )
+
+    decider = BasicDecider()
+
+    player = Player(
+        decider = cast(Decider, decider),
+        player_id = "rl_agent"
+    )
 
     game = Game(
         players = [player],
